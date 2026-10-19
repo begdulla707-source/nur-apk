@@ -336,3 +336,5 @@ from backend.ranking_plus import register_ranking
 register_ranking(app, db, admin_only, require_int, request_json, bad)
 from backend.contact import register_contact
 register_contact(app, db, admin_only, request_json, bad)
+from backend.payments import register_payments
+register_payments(app, db, admin_only, request_json, require_int, bad)
