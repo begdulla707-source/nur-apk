@@ -96,10 +96,18 @@ def preflight():
 def handle_value(exc):
     return bad(str(exc))
 
+from werkzeug.exceptions import HTTPException
+
 @app.errorhandler(Exception)
 def handle_error(exc):
+    if isinstance(exc, HTTPException):
+        return exc
     logging.exception("Unexpected API error: %s", type(exc).__name__)
     return bad("Server xatosi. Keyinroq qayta urinib ko‘ring", 500)
+
+@app.get("/")
+def root_ok():
+    return jsonify({"service":"Nur Oqiw Orayi API","ok":True,"health":"/api/health"})
 
 @app.get("/api/health")
 def health():
