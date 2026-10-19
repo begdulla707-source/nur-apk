@@ -1,0 +1,47 @@
+/* Nur premium accessibility & menu polish; no change to the app icon or main palette. */
+.menubtn,.menubtn svg{transform:none!important;transition:background .16s ease,scale .16s ease!important}
+.menubtn:active{scale:.96}
+.drawer{left:max(10px,calc((100vw - 430px)/2 + 9px));top:11px;bottom:11px;border-radius:25px!important;
+ border:1px solid var(--stroke)!important;transform:translate3d(calc(-105% - 12px),0,0)!important;
+ transition:transform .29s cubic-bezier(.22,.9,.25,1)!important;
+ overflow-y:auto;-webkit-backdrop-filter:blur(8px)!important;backdrop-filter:blur(8px)!important}
+.drawer.open{transform:translate3d(0,0,0)!important}
+.drawer>*{opacity:1!important;transform:none!important;transition:none!important}
+.drawer:before{border-radius:25px!important}
+.drawer .drawer-head,.drawer .drawer-info{position:relative}
+.overlay.open{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:#06191077!important}
+.drawer .setting{border-radius:17px}
+.language-panel{border:1px solid var(--stroke);background:var(--card);padding:15px 12px;border-radius:18px;margin-top:10px}
+.language-heading{font-weight:750;font-size:13px;color:var(--text);display:flex;justify-content:space-between;gap:9px;align-items:center}
+.language-heading small{font-size:9px;font-weight:500;color:var(--muted);text-align:right}
+.drawer .langs{margin-top:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.drawer .langs button{display:flex;align-items:flex-start;flex-direction:column;justify-content:center;gap:5px;text-align:left;
+ padding:11px 12px;border-radius:14px!important;border:1px solid var(--stroke)!important;
+ background:var(--bg)!important;color:var(--text)!important;min-height:62px;
+ transition:background .19s ease,transform .19s ease,border-color .19s ease}
+.drawer .langs button strong{font-size:13px;letter-spacing:.6px}
+.drawer .langs button small{font-size:10px;color:var(--muted);max-width:100%;word-wrap:break-word}
+.drawer .langs button.on{background:var(--tint)!important;border-color:var(--accent)!important;box-shadow:inset 0 0 0 1px var(--accent)}
+.drawer .langs button.on strong{color:var(--accent)}
+.drawer .langs button:active{transform:scale(.96)}
+.drawer .adminbtn,.drawer .contact-launch{display:flex!important;align-items:center;justify-content:space-between;gap:12px;
+ width:100%;min-height:52px;margin-top:11px;border-radius:17px;padding:15px;font-size:12px;font-weight:760;
+ border:1px solid var(--stroke);background:var(--tint);color:var(--accent);text-align:left}
+.drawer .contact-launch{background:var(--card);color:var(--text)}
+.drawer .adminbtn svg,.drawer .contact-launch svg{width:21px;height:21px;flex:none;stroke-width:2.5}
+.drawer #lang-msg{font-size:10px;margin:12px 2px 0;line-height:1.5}
+.back{display:inline-flex;align-items:center;gap:7px;font-size:12px}
+.back:before{content:"";display:inline-block;flex:none;width:9px;height:9px;border-left:2.6px solid currentColor;border-bottom:2.6px solid currentColor;transform:rotate(45deg);margin:0 4px 0 1px}
+.subject .arrow{font-size:0!important}
+.subject .arrow:after{content:"";border-top:2.7px solid currentColor;border-right:2.7px solid currentColor;width:8px;height:8px;transform:rotate(45deg);margin-left:-3px}
+.contact-launch:active,.adminbtn:active{transform:scale(.985)}
+#public-contact-form{background:var(--card);border:1px solid var(--stroke);border-radius:19px;padding:16px}
+#public-contact-form label{font-size:12px}
+#contact-subject-label[hidden]{display:none!important}
+#contact-feedback:empty{display:none}
+#contact-feedback{margin-top:10px;line-height:1.6}
+.inbox-card.unread{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.inbox-body{white-space:pre-wrap;color:var(--text)!important;font-size:12px!important}
+.inbox-controls{display:flex;flex-wrap:wrap;gap:7px;margin:13px 0}
+@media(min-width:550px){.drawer{top:30px;bottom:30px;left:calc((100vw - 430px)/2 + 10px)}}
+@media(prefers-reduced-motion:reduce){.drawer{transition:none!important}}
