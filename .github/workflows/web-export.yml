@@ -15,6 +15,9 @@ on:
       - "liquid-glass.js"
       - "i18n.js"
       - "contact-ui.js"
+      - "payment-ui.js"
+      - "payment-ui.css"
+      - "paynet_qr.png"
       - "polish-v08.css"
       - "ranking-ui.css"
       - "ranking-ui.js"
@@ -31,16 +34,20 @@ jobs:
           node --check liquid-glass.js
           node --check i18n.js
           node --check contact-ui.js
-          python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/contact.py backend/init_db.py
+          node --check payment-ui.js
+          python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/contact.py backend/payments.py backend/init_db.py
           test -s index.html
           test -s features.css
           test -s premium-admin.css
           test -s liquid-glass.css
           test -s ranking-ui.css
           test -s polish-v08.css
+          test -s payment-ui.css
+          test -s paynet_qr.png
           grep -q 'ranking-ui.js' index.html
           grep -q 'liquid-glass.js' index.html
           grep -q 'i18n.js' index.html
+          grep -q 'payment-ui.js' index.html
       - uses: actions/upload-artifact@v4
         with:
           name: nur-apk-mobile-html
@@ -57,4 +64,7 @@ jobs:
             i18n.js
             contact-ui.js
             polish-v08.css
+            payment-ui.css
+            payment-ui.js
+            paynet_qr.png
           retention-days: 30
