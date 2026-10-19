@@ -13,6 +13,7 @@ on:
       - "backend/**"
       - "liquid-glass.css"
       - "liquid-glass.js"
+      - "i18n.js"
       - "ranking-ui.css"
       - "ranking-ui.js"
 jobs:
@@ -26,6 +27,7 @@ jobs:
           node --check premium-admin.js
           node --check ranking-ui.js
           node --check liquid-glass.js
+          node --check i18n.js
           python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/init_db.py
           test -s index.html
           test -s features.css
@@ -34,6 +36,7 @@ jobs:
           test -s ranking-ui.css
           grep -q 'ranking-ui.js' index.html
           grep -q 'liquid-glass.js' index.html
+          grep -q 'i18n.js' index.html
       - uses: actions/upload-artifact@v4
         with:
           name: nur-apk-mobile-html
@@ -47,4 +50,5 @@ jobs:
             ranking-ui.js
             liquid-glass.css
             liquid-glass.js
+            i18n.js
           retention-days: 30
