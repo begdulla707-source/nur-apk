@@ -24,16 +24,23 @@
   function note(text){return '<p class="page-message">'+esc(text)+'</p>'}
   function premiumModal(content){return '<div id="premium-edit" class="premium-edit">'+content+'</div>'}
   const catalog=[
-   ['Hisobot paneli',1],['O‘quvchilar umumiy soni',1],['Guruhlar statistikasi',1],['Fanlar kesimidagi raqamlar',1],
-   ['Oxirgi o‘zgarishlar jurnali',1],['O‘zlashtirish o‘rtachasi',1],
-   ['Guruh yaratish',1],['Guruh nomini o‘zgartirish',1],['Guruh arxivlash',1],['Guruhni qayta tiklash',1],['Fanlar bo‘yicha guruhlar',1],['Guruhdagi o‘quvchilar soni',1],
-   ['O‘quvchi qo‘shish',1],['O‘quvchini tahrirlash',1],['O‘quvchini boshqa guruhga o‘tkazish',1],['O‘quvchini izlash',1],['O‘quvchi arxivlash',1],['O‘quvchini tiklash',1],['Ota-ona telefonini admin uchun saqlash',1],['O‘quvchiga ichki izoh yozish',1],['100 tagacha o‘quvchini ommaviy import qilish',1],['O‘quvchilar CSV eksporti',1],
-   ['Yangi test / mashg‘ulot',1],['Oldingi sanadagi mashg‘ulot',1],['Mashg‘ulotni tahrirlash',1],['Mashg‘ulotdan nusxa olish',1],['Mashg‘ulot arxivlash',1],['Mashg‘ulotni tiklash',1],
-   ['0–100 ball qo‘yish',1],['Ballni qayta tahrirlash',1],['DQ — dars qoldirdi',1],['Kiritilmagan baholar ogohlantirishi',1],
-   ['Avtomatik reyting',1],['Guruh reytingi',1],['Guruh o‘rtacha balli',1],['Sana bo‘yicha tahlil',1],['Past ball haqida ogohlantirish',1],['Ko‘p dars qoldirish haqida signal',1],
-   ['Natijalar CSV eksporti',1],['Davomat CSV eksporti',1],
-   ['Ilova ichidagi e’lonlar',1],['E’lonni muhim sifatida belgilash',1],['E’lonni kelajak sanaga rejalash',1],['Muayyan guruhga e’lon',1],['E’lon muddatini belgilash',1],
-   ['Telefon push xabarlari',0],['PDF sertifikat va hisobot',0],['Admin uchun ikki faktorli kirish',0],['Ustozlarning alohida rollari',0],['Avtomatik bulut zaxira nusxasi',0]
+    ['Dashboard Pro',1],
+    ['O‘quvchi qo‘shish',1],
+    ['O‘quvchini tahrirlash',1],
+    ['O‘quvchini arxivlash va tiklash',1],
+    ['Guruh yaratish',1],
+    ['Guruhlarni boshqarish',1],
+    ['O‘quvchini boshqa guruhga ko‘chirish',1],
+    ['Ball kiritish',1],
+    ['Ballni tahrirlash',1],
+    ['Davomat nazorati — DQ',1],
+    ['Avtomatik reyting',1],
+    ['Reyting davri va e’lonini boshqarish',1],
+    ['Top 15 o‘quvchi',1],
+    ['O‘quvchi premium profili',1],
+    ['Bildirishnomalar va e’lonlar',1],
+    ['Statistika Pro',1],
+    ['Admin xavfsizligi — token va amallar tarixi',1]
   ];
   async function renderTab(tab,ctx){
     const root=ctx.root; if(!root)return;
@@ -128,11 +135,11 @@
     parent.append(wrap);
   }
   async function sessions(root,ctx){
-    root.innerHTML='<div class="appcard"><h3>Mashg‘ulot / test yaratish</h3>'+
+    root.innerHTML='<div class="appcard"><h3>Natija sanasini qo‘shish</h3>'+
       '<form class="appform" data-form="add-session"><label>Guruh<select required name="group_id">'+groupOptions(ctx.state.groups)+'</select></label>'+
       field('Mashg‘ulot nomi','title','text','','required maxlength="120"')+
       field('Sana (Toshkent)','held_on','date',ymd(),'required')+
-      '<button class="appbtn" type="submit">Yaratish</button></form></div>'+section('Mashg‘ulotlar',String(ctx.state.sessions.length));
+      '<button class="appbtn" type="submit">Yaratish</button></form></div>'+section('Natija kunlari',String(ctx.state.sessions.length));
     const list=document.createElement('div');root.append(list);
     for(const se of ctx.state.sessions){
       const node=document.createElement('div');node.className='appcard';
@@ -142,7 +149,7 @@
         b('Arxiv','premium-archive-session',se.id,'danger')+'</div>';
       list.append(node);
     }
-    if(!ctx.state.sessions.length)list.innerHTML='<div class="empty">Mashg‘ulot yaratilmagan.</div>';
+    if(!ctx.state.sessions.length)list.innerHTML='<div class="empty">Hali natija kuni qo‘shilmagan.</div>';
   }
   function showSessionModal(type,id,ctx){
     const se=ctx.state.sessions.find(s=>s.id===id);
@@ -292,7 +299,7 @@
   }
   function showCatalog(root){
     const count=catalog.filter(x=>x[1]).length;
-    root.innerHTML=section('TOP 50 premium funksiya',count+' ta kodlangan')+
+    root.innerHTML=section('TOP 17 premium funksiya',count+' ta kodlangan')+
       note('Pastdagi “Kodlandi” holati ishlab chiqilgan funksiyani bildiradi. Jonli ishlashi uchun Render DATABASE_URL ulanib, API tekshiruvidan o‘tishi kerak.')+
       '<div class="premium-catalog">'+catalog.map(([title,ready],i)=>
         '<div><span class="premium-catalog-no">'+pad(i+1)+'</span><span>'+esc(title)+'</span><small class="'+(ready?'ready':'planned')+'">'+(ready?'Kodlandi':'Keyingi')+'</small></div>').join('')+'</div>';
