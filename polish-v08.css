@@ -55,3 +55,24 @@
 .admin-verified-icon{display:inline-block;vertical-align:middle;flex:0 0 21px;
   width:21px;height:21px;filter:drop-shadow(0 2px 3px #0878c12b)}
 .admin-mark-role{font-weight:650;font-size:11px;color:var(--muted);padding-left:1px}
+
+/* Performance mode: preserve the jade palette and liquid silhouette, avoid
+   repeatedly blurring three full layers on budget Android WebView devices. */
+@media (max-width:520px){
+  .tabbar{
+    -webkit-backdrop-filter:blur(4px)!important;
+    backdrop-filter:blur(4px)!important;
+  }
+  .glass-bubble>span{
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+  }
+  .drawer{
+    -webkit-backdrop-filter:blur(4px)!important;
+    backdrop-filter:blur(4px)!important;
+  }
+  .overlay,.overlay.open{
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+  }
+}
