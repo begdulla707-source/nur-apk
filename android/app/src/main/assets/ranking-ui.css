@@ -1,0 +1,42 @@
+/* Top students and administrator ranking surfaces (uses existing theme tokens). */
+.rank-podium{display:grid;grid-template-columns:1fr 1.07fr 1fr;align-items:end;gap:7px;margin:8px 0 18px}
+.rank-podium button{border:1px solid var(--stroke);background:var(--card);border-radius:16px;color:var(--text);
+ padding:15px 5px 12px;min-width:0;text-align:center;box-shadow:0 6px 15px #11392a0b;transition:transform .25s}
+.rank-podium button:active{transform:scale(.96)}
+.rank-podium button:first-child{min-height:116px}
+.rank-podium button:nth-child(2){min-height:147px;background:var(--tint);
+ border-color:color-mix(in srgb,var(--accent) 26%,var(--stroke))}
+.rank-podium button:nth-child(3){min-height:100px}
+.rank-podium small{font-size:10px;color:var(--muted);display:block}
+.rank-podium b{font-size:11px;display:block;line-height:1.35;margin:9px auto 5px;overflow-wrap:anywhere}
+.rank-podium strong{font-size:16px;color:var(--accent);display:block}
+.rank-medal{display:grid;place-items:center;width:35px;height:35px;margin:0 auto;
+ border-radius:50%;background:var(--card);border:1px solid var(--stroke);
+ color:var(--accent);font-weight:850;font-size:15px}
+.top-list{display:grid;gap:8px}.top-item{border:1px solid var(--stroke);background:var(--card);
+ border-radius:14px;display:flex;align-items:center;gap:10px;padding:13px 11px;color:var(--text);width:100%;text-align:left}
+.top-item b{font-size:12px;display:block}.top-item small{color:var(--muted);font-size:10px;margin-top:4px;display:block}
+.top-item strong{margin-left:auto;color:var(--accent);font-size:13px}
+.top-item>div{flex:1;min-width:0}
+.rank-note{font-size:10px;line-height:1.6;color:var(--muted);margin:11px 0}
+.rank-profile-card{border:1px solid var(--stroke);background:var(--card);border-radius:19px;padding:20px 17px;margin:20px 0}
+.rank-profile-head{display:flex;gap:12px;align-items:center}.rank-profile-head>.rank-medal{width:45px;height:45px;flex:none;font-size:17px;margin:0}
+.rank-profile-head b{font-size:17px;display:block;line-height:1.25;color:var(--text)}
+.rank-profile-head small{font-size:11px;display:block;color:var(--muted);margin-top:5px}
+.rank-profile-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:19px}
+.rank-profile-metrics>div{border-radius:12px;background:var(--tint);padding:12px 6px;text-align:center}
+.rank-profile-metrics b{color:var(--accent);font-size:17px;display:block}
+.rank-profile-metrics small{display:block;color:var(--muted);font-size:9px;margin-top:4px}
+.rank-setting-toggle{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--stroke);
+ border-radius:13px;background:var(--card);padding:12px;color:var(--text);font-size:12px}
+.rank-setting-toggle input{width:20px;height:20px;accent-color:var(--accent)}
+.rank-settings form{display:grid;gap:12px}.rank-settings form label{font-size:11px;display:grid;gap:7px}
+.rank-settings form input[type=date],.rank-settings form select{background:var(--card);border:1px solid var(--stroke);
+ border-radius:12px;padding:11px 12px;color:var(--text);min-height:43px;font:inherit}
+.rank-settings .admin-preview{margin:17px 0 0}
+.rank-stat-meter{height:6px;background:var(--tint);border-radius:100px;overflow:hidden;margin:9px 0}
+.rank-stat-meter>span{display:block;height:100%;border-radius:100px;background:var(--accent)}
+.rank-tap-hint{font-size:9px;color:var(--muted)}
+.rank-top-title{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:18px 0 12px}
+.rank-top-title h3{margin:0;font-size:15px;color:var(--text)}
+@media(prefers-reduced-motion:reduce){.rank-podium button{transition:none}}
