@@ -5,7 +5,7 @@
   const $ = id => document.getElementById(id);
   const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const state = { subjects:[], groups:[], notices:[], selectedGroup:null, subject:null,
-    rankingGroup:'', resultGroup:'', adminTab:'groups', sessions:[], sessionId:null, online:false };
+    rankingGroup:'', resultGroup:'', adminTab:'dashboard', sessions:[], sessionId:null, online:false };
   let auth = sessionStorage.getItem('nur-apk-admin-session') || '';
   let refreshing = false;
   const choice = (rows, selected='') => rows.map(r=>'<option value="'+escape(r.value)+'"'+(String(r.value)===String(selected)?' selected':'')+'>'+escape(r.text)+'</option>').join('');
@@ -183,9 +183,11 @@
     adminRoot.addEventListener('click',onAdminClick);
     adminRoot.addEventListener('change',onAdminChange);
   }
+  function premiumCtx(){return {root:$('admin-tab-content'),state,api,toast,refresh,renderAdmin,showAdminTab,dateText,tashkentDate}}
   async function renderAdmin(){
     if(!adminRoot)setupAdmin();
     if(!auth){
+      syncAdminEntry();
       adminRoot.innerHTML='<div class="appcard"><h3>Admin token bilan kirish</h3><form class="appform" data-form="login"><label>Maxfiy admin token<input name="token" type="password" autocomplete="off" required placeholder="Admin tokenni kiriting"></label><button class="appbtn" type="submit">Xavfsiz kirish</button><div class="page-message">Token ilova kodida saqlanmaydi; kirgandan keyin vaqtinchalik sessiya ishlatiladi.</div></form></div>';
       return;
     }
@@ -197,7 +199,7 @@
       const c=overview.counts||{};
       adminRoot.innerHTML='<div class="admin-grid"><div><strong>'+Number(c.groups||0)+'</strong><small>Guruhlar</small></div><div><strong>'+Number(c.students||0)+'</strong><small>O‘quvchilar</small></div><div><strong>'+Number(c.sessions||0)+'</strong><small>Mashg‘ulotlar</small></div></div><button class="appbtn small light" data-act="logout">Chiqish</button><div class="admin-tabs" id="admin-tabs"></div><div id="admin-tab-content"></div>';
       const root=$('admin-tabs');
-      for(const [id,title] of [['groups','Guruhlar'],['students','O‘quvchilar'],['marks','Natijalar'],['notices','E’lonlar']]){
+      for(const [id,title] of [['dashboard','Panel'],['groups','Guruhlar'],['students','O‘quvchilar'],['sessions','Mashg‘ulot'],['marks','Baholar'],['attendance','Davomat'],['analytics','Tahlil'],['notices','E’lonlar'],['archive','Arxiv'],['audit','Tarix'],['exports','CSV'],['security','Xavfsizlik'],['catalog','TOP 50']]){
         const b=el('button',state.adminTab===id?'on':'',title);b.dataset.tab=id;root.append(b);
       }
       await showAdminTab();
@@ -206,7 +208,11 @@
   async function showAdminTab(){
     const root=$('admin-tab-content');if(!root)return;
     $('admin-tabs')?.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.tab===state.adminTab));
-    if(state.adminTab==='groups'){
+    if(window.NurPremium && ['dashboard','students','sessions','attendance','analytics','notices','archive','audit','exports','catalog','security'].includes(state.adminTab)) {
+      await window.NurPremium.renderTab(state.adminTab,premiumCtx());
+      return;
+    }
+    if(state.adminTab==='groups'){ 
       root.innerHTML='<section class="appcard"><h3>Guruh qo‘shish</h3><form data-form="add-group" class="appform"><label>Fan<select required name="subject_id">'+choice(state.subjects.map(s=>({value:s.id,text:s.title})))+'</select></label><label>Guruh kodi<input required maxlength="16" name="code" placeholder="Masalan: K"></label><label>Guruh nomi<input maxlength="80" name="title" placeholder="Masalan: K guruhi"></label><button class="appbtn">Guruhni saqlash</button></form></section>';
       for(const g of state.groups){
         const row=el('div','appcard');row.innerHTML='<b>'+escape(g.title)+'</b><div class="small-group-label">'+escape(state.subjects.find(s=>s.id===g.subject_id)?.title)+' · '+g.student_count+' o‘quvchi</div><div class="action-row"><button class="appbtn secondary small" data-act="rename-group" data-id="'+g.id+'">Nomini o‘zgartirish</button><button class="appbtn danger small" data-act="archive-group" data-id="'+g.id+'">Arxivlash</button></div>';root.append(row);
@@ -270,11 +276,13 @@
   }
   async function onAdminSubmit(e){
     const form=e.target.closest('form[data-form]');if(!form)return;
-    e.preventDefault();const type=form.dataset.form;const data=Object.fromEntries(new FormData(form));const submit=form.querySelector('button[type=submit],button.appbtn');if(submit)submit.disabled=true;
+    e.preventDefault();
+    if(form.dataset.form?.startsWith('premium-') && window.NurPremium){await window.NurPremium.onSubmit(form,premiumCtx());return}
+    const type=form.dataset.form;const data=Object.fromEntries(new FormData(form));const submit=form.querySelector('button[type=submit],button.appbtn');if(submit)submit.disabled=true;
     try{
       if(type==='login'){
         const r=await api('/admin/login',{method:'POST',body:{token:data.token}});
-        auth=r.session;sessionStorage.setItem('nur-apk-admin-session',auth);toast('Administratorga xush kelibsiz');await renderAdmin();return;
+        auth=r.session;sessionStorage.setItem('nur-apk-admin-session',auth);syncAdminEntry();toast('Administratorga xush kelibsiz');await renderAdmin();return;
       }
       if(type==='add-group')await api('/admin/groups',{method:'POST',admin:true,body:{subject_id:Number(data.subject_id),code:data.code,title:data.title}});
       if(type==='add-student')await api('/admin/students',{method:'POST',admin:true,body:{group_id:Number(data.group_id),full_name:data.full_name}});
@@ -297,8 +305,9 @@
   async function onAdminClick(e){
     const btn=e.target.closest('button[data-act],button[data-tab]');if(!btn)return;
     if(btn.dataset.tab){state.adminTab=btn.dataset.tab;await showAdminTab();return}
+    if(btn.dataset.act?.startsWith('premium-') && window.NurPremium){await window.NurPremium.onClick(btn,premiumCtx());return}
     const act=btn.dataset.act,id=Number(btn.dataset.id);
-    if(act==='logout'){auth='';sessionStorage.removeItem('nur-apk-admin-session');await renderAdmin();return}
+    if(act==='logout'){auth='';sessionStorage.removeItem('nur-apk-admin-session');syncAdminEntry();await renderAdmin();return}
     if(act==='reload'){await renderAdmin();return}
     if(act==='choose-session'){state.sessionId=id;state.adminTab='marks';await showAdminTab();return}
     if(['archive-group','archive-student','archive-session','archive-notice'].includes(act)){
@@ -318,6 +327,7 @@
     }
   }
   async function onAdminChange(e){
+    if(e.target.dataset.premiumFilter && window.NurPremium){await window.NurPremium.onChange(e.target,premiumCtx());return}
     if(e.target.id==='admin-student-group')await showAdminStudents();
     if(e.target.id==='admin-session'){state.sessionId=Number(e.target.value);await showAdminMarks()}
   }
@@ -338,6 +348,13 @@
     };
   }
   setupAdmin();bindLanguage();
+  // The admin entry point is hidden from regular users. A signed session controls API rights.
+  const adminEntrance=document.querySelector('.adminbtn');
+  function syncAdminEntry(){if(adminEntrance)adminEntrance.style.display=auth?'block':'none'}
+  syncAdminEntry();
+  const intendedAdmin=new URLSearchParams(location.search).get('admin')==='1';
+  if(intendedAdmin)go('admin');
+
   const oldGroupHandler=window.openSubject;
   window.openSubject=function(name){const s=state.subjects.find(x=>x.title===name);if(s)return openSubjectDynamic(s);return oldGroupHandler(name)};
   refresh(true).then(()=>renderPublicResults());
