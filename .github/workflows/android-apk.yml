@@ -37,8 +37,8 @@ jobs:
           test -s android/app/src/main/assets/index.html
           test -s android/app/src/main/assets/i18n.js
           test -s android/app/src/main/assets/app-features.js
-          grep -q 'id="admin-identity"' android/app/src/main/assets/index.html
-          grep -q 'adminVerified(true)' android/app/src/main/assets/app-features.js
+          grep -q 'id="admin-identity"' index.html
+          grep -q 'adminVerified(true)' app-features.js
           test -s android/app/src/main/assets/liquid-glass.js
       - name: Sync latest app UI into Android assets
         run: |
