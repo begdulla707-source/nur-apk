@@ -11,6 +11,10 @@ on:
       - "premium-admin.js"
       - "premium-admin.css"
       - "backend/**"
+      - "liquid-glass.css"
+      - "liquid-glass.js"
+      - "ranking-ui.css"
+      - "ranking-ui.js"
 jobs:
   export:
     runs-on: ubuntu-latest
@@ -20,10 +24,16 @@ jobs:
         run: |
           node --check app-features.js
           node --check premium-admin.js
-          python -m py_compile backend/app.py backend/premium.py backend/init_db.py
+          node --check ranking-ui.js
+          node --check liquid-glass.js
+          python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/init_db.py
           test -s index.html
           test -s features.css
           test -s premium-admin.css
+          test -s liquid-glass.css
+          test -s ranking-ui.css
+          grep -q 'ranking-ui.js' index.html
+          grep -q 'liquid-glass.js' index.html
       - uses: actions/upload-artifact@v4
         with:
           name: nur-apk-mobile-html
@@ -33,4 +43,8 @@ jobs:
             app-features.js
             premium-admin.css
             premium-admin.js
+            ranking-ui.css
+            ranking-ui.js
+            liquid-glass.css
+            liquid-glass.js
           retention-days: 30
