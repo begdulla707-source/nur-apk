@@ -44,8 +44,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.1.0-preview
-          name: Nur oqiw orayi — preview APK
+          tag_name: v0.2.0-preview
+          name: Nur oqiw orayi — premium preview APK
           prerelease: true
           make_latest: false
           files: nur-oqiw-orayi-preview.apk
