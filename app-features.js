@@ -6,7 +6,12 @@
   const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const state = { subjects:[], groups:[], notices:[], selectedGroup:null, subject:null,
     rankingGroup:'', resultGroup:'', adminTab:'dashboard', sessions:[], sessionId:null, online:false };
-  let auth = sessionStorage.getItem('nur-apk-admin-session') || '';
+  const session = {
+    get:()=>{try{return sessionStorage.getItem('nur-apk-admin-session')||''}catch{return ''}},
+    set:v=>{try{sessionStorage.setItem('nur-apk-admin-session',v)}catch{}},
+    clear:()=>{try{session.clear()}catch{}}
+  };
+  let auth = session.get();
   let refreshing = false;
   const choice = (rows, selected='') => rows.map(r=>'<option value="'+escape(r.value)+'"'+(String(r.value)===String(selected)?' selected':'')+'>'+escape(r.text)+'</option>').join('');
   const groupOptions = () => state.groups.map(g=>({value:g.id,text:(state.subjects.find(s=>s.id===g.subject_id)?.title||'')+' / '+g.title}));
@@ -24,7 +29,7 @@
       const res=await fetch(API+path,{method:options.method||'GET',headers,body:options.body?JSON.stringify(options.body):undefined,signal:controller.signal,cache:'no-store'});
       const data=await res.json().catch(()=>({}));
       if(!res.ok) {
-        if(res.status===401&&options.admin){auth='';sessionStorage.removeItem('nur-apk-admin-session')}
+        if(res.status===401&&options.admin){auth='';session.clear()}
         throw new Error(data.error||('Server xatosi: '+res.status));
       }
       return data;
@@ -282,7 +287,7 @@
     try{
       if(type==='login'){
         const r=await api('/admin/login',{method:'POST',body:{token:data.token}});
-        auth=r.session;sessionStorage.setItem('nur-apk-admin-session',auth);syncAdminEntry();toast('Administratorga xush kelibsiz');await renderAdmin();return;
+        auth=r.session;session.set(auth);syncAdminEntry();toast('Administratorga xush kelibsiz');await renderAdmin();return;
       }
       if(type==='add-group')await api('/admin/groups',{method:'POST',admin:true,body:{subject_id:Number(data.subject_id),code:data.code,title:data.title}});
       if(type==='add-student')await api('/admin/students',{method:'POST',admin:true,body:{group_id:Number(data.group_id),full_name:data.full_name}});
@@ -307,7 +312,7 @@
     if(btn.dataset.tab){state.adminTab=btn.dataset.tab;await showAdminTab();return}
     if(btn.dataset.act?.startsWith('premium-') && window.NurPremium){await window.NurPremium.onClick(btn,premiumCtx());return}
     const act=btn.dataset.act,id=Number(btn.dataset.id);
-    if(act==='logout'){auth='';sessionStorage.removeItem('nur-apk-admin-session');syncAdminEntry();await renderAdmin();return}
+    if(act==='logout'){auth='';session.clear();syncAdminEntry();await renderAdmin();return}
     if(act==='reload'){await renderAdmin();return}
     if(act==='choose-session'){state.sessionId=id;state.adminTab='marks';await showAdminTab();return}
     if(['archive-group','archive-student','archive-session','archive-notice'].includes(act)){
