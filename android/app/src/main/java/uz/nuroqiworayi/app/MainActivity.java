@@ -7,20 +7,41 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebSettings;
 import android.widget.FrameLayout;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
- * Nur oqiw orayi is an independent Android shell for our HTTPS mobile site.
- * No Telegram bot integration, no storage, contacts, location or file permissions.
- * No JavaScript-to-native bridges or hidden download mechanisms.
+ * Offline-first Nur oqiw orayi Android client, separate from the Telegram bot.
+ * The interface is bundled inside the APK and loaded from a secure HTTPS-like
+ * origin. Only explicit static assets can be served by this WebViewClient.
+ *
+ * The independent Render API is contacted when internet is available.
+ * No native Javascript bridge, file permissions or native download mechanism.
  */
 public class MainActivity extends Activity {
-    private static final String HOME = "https://nur-apk.vercel.app/";
-    private static final String TRUSTED_HOST = "nur-apk.vercel.app";
+    private static final String APP_HOST = "appassets.androidplatform.net";
+    private static final String HOME = "https://" + APP_HOST + "/assets/index.html";
+    private static final Set<String> WEB_ASSETS = new HashSet<String>(Arrays.asList(
+        "index.html", "features.css", "premium-admin.css", "ranking-ui.css",
+        "liquid-glass.css", "app-features.js", "premium-admin.js",
+        "ranking-ui.js", "liquid-glass.js", "i18n.js"
+    ));
     private WebView webView;
+
+    private WebResourceResponse deny() {
+        return new WebResourceResponse("text/plain", "UTF-8",
+            new ByteArrayInputStream("Not found".getBytes(StandardCharsets.UTF_8)));
+    }
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,7 +49,7 @@ public class MainActivity extends Activity {
         getWindow().setNavigationBarColor(Color.rgb(239, 246, 241));
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(239, 246, 241));
-        WebSettings settings = webView.getSettings();
+        final WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);
@@ -41,10 +62,30 @@ public class MainActivity extends Activity {
         }
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient() {
-            @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+            @Override public WebResourceResponse shouldInterceptRequest(
+                    WebView view, WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                if (!"https".equals(uri.getScheme()) ||
+                    !APP_HOST.equalsIgnoreCase(uri.getHost())) return null;
+                String path = uri.getPath();
+                if (path == null || !path.startsWith("/assets/")) return deny();
+                String asset = path.substring("/assets/".length());
+                if (!WEB_ASSETS.contains(asset)) return deny();
+                String mime = "text/html";
+                if (asset.endsWith(".css")) mime = "text/css";
+                if (asset.endsWith(".js")) mime = "application/javascript";
+                try {
+                    return new WebResourceResponse(mime, "UTF-8", getAssets().open(asset));
+                } catch (IOException e) {
+                    return deny();
+                }
+            }
+            @Override public boolean shouldOverrideUrlLoading(
+                    WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 if ("https".equals(uri.getScheme()) &&
-                    TRUSTED_HOST.equalsIgnoreCase(uri.getHost())) {
+                    APP_HOST.equalsIgnoreCase(uri.getHost()) &&
+                    uri.getPath() != null && uri.getPath().startsWith("/assets/")) {
                     return false;
                 }
                 if ("https".equals(uri.getScheme()) || "mailto".equals(uri.getScheme())) {
@@ -66,12 +107,10 @@ public class MainActivity extends Activity {
         if (webView != null) webView.saveState(state);
         super.onSaveInstanceState(state);
     }
-
     @Override public void onBackPressed() {
         if (webView != null && webView.canGoBack()) webView.goBack();
         else super.onBackPressed();
     }
-
     @Override protected void onDestroy() {
         if (webView != null) {
             webView.stopLoading();
