@@ -37,6 +37,8 @@ jobs:
           test -s android/app/src/main/assets/index.html
           test -s android/app/src/main/assets/i18n.js
           test -s android/app/src/main/assets/app-features.js
+          grep -q 'id="admin-identity"' android/app/src/main/assets/index.html
+          grep -q 'adminVerified(true)' android/app/src/main/assets/app-features.js
           test -s android/app/src/main/assets/liquid-glass.js
       - name: Sync latest app UI into Android assets
         run: |
@@ -69,8 +71,9 @@ jobs:
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" /tmp/signature-check.txt
           "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
-          grep -q "versionCode='9'" /tmp/apk-badging.txt
+          grep -q "versionCode='10'" /tmp/apk-badging.txt
           grep -q "application-icon" /tmp/apk-badging.txt
+          grep -q "application-label:'Nur oqiw'" /tmp/apk-badging.txt
           unzip -l "$APK" | tee /tmp/apk-filelist.txt
           grep -q "res/drawable-nodpi.*nur_premium_icon" /tmp/apk-filelist.txt
           grep -q "assets/index.html" /tmp/apk-filelist.txt
@@ -82,19 +85,19 @@ jobs:
           grep -q "assets/payment-ui.js" /tmp/apk-filelist.txt
           grep -q "assets/paynet_qr.png" /tmp/apk-filelist.txt
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk nur-oqiw-orayi-liquid-v0.9.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Nur_oqiw.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: nur-oqiw-orayi-preview-apk
-          path: nur-oqiw-orayi-liquid-v0.9.apk
+          name: Nur-oqiw-installable-APK
+          path: Nur_oqiw.apk
           retention-days: 30
       - name: Publish preview release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.9.0-preview
-          name: Nur oqiw orayi — iOS M4 F3 + Paynet payment requests v0.9
+          tag_name: build-10
+          name: Nur oqiw
           prerelease: true
           make_latest: false
-          files: nur-oqiw-orayi-liquid-v0.9.apk
-          body: "M4/F3 math physics icons, Paynet payment requests, manual admin verification, unchanged main theme and launcher icon. Auto-payments are NOT live without official Paynet credentials; admin must verify real transactions."
+          files: Nur_oqiw.apk
+          body: "Nur oqiw: blue admin verification badge shown only after login; smoother Liquid Glass motion, lighter rendering, offline interface, Paynet payment requests (manual verification only). Existing premium icon unchanged. Debug-signed preview; not a Play Store release."
