@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - "android/**"
+      - "index.html"
+      - "*.css"
+      - "*.js"
+      - "backend/**"
       - ".github/workflows/android-apk.yml"
 permissions:
   contents: write
@@ -25,12 +29,20 @@ jobs:
           node --check ranking-ui.js
           node --check liquid-glass.js
           node --check i18n.js
-          python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/init_db.py
+          node --check contact-ui.js
+          python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/contact.py backend/init_db.py
           test -s android/app/src/main/res/drawable-nodpi/nur_premium_icon.webp
           test -s android/app/src/main/assets/index.html
           test -s android/app/src/main/assets/i18n.js
           test -s android/app/src/main/assets/app-features.js
           test -s android/app/src/main/assets/liquid-glass.js
+      - name: Sync latest app UI into Android assets
+        run: |
+          mkdir -p android/app/src/main/assets
+          cp index.html features.css premium-admin.css ranking-ui.css liquid-glass.css polish-v08.css android/app/src/main/assets/
+          cp app-features.js premium-admin.js ranking-ui.js liquid-glass.js i18n.js contact-ui.js android/app/src/main/assets/
+          test -s android/app/src/main/assets/contact-ui.js
+          test -s android/app/src/main/assets/polish-v08.css
       - name: Install Android SDK
         run: |
           SDKMANAGER="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -type f -name sdkmanager | head -n 1)"
@@ -52,7 +64,7 @@ jobs:
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" /tmp/signature-check.txt
           "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
-          grep -q "versionCode='7'" /tmp/apk-badging.txt
+          grep -q "versionCode='8'" /tmp/apk-badging.txt
           grep -q "application-icon" /tmp/apk-badging.txt
           unzip -l "$APK" | tee /tmp/apk-filelist.txt
           grep -q "res/drawable-nodpi.*nur_premium_icon" /tmp/apk-filelist.txt
@@ -60,20 +72,22 @@ jobs:
           grep -q "assets/i18n.js" /tmp/apk-filelist.txt
           grep -q "assets/liquid-glass.js" /tmp/apk-filelist.txt
           grep -q "assets/app-features.js" /tmp/apk-filelist.txt
+          grep -q "assets/contact-ui.js" /tmp/apk-filelist.txt
+          grep -q "assets/polish-v08.css" /tmp/apk-filelist.txt
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk nur-oqiw-orayi-liquid-v0.7.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk nur-oqiw-orayi-liquid-v0.8.apk
       - uses: actions/upload-artifact@v4
         with:
           name: nur-oqiw-orayi-preview-apk
-          path: nur-oqiw-orayi-liquid-v0.7.apk
+          path: nur-oqiw-orayi-liquid-v0.8.apk
           retention-days: 30
       - name: Publish preview release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.7.0-preview
-          name: Nur oqiw orayi — offline Liquid Glass 0.7
+          tag_name: v0.8.0-preview
+          name: Nur oqiw orayi — iOS menu 0.8 + admin inbox
           prerelease: true
           make_latest: false
-          files: nur-oqiw-orayi-liquid-v0.7.apk
+          files: nur-oqiw-orayi-liquid-v0.8.apk
           body: "Gradle-built, APK Signature v2 verified, unchanged premium icon, no native CSV bridge. Preview sideload may still trigger Android Play Protect; Play Store release requires secure production signing."
