@@ -304,8 +304,17 @@
     if(v.exportGroup)search.set('group_id',v.exportGroup);
     const resp=await fetch('https://nur-apk-api.onrender.com/api/admin/v2/export?'+search,{headers:{Authorization:'Bearer '+auth},cache:'no-store'});
     if(!resp.ok)throw new Error('Hisobot yuklanmadi ('+resp.status+')');
-    const blob=await resp.blob();const href=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=href;a.download='nur-apk-'+kind+'-'+ymd()+'.csv';
+    const blob=await resp.blob();
+    const filename='nur-apk-'+kind+'-'+ymd()+'.csv';
+    if(window.NurFiles && typeof window.NurFiles.saveCsv==='function'){
+      const dataUrl=await new Promise((resolve,reject)=>{
+        const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Faylni tayyorlashda xatolik'));reader.readAsDataURL(blob);
+      });
+      window.NurFiles.saveCsv(filename,String(dataUrl).split(',')[1]);
+      ctx.toast('Telefonning fayl saqlash oynasi ochiladi');return;
+    }
+    const href=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=href;a.download=filename;
     document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(href),2500);
     ctx.toast('CSV hisobot yuklandi');
   }
