@@ -352,6 +352,24 @@
   const adminEntrance=document.querySelector('.adminbtn');
   function syncAdminEntry(){if(adminEntrance)adminEntrance.style.display=auth?'block':'none'}
   syncAdminEntry();
+  // Six deliberate taps on the N logo reveal the token login inside the Android app.
+  // This is only a discovery gesture; server-side token verification remains mandatory.
+  const launchLogo=document.querySelector('#home .brand .logo');
+  if(launchLogo){
+    launchLogo.setAttribute('tabindex','0');
+    launchLogo.setAttribute('role','button');
+    launchLogo.setAttribute('aria-label','Administrator hisobiga kirish');
+    let count=0,last=0;
+    const launchAdmin=()=>{
+      if(auth){go('admin');return}
+      const now=Date.now();
+      if(now-last>5000)count=0;
+      last=now;
+      if(++count>=6){count=0;go('admin')}
+    };
+    launchLogo.addEventListener('click',launchAdmin);
+    launchLogo.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();launchAdmin()}});
+  }
   const intendedAdmin=new URLSearchParams(location.search).get('admin')==='1';
   if(intendedAdmin)go('admin');
 
