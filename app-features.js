@@ -9,7 +9,7 @@
   const session = {
     get:()=>{try{return sessionStorage.getItem('nur-apk-admin-session')||''}catch{return ''}},
     set:v=>{try{sessionStorage.setItem('nur-apk-admin-session',v)}catch{}},
-    clear:()=>{try{session.clear()}catch{}}
+    clear:()=>{try{sessionStorage.removeItem('nur-apk-admin-session')}catch{}}
   };
   let auth = session.get();
   let refreshing = false;
