@@ -20,14 +20,16 @@ body.dark{color-scheme:dark;--bg:#101c16;--card:#1b2e23;--text:#e9f8ee;--muted:#
 <link rel="stylesheet" href="ranking-ui.css">
 <link rel="stylesheet" href="liquid-glass.css">
 <link rel="stylesheet" href="polish-v08.css">
+<link rel="stylesheet" href="payment-ui.css">
 </head>
 <body><main class="phone">
 <section id="home" class="view show"><header class="hero"><div class="top"><button class="menubtn" aria-label="Menyu" onclick="openMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><div class="brand"><div class="logo">N</div><div><small>TA’LIM MARKAZI</small><b>Nur oqiw orayi</b></div></div></div><h1>Har bir qadam —<br>yangi imkoniyat.</h1><p>O‘rganing, rivojlaning va natijalaringizni kuzatib boring.</p></header>
 <div class="content"><div class="stats"><div class="stat"><small>JAMI O‘QUVCHILAR</small><strong>—</strong><span>Baza kutilmoqda</span></div><div class="stat"><small>FANLAR</small><strong>4</strong><span>Ta’lim yo‘nalishi</span></div></div><div class="section-head"><h2>Ta’lim yo‘nalishlari</h2><small>Fan tanlang</small></div><div class="list">
-<button class="subject" onclick="go('groups')"><span class="symbol">M</span><span class="subject-info"><b>Matematika</b><small>7 ta o‘quv guruhi</small></span><span class="arrow">›</span></button>
-<button class="subject" onclick="openSubject('Fizika')"><span class="symbol">F</span><span class="subject-info"><b>Fizika</b><small>Ma’lumotlar tayyorlanmoqda</small></span><span class="arrow">›</span></button>
+<button class="subject" onclick="go('groups')"><span class="symbol" aria-label="Koordinata — matematika"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20V4M3 20h18M6 15l4-4 4 2 6-8"/></svg></span><span class="subject-info"><b>Matematika</b><small>7 ta o‘quv guruhi</small></span><span class="arrow">›</span></button>
+<button class="subject" onclick="openSubject('Fizika')"><span class="symbol" aria-label="Elektr — fizika"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 10-13h-7V2Z"/></svg></span><span class="subject-info"><b>Fizika</b><small>Ma’lumotlar tayyorlanmoqda</small></span><span class="arrow">›</span></button>
 <button class="subject" onclick="openSubject('Rus tili')"><span class="symbol">RU</span><span class="subject-info"><b>Rus tili</b><small>Ma’lumotlar tayyorlanmoqda</small></span><span class="arrow">›</span></button>
 <button class="subject" onclick="openSubject('Ingliz tili')"><span class="symbol">EN</span><span class="subject-info"><b>Ingliz tili</b><small>Ma’lumotlar tayyorlanmoqda</small></span><span class="arrow">›</span></button></div>
+<button class="payment-home-card" type="button" onclick="go('payments')" aria-label="To‘lov bo‘limini ochish"><span class="payment-home-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="13" rx="3"/><path d="M2.5 10h19M16 15h2.5M7 6V4.5c0-1 1-1.5 2-1.5h8"/></svg></span><span class="payment-home-text"><strong>To‘lovlar</strong><small>Paynet QR · To‘lov holatini tekshirish</small></span><span class="payment-home-arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></span></button>
 <div class="note"><span class="i">i</span><div><b>Ma’lumot uchun</b><p>Reyting va natijalar xavfsiz bazaga ulangach avtomatik yangilanadi.</p></div></div></div></section>
 <section class="view subpage" id="rating"><button class="back" onclick="go('home')">Bosh menyu</button><h2>Reyting</h2><p class="desc">O‘quvchilarning o‘zlashtirish ko‘rsatkichlari.</p><div id="rating-filters" class="filters"></div><div class="empty" id="ratingEmpty">Hozircha reyting ma’lumotlari mavjud emas. Administrator natijalarni kiritgach, reyting avtomatik ko‘rsatiladi.</div></section>
 <section class="view subpage" id="results"><button class="back" onclick="go('home')">Bosh menyu</button><h2>Natijalar</h2><p class="desc">Mashg‘ulotlar va testlar bo‘yicha natijalar.</p><div id="results-filters" class="filters"></div><div class="empty" id="resultsEmpty">Hozircha natijalar joylanmagan. Administrator ma’lumot kiritgach, natijalarni shu yerda ko‘rasiz.</div></section>
@@ -43,6 +45,42 @@ body.dark{color-scheme:dark;--bg:#101c16;--card:#1b2e23;--text:#e9f8ee;--muted:#
 <label>Xabar matni<textarea name="message" rows="6" minlength="5" maxlength="2000" required placeholder="Administratorga xabaringizni yozing..."></textarea></label>
 <p class="page-message">Ma’lumotlar faqat administratorning shaxsiy xabarlar bo‘limida ko‘rinadi.</p><button type="submit" class="appbtn">Xabarni yuborish</button><div id="contact-feedback" role="status" aria-live="polite"></div>
 </form></section>
+<section class="view subpage" id="payments">
+<button class="back" onclick="go('home')" type="button">Bosh menyu</button>
+<h2>To‘lovlar</h2><p class="desc">Nur oqiw orayi uchun Paynet QR orqali to‘lov so‘rovi va uning holati.</p>
+<div id="payment-page-status" role="status" aria-live="polite"></div>
+<div class="payment-block">
+<h3>To‘lov qilish</h3><p>O‘quvchining ism-familiyasi, guruhini va qaysi oy uchun to‘lashini tanlang. Summani administrator belgilaydi.</p>
+<form id="payment-public-form" class="appform" hidden>
+<label>O‘quvchining ism-familiyasi<input required name="payer_name" maxlength="120" minlength="3" autocomplete="name" placeholder="Ism Familiya"></label>
+<label>Kim to‘layapti?<select name="payer_type" required><option value="student">O‘quvchi</option><option value="parent">Ota-ona</option></select></label>
+<label>Guruh<select id="payment-group" name="group_id" required><option value="">Guruhni tanlang</option></select></label>
+<label>To‘lov davri<input name="period" type="month" required></label>
+<div class="payment-amount"><span>To‘lanadigan summa</span><b id="payment-preview-amount">—</b></div>
+<button type="submit" class="appbtn" disabled>To‘lov buyurtmasini yaratish</button>
+</form></div>
+<div id="payment-order-panel" class="payment-block" hidden>
+<h3>Paynet orqali to‘lash</h3>
+<div class="payment-status-head"><b id="payment-order-code"></b><span id="payment-order-status" class="payment-status-chip"></span></div>
+<p id="payment-order-summary" class="page-message"></p>
+<div class="payment-amount"><span>Summa</span><b id="payment-order-amount">—</b></div>
+<div id="payment-qr-section" hidden>
+<div class="payment-payee"><small>Paynet QR'dagi mablag‘ oluvchi</small><strong id="payment-payee-name">IBIRAYM NURJANOV</strong></div>
+<img src="paynet_qr.png" class="payment-qr" alt="Paynet orqali to‘lov qilish QR kodi" width="414" height="414">
+<p class="payment-alert warning">To‘lovdan avval mablag‘ oluvchi va summani tekshiring. QR'ni Paynet ilovasidan skanerlang yoki ikkinchi telefondan foydalaning.</p>
+</div>
+<p id="payment-final-message" class="page-message"></p>
+<form id="payment-review-form" class="appform" hidden>
+<label>Paynet operatsiya raqami<input name="payment_reference" minlength="5" maxlength="120" required placeholder="Chekdagi operatsiya raqami"></label>
+<label>Izoh (ixtiyoriy)<textarea name="note" maxlength="300" placeholder="Qo‘shimcha ma’lumot"></textarea></label>
+<button type="submit" class="appbtn">To‘lov qildim — tekshirishga yuborish</button>
+</form>
+<div class="payment-action-row"><button id="payment-refresh-status" type="button" class="appbtn secondary">Holatini yangilash</button><button id="payment-copy-token" type="button" class="appbtn light">Tekshirish kodini nusxalash</button></div>
+</div>
+<h3 class="payment-history-title">To‘lovlarim</h3>
+<div id="payment-my-orders"></div>
+<p class="page-message">“To‘lov tasdiqlandi” xabari faqat haqiqiy Paynet operatsiyasi administrator tomonidan tekshirilgandan keyin chiqadi. Avtomatik tekshiruv hozir ulanmagan.</p>
+</section>
 <nav class="tabbar" aria-label="Navigatsiya"><button class="active" data-page="home" onclick="go('home')"><svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11h-6v-7H9v7H3z"/></svg>Bosh menyu</button><button data-page="rating" onclick="go('rating')"><svg viewBox="0 0 24 24"><path d="M4 21v-8h4v8M10 21V6h4v15M16 21V10h4v11M2 21h20"/></svg>Reyting</button><button data-page="results" onclick="go('results')"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Natijalar</button></nav></main>
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 <aside class="drawer" id="drawer" aria-hidden="true"><div class="drawer-head"><h3>Tezkor menyu</h3><button class="x" onclick="closeMenu()" aria-label="Yopish">×</button></div><p class="drawer-info">Ilova sozlamalarini shu yerdan boshqaring.</p><div class="setting">Tungi rejim <button id="theme-switch" class="switch" aria-label="Tungi rejim" aria-pressed="false" onclick="toggleTheme()"></button></div><div class="language-panel"><div class="language-heading">Tilni tanlang <small>Language / Язык / Til</small></div><div class="langs" role="group" aria-label="Tilni tanlash"><button class="on" data-language="UZ" onclick="lang(this,'UZ')"><strong>UZ</strong><small>O‘zbekcha</small></button><button data-language="EN" onclick="lang(this,'EN')"><strong>EN</strong><small>English</small></button><button data-language="RU" onclick="lang(this,'RU')"><strong>RU</strong><small>Русский</small></button><button data-language="QQ" onclick="lang(this,'QQ')"><strong>QQ</strong><small>Qaraqalpaqsha</small></button></div></div><button class="adminbtn" onclick="closeMenu();go('admin')"><span>Admin panelga kirish</span><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></button><button class="contact-launch" type="button" onclick="closeMenu();go('contact')"><span>Написать администратору</span><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 20l.9-4A8.5 8.5 0 1 1 20 11.5Z"/><path d="M8 11h8M8 14h5"/></svg></button><p id="lang-msg" class="fineprint">Interfeys tili: O‘zbekcha.</p></aside>
@@ -51,7 +89,7 @@ body.dark{color-scheme:dark;--bg:#101c16;--card:#1b2e23;--text:#e9f8ee;--muted:#
 const find=id=>document.getElementById(id),groups=['A','B','C','V','G','J','H'];
 for(const g of groups){const b=document.createElement('button');b.className='group';b.textContent=g+' guruhi';const small=document.createElement('small');small.textContent='Guruhni ochish';b.append(small);b.onclick=()=>{find('group-title').textContent=g+' guruhi';go('group')};find('group-list').append(b)}
 for(const id of ['rating-filters','results-filters']){const root=find(id);for(const name of ['Barchasi',...groups]){const b=document.createElement('button');b.className='chip'+(name==='Barchasi'?' on':'');b.textContent=name==='Barchasi'?name:name+' guruhi';b.onclick=()=>{root.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));b.classList.add('on')};root.append(b)}}
-function go(id){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('show',x.id===id));const current=id==='student-profile'?'rating':['groups','group','subject','admin','contact'].includes(id)?'home':id;document.querySelectorAll('.tabbar button').forEach(x=>x.classList.toggle('active',x.dataset.page===current));closeMenu();scrollTo({top:0,behavior:'instant'})}
+function go(id){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('show',x.id===id));const current=id==='student-profile'?'rating':['groups','group','subject','admin','contact','payments'].includes(id)?'home':id;document.querySelectorAll('.tabbar button').forEach(x=>x.classList.toggle('active',x.dataset.page===current));closeMenu();scrollTo({top:0,behavior:'instant'})}
 function openSubject(name){find('subject-title').textContent=name;go('subject')}
 function openMenu(){find('drawer').classList.add('open');find('overlay').classList.add('open');find('drawer').setAttribute('aria-hidden','false')}
 function closeMenu(){find('drawer').classList.remove('open');find('overlay').classList.remove('open');find('drawer').setAttribute('aria-hidden','true')}
@@ -66,4 +104,5 @@ addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 <script src="liquid-glass.js" defer></script>
 <script src="i18n.js" defer></script>
 <script src="contact-ui.js" defer></script>
+<script src="payment-ui.js" defer></script>
 </body></html>
