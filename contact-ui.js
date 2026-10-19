@@ -3,7 +3,7 @@
  'use strict';
  const API='https://nur-apk-api.onrender.com/api';
  const $=id=>document.getElementById(id);
- const clean=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','&#39;'}[c]));
+ const clean=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  function messageDate(raw){try{return new Intl.DateTimeFormat('uz-UZ',{timeZone:'Asia/Tashkent',dateStyle:'medium',timeStyle:'short'}).format(new Date(raw))}catch{return String(raw)}}
  const form=$('public-contact-form');
  if(form){
