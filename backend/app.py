@@ -334,3 +334,5 @@ from backend.premium import register_premium
 register_premium(app, db, admin_only, require_int, require_text, request_json, bad)
 from backend.ranking_plus import register_ranking
 register_ranking(app, db, admin_only, require_int, request_json, bad)
+from backend.contact import register_contact
+register_contact(app, db, admin_only, request_json, bad)
