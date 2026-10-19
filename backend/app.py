@@ -116,7 +116,9 @@ def bootstrap():
           FROM app_groups g LEFT JOIN app_students s ON s.group_id=g.id AND NOT s.archived
           WHERE NOT g.archived GROUP BY g.id ORDER BY g.subject_id,g.id""").fetchall()
         notices = conn.execute("""SELECT id,title,body,created_at FROM app_notices
-          WHERE NOT archived ORDER BY created_at DESC LIMIT 20""").fetchall()
+          WHERE NOT archived AND group_id IS NULL AND publish_at<=now()
+          AND (expires_at IS NULL OR expires_at>now())
+          ORDER BY pinned DESC,publish_at DESC LIMIT 20""").fetchall()
     return jsonify({"subjects": subjects, "groups": groups, "notices": notices,
                     "total_students": sum(g["student_count"] for g in groups)})
 
@@ -145,9 +147,9 @@ def ranking():
      COUNT(m.id) FILTER (WHERE NOT m.absent)::int AS tests,
      COUNT(m.id) FILTER (WHERE m.absent)::int AS absences
      FROM app_students s JOIN app_groups g ON g.id=s.group_id
-     LEFT JOIN app_marks m ON m.student_id=s.id
-     LEFT JOIN app_sessions se ON se.id=m.session_id
-     WHERE """ + " AND ".join(where) + """ AND (se.id IS NULL OR NOT se.archived)
+     LEFT JOIN app_marks m ON m.student_id=s.id AND EXISTS (
+        SELECT 1 FROM app_sessions ms WHERE ms.id=m.session_id AND ms.group_id=s.group_id AND NOT ms.archived)
+     WHERE """ + " AND ".join(where) + """
      GROUP BY s.id,g.id ORDER BY average DESC NULLS LAST, tests DESC,s.full_name LIMIT 500"""
     with db() as conn:
         rows = conn.execute(sql, params).fetchall()
@@ -345,3 +347,7 @@ def archive_notice(notice_id):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "10000")))
+
+# Routes for the independent premium mobile administrator.
+from backend.premium import register_premium
+register_premium(app, db, admin_only, require_int, require_text, request_json, bad)
