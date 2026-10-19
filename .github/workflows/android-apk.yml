@@ -21,7 +21,9 @@ jobs:
       - name: Validate web app syntax
         run: |
           node --check app-features.js
-          python -m py_compile backend/app.py backend/init_db.py
+          node --check premium-admin.js
+          python -m py_compile backend/app.py backend/premium.py backend/init_db.py
+          test -s android/app/src/main/res/drawable-nodpi/nur_premium_icon.webp
       - name: Install Android SDK
         run: |
           SDKMANAGER="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -type f -name sdkmanager | head -n 1)"
@@ -33,20 +35,34 @@ jobs:
           gradle-version: '8.9'
       - name: Build installable debug APK
         run: gradle --no-daemon -p android assembleDebug
+      - name: Verify APK validity, signing and real launcher icon
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          test -s "$APK"
+          "$BUILD_TOOLS/apksigner" verify --verbose "$APK" | tee /tmp/signature-check.txt
+          grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" /tmp/signature-check.txt
+          "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
+          grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
+          grep -q "versionCode='3'" /tmp/apk-badging.txt
+          grep -q "application-icon" /tmp/apk-badging.txt
+          unzip -l "$APK" | tee /tmp/apk-filelist.txt
+          grep -q "res/drawable-nodpi.*nur_premium_icon" /tmp/apk-filelist.txt
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk nur-oqiw-orayi-preview.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk nur-oqiw-orayi-premium-v0.3.apk
       - uses: actions/upload-artifact@v4
         with:
           name: nur-oqiw-orayi-preview-apk
-          path: nur-oqiw-orayi-preview.apk
+          path: nur-oqiw-orayi-premium-v0.3.apk
           retention-days: 30
       - name: Publish preview release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.2.0-preview
-          name: Nur oqiw orayi — premium preview APK
+          tag_name: v0.3.0-preview
+          name: Nur oqiw orayi — premium app v0.3 with icon
           prerelease: true
           make_latest: false
-          files: nur-oqiw-orayi-preview.apk
-          body: "Preview build for testing. Not yet Play Store release."
+          files: nur-oqiw-orayi-premium-v0.3.apk
+          body: "Fresh Gradle build with transparent app icon, verified APK signing and icon resource. Preview release; not yet Google Play build."
