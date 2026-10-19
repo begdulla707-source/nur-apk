@@ -130,33 +130,6 @@ def students():
         WHERE group_id=%s AND NOT archived ORDER BY full_name,id""", (group_id,)).fetchall()
     return jsonify({"students": rows})
 
-@app.get("/api/ranking")
-def ranking():
-    group_id = request.args.get("group_id")
-    subject_id = request.args.get("subject_id")
-    params = []
-    where = ["NOT s.archived", "NOT g.archived"]
-    if group_id:
-        where.append("g.id=%s")
-        params.append(require_int(group_id, "group_id"))
-    if subject_id:
-        where.append("g.subject_id=%s")
-        params.append(require_int(subject_id, "subject_id"))
-    sql = """SELECT s.id AS student_id,s.full_name,g.id AS group_id,g.title AS group_title,
-     g.subject_id, ROUND(AVG(m.score) FILTER (WHERE NOT m.absent),1)::float8 AS average,
-     COUNT(m.id) FILTER (WHERE NOT m.absent)::int AS tests,
-     COUNT(m.id) FILTER (WHERE m.absent)::int AS absences
-     FROM app_students s JOIN app_groups g ON g.id=s.group_id
-     LEFT JOIN app_marks m ON m.student_id=s.id AND EXISTS (
-        SELECT 1 FROM app_sessions ms WHERE ms.id=m.session_id AND ms.group_id=s.group_id AND NOT ms.archived)
-     WHERE """ + " AND ".join(where) + """
-     GROUP BY s.id,g.id ORDER BY average DESC NULLS LAST, tests DESC,s.full_name LIMIT 500"""
-    with db() as conn:
-        rows = conn.execute(sql, params).fetchall()
-    for i, row in enumerate(rows, 1):
-        row["rank"] = i if row["tests"] else None
-    return jsonify({"ranking": rows})
-
 @app.get("/api/results")
 def results():
     group_id = request.args.get("group_id")
@@ -351,3 +324,5 @@ if __name__ == "__main__":
 # Routes for the independent premium mobile administrator.
 from backend.premium import register_premium
 register_premium(app, db, admin_only, require_int, require_text, request_json, bad)
+from backend.ranking_plus import register_ranking
+register_ranking(app, db, admin_only, require_int, request_json, bad)
