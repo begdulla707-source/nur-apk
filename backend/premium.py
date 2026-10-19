@@ -83,9 +83,9 @@ def register_premium(app, db, admin_only, require_int, require_text, request_jso
               (SELECT count(*)::int FROM app_groups WHERE NOT archived) AS groups,
               (SELECT count(*)::int FROM app_students WHERE NOT archived) AS students,
               (SELECT count(*)::int FROM app_sessions WHERE NOT archived) AS sessions,
-              (SELECT count(*)::int FROM app_marks) AS marks,
-              (SELECT count(*)::int FROM app_marks WHERE absent) AS dq,
-              (SELECT ROUND(AVG(score) FILTER(WHERE NOT absent),1)::float8 FROM app_marks) AS avg_score,
+              (SELECT count(*)::int FROM app_marks m JOIN app_sessions se ON se.id=m.session_id WHERE NOT se.archived) AS marks,
+              (SELECT count(*)::int FROM app_marks m JOIN app_sessions se ON se.id=m.session_id WHERE m.absent AND NOT se.archived) AS dq,
+              (SELECT ROUND(AVG(m.score) FILTER(WHERE NOT m.absent),1)::float8 FROM app_marks m JOIN app_sessions se ON se.id=m.session_id WHERE NOT se.archived) AS avg_score,
               (SELECT count(*)::int FROM app_notices WHERE NOT archived AND publish_at <= now()) AS notices""").fetchone()
             groups = conn.execute("""SELECT g.id,g.title,s.title AS subject,
                 count(DISTINCT st.id)::int AS students,
@@ -306,8 +306,8 @@ def register_premium(app, db, admin_only, require_int, require_text, request_jso
                 count(m.id) FILTER (WHERE m.absent)::int AS absences,
                 count(m.id) FILTER (WHERE NOT m.absent)::int AS scores
                 FROM app_students st JOIN app_groups g ON g.id=st.group_id
-                LEFT JOIN app_marks m ON m.student_id=st.id
-                LEFT JOIN app_sessions se ON se.id=m.session_id AND NOT se.archived
+                LEFT JOIN app_marks m ON m.student_id=st.id AND EXISTS (
+                    SELECT 1 FROM app_sessions se WHERE se.id=m.session_id AND NOT se.archived AND se.group_id=st.group_id)
                 WHERE NOT st.archived AND NOT g.archived
                 GROUP BY st.id,g.id
                 HAVING (AVG(m.score) FILTER(WHERE NOT m.absent) < 60)
@@ -428,7 +428,8 @@ def register_premium(app, db, admin_only, require_int, require_text, request_jso
                     count(m.id) FILTER (WHERE m.absent)
                     FROM app_students st JOIN app_groups g ON g.id=st.group_id
                     JOIN app_subjects sub ON sub.id=g.subject_id
-                    LEFT JOIN app_marks m ON m.student_id=st.id
+                    LEFT JOIN app_marks m ON m.student_id=st.id AND EXISTS (
+                        SELECT 1 FROM app_sessions se WHERE se.id=m.session_id AND NOT se.archived AND se.group_id=st.group_id)
                     WHERE NOT st.archived AND (%s::bigint IS NULL OR g.id=%s)
                     GROUP BY st.id,g.id,sub.title ORDER BY avg(m.score) DESC NULLS LAST""",(group_id,group_id)).fetchall()
             else:
