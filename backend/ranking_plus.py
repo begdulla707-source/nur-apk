@@ -89,11 +89,12 @@ def register_ranking(app, db, admin_only, require_int, request_json, bad):
 
     @app.get("/api/students/<int:student_id>/profile")
     def public_profile(student_id):
+        group_id=parse_id("group_id")
         with db() as conn:
             config=get_settings(conn)
             if not config["is_published"]:
                 return bad("Reyting hozircha e’lon qilinmagan",403)
-            top=calculate(conn,config)
+            top=calculate(conn,config,group_id=group_id)
             selected=next((x for x in top if x["student_id"]==student_id
                           and x["rank"] is not None and x["rank"]<=config["top_limit"]),None)
             if selected is None:
