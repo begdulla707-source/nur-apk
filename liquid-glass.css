@@ -96,3 +96,34 @@ body:has(.drawer.open) .menubtn{transform:rotate(-10deg) scale(1.05)}
  .overlay,.menubtn{transition-duration:.01ms!important;animation:none!important}
  .glass-tap{display:none}
 }
+
+
+/* v0.5: low-jank mobile touch, better icon alignment and softly rounded drawer. */
+.tabbar{touch-action:pan-y;overflow:hidden;border-radius:29px;padding-top:8px;padding-bottom:calc(9px + env(safe-area-inset-bottom));-webkit-backdrop-filter:blur(11px);backdrop-filter:blur(11px)}
+.tabbar button{min-height:54px;height:54px;padding:5px 0 0;gap:5px;border-radius:22px!important;touch-action:pan-y}
+.tabbar button svg{transform:translate3d(0,2px,0)}
+.tabbar button.active svg{transform:translate3d(0,1px,0) scale(1.06)}
+.glass-bubble{top:0;transition:transform .38s cubic-bezier(.24,1.1,.32,1),width .36s ease,height .36s ease;will-change:transform}
+.glass-bubble>span{-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);border-radius:23px}
+.glass-bubble.moving>span{animation-duration:.35s}
+.glass-dragging{touch-action:none!important}
+.glass-dragging button{touch-action:none!important}
+.glass-dragging .glass-bubble{transition:transform .12s cubic-bezier(.2,.8,.2,1),width .12s ease,height .12s ease!important}
+.glass-dragging .glass-bubble>span{transform:scale(1.045);box-shadow:0 6px 18px #115c452b,0 1px 0 #ffffffb3 inset}
+.tabbar button.drag-preview{color:var(--accent)}
+.drawer{border-radius:0 29px 29px 0;overflow-y:auto;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);will-change:auto}
+.drawer.open{transform:translate3d(0,0,0) scale(1)}
+.overlay.open{-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.drawer:before{border-radius:0 29px 0 0}
+.drawer .setting{border-radius:19px}
+.drawer .adminbtn{display:block!important;border-radius:19px;font-weight:800;min-height:51px}
+@media(min-width:550px){.drawer{border-radius:22px 29px 29px 22px}}
+@media(max-width:420px){
+ .tabbar{-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
+ .glass-bubble>span{-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+ .drawer{-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
+ .overlay.open{-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .glass-bubble,.tabbar button,.tabbar button svg,.drawer,.overlay{transition-duration:0.01ms!important}
+}
