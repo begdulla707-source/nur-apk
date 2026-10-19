@@ -1,0 +1,28 @@
+name: Export Mobile HTML
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/web-export.yml"
+      - "index.html"
+      - "features.css"
+      - "app-features.js"
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax and source files
+        run: |
+          node --check app-features.js
+          test -s index.html
+          test -s features.css
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nur-apk-mobile-html
+          path: |
+            index.html
+            features.css
+            app-features.js
+          retention-days: 30
