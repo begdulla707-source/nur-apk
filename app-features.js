@@ -216,7 +216,7 @@
       const c=overview.counts||{};
       adminRoot.innerHTML='<div class="admin-grid"><div><strong>'+Number(c.groups||0)+'</strong><small>Guruhlar</small></div><div><strong>'+Number(c.students||0)+'</strong><small>O‘quvchilar</small></div><div><strong>'+Number(c.sessions||0)+'</strong><small>Mashg‘ulotlar</small></div></div><button class="appbtn small light" data-act="logout">Chiqish</button><div class="admin-tabs" id="admin-tabs"></div><div id="admin-tab-content"></div>';
       const root=$('admin-tabs');
-      for(const [id,title] of [['dashboard','Panel'],['groups','Guruhlar'],['students','O‘quvchilar'],['sessions','Mashg‘ulot'],['marks','Baholar'],['attendance','Davomat'],['analytics','Tahlil'],['ranking','Reyting'],['profiles','Profil'],['notices','E’lonlar'],['archive','Arxiv'],['audit','Tarix'],['security','Xavfsizlik'],['catalog','TOP 17']]){
+      for(const [id,title] of [['dashboard','Panel'],['groups','Guruhlar'],['students','O‘quvchilar'],['sessions','Mashg‘ulot'],['marks','Baholar'],['attendance','Davomat'],['analytics','Tahlil'],['ranking','Reyting'],['profiles','Profil'],['inbox','Xabarlar'],['notices','E’lonlar'],['archive','Arxiv'],['audit','Tarix'],['security','Xavfsizlik'],['catalog','TOP 17']]){
         const b=el('button',state.adminTab===id?'on':'',title);b.dataset.tab=id;root.append(b);
       }
       await showAdminTab();
@@ -225,6 +225,7 @@
   async function showAdminTab(){
     const root=$('admin-tab-content');if(!root)return;
     $('admin-tabs')?.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.tab===state.adminTab));
+    if(state.adminTab==='inbox' && window.NurContact) {await window.NurContact.inbox(root,premiumCtx());return}
     if(window.NurRankingUI && state.adminTab==='ranking') {await window.NurRankingUI.adminRanking(root,premiumCtx());return}
     if(window.NurRankingUI && state.adminTab==='profiles') {await window.NurRankingUI.adminProfiles(root,premiumCtx());return}
     if(window.NurPremium && ['dashboard','students','sessions','attendance','analytics','notices','archive','audit','catalog','security'].includes(state.adminTab)) {
@@ -323,7 +324,8 @@
     }catch(err){toast(err.message)}finally{if(submit)submit.disabled=false}
   }
   async function onAdminClick(e){
-    const btn=e.target.closest('button[data-act],button[data-tab],button[data-ranking-act]');if(!btn)return;
+    const btn=e.target.closest('button[data-act],button[data-tab],button[data-ranking-act],button[data-inbox-action]');if(!btn)return;
+    if(btn.dataset.inboxAction && window.NurContact){await window.NurContact.click(btn,premiumCtx());return}
     if(btn.dataset.rankingAct && window.NurRankingUI){await window.NurRankingUI.onAdminClick(btn,premiumCtx());return}
     if(btn.dataset.tab){state.adminTab=btn.dataset.tab;await showAdminTab();return}
     if(btn.dataset.act?.startsWith('premium-') && window.NurPremium){await window.NurPremium.onClick(btn,premiumCtx());return}
