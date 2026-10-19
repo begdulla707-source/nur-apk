@@ -122,6 +122,25 @@ def register_premium(app, db, admin_only, require_int, require_text, request_jso
                 (archived,group_id,group_id,"%"+query+"%")).fetchall()
         return jsonify({"students":rows})
 
+    @app.post("/api/admin/v2/students")
+    @admin_only
+    def v2_create_student():
+        data=request_json()
+        group_id=require_int(data.get("group_id"),"group_id")
+        name=require_string(data.get("full_name"),"Ism familiya",120)
+        phone=optional_phone(data.get("phone"))
+        notes=data.get("notes") or ""
+        if not isinstance(notes,str) or len(notes)>2000:
+            raise ValueError("Izoh 2000 belgidan oshmasligi kerak")
+        enrolled_at=as_date(data.get("enrolled_at"),"Qabul sanasi") or datetime.now(TZ).date()
+        with db() as conn:
+            g=conn.execute("SELECT id FROM app_groups WHERE id=%s AND NOT archived",(group_id,)).fetchone()
+            if not g:return bad("Guruh topilmadi",404)
+            st=conn.execute("""INSERT INTO app_students(group_id,full_name,phone,notes,enrolled_at)
+                VALUES(%s,%s,%s,%s,%s) RETURNING id""",
+                (group_id,name,phone,notes,enrolled_at)).fetchone()
+        return jsonify({"ok":True,"id":st["id"]}),201
+
     @app.patch("/api/admin/v2/students/<int:student_id>")
     @admin_only
     def v2_edit_student(student_id):
