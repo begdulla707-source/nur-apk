@@ -14,6 +14,8 @@ on:
       - "liquid-glass.css"
       - "liquid-glass.js"
       - "i18n.js"
+      - "contact-ui.js"
+      - "polish-v08.css"
       - "ranking-ui.css"
       - "ranking-ui.js"
 jobs:
@@ -28,12 +30,14 @@ jobs:
           node --check ranking-ui.js
           node --check liquid-glass.js
           node --check i18n.js
-          python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/init_db.py
+          node --check contact-ui.js
+          python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/contact.py backend/init_db.py
           test -s index.html
           test -s features.css
           test -s premium-admin.css
           test -s liquid-glass.css
           test -s ranking-ui.css
+          test -s polish-v08.css
           grep -q 'ranking-ui.js' index.html
           grep -q 'liquid-glass.js' index.html
           grep -q 'i18n.js' index.html
@@ -51,4 +55,6 @@ jobs:
             liquid-glass.css
             liquid-glass.js
             i18n.js
+            contact-ui.js
+            polish-v08.css
           retention-days: 30
