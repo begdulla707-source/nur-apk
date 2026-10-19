@@ -5,7 +5,7 @@
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
   const base='https://nur-apk-api.onrender.com/api';
-  let requestId=0;
+  let requestId=0,selectedPublicGroup='';
   const dateText=d=>{if(!d)return '—';const value=new Date(d);if(!Number.isFinite(value.getTime()))return String(d);
     return new Intl.DateTimeFormat('uz-UZ',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Asia/Tashkent'}).format(value)};
   const percentage=v=>v===null||v===undefined?'—':Number(v).toFixed(1)+'%';
@@ -30,11 +30,12 @@
     return el;
   }
   async function loadTop(groupId=''){
+    selectedPublicGroup=String(groupId||'');
     const el=ensurePublic();
     if(!el)return;
     const call=++requestId;
     el.innerHTML='<div class="rank-top-title"><h3>TOP 15</h3><small>Yuklanmoqda...</small></div>';
-    const q=groupId?'?group_id='+encodeURIComponent(groupId):'';
+    const q=selectedPublicGroup?'?group_id='+encodeURIComponent(selectedPublicGroup):'';
     try{
       const response=await fetch(base+'/top15'+q,{cache:'no-store'});
       if(!response.ok)throw Error('Reytingni yuklab bo‘lmadi');
@@ -81,7 +82,8 @@
     root.innerHTML='<div class="empty">Profil ochilmoqda...</div>';
     window.go?.('student-profile');
     try{
-      const r=await fetch(base+'/students/'+encodeURIComponent(id)+'/profile',{cache:'no-store'});
+      const q=selectedPublicGroup?'?group_id='+encodeURIComponent(selectedPublicGroup):'';
+      const r=await fetch(base+'/students/'+encodeURIComponent(id)+'/profile'+q,{cache:'no-store'});
       const d=await r.json();
       if(!r.ok)throw Error(d.error||'Profil yuklanmadi');
       const p=d.student;
