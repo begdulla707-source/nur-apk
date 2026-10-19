@@ -143,16 +143,24 @@
   }
   async function renderRanking(){
     const target=$('ratingEmpty');if(!target)return;
+    window.NurRankingUI?.loadTop(state.rankingGroup);
     target.replaceChildren(el('p','loadertext','Reyting yuklanmoqda...'));
     try{
       const data=await api('/ranking'+(state.rankingGroup?'?group_id='+state.rankingGroup:''));
-      if(!data.ranking.length){target.textContent='Hozircha o‘quvchilar qo‘shilmagan.';return}
+      if(data.settings && !data.settings.published){target.className='empty';target.textContent='Reyting hozircha administrator tomonidan e’lon qilinmagan.';return}
+      if(!data.ranking.length){target.className='empty';target.textContent='Hozircha baholangan o‘quvchilar yo‘q.';return}
       target.className='data-list';
       target.replaceChildren();
       for(const s of data.ranking){
         const row=el('div','data-row');row.append(el('span','tiny-number',s.rank||'—'));
         const info=el('div');info.append(el('b','',s.full_name));info.append(el('small','',s.group_title+' · '+s.tests+' ta natija'+(s.absences?', DQ: '+s.absences:'')));row.append(info);
-        row.append(el('strong','',s.average===null?'—':s.average+'%'));target.append(row);
+        row.append(el('strong','',s.average===null?'—':s.average+'%'));
+        if(s.rank!==null && s.rank <= (data.settings?.top_limit||15)){
+          row.role='button';row.tabIndex=0;row.style.cursor='pointer';row.title='Profilni ko‘rish';
+          row.onclick=()=>window.NurRankingUI?.openProfile(s.student_id);
+          row.onkeydown=e=>{if(e.key==='Enter')window.NurRankingUI?.openProfile(s.student_id)};
+        }
+        target.append(row);
       }
     }catch(e){target.className='empty';target.textContent=e.message}
   }
@@ -204,7 +212,7 @@
       const c=overview.counts||{};
       adminRoot.innerHTML='<div class="admin-grid"><div><strong>'+Number(c.groups||0)+'</strong><small>Guruhlar</small></div><div><strong>'+Number(c.students||0)+'</strong><small>O‘quvchilar</small></div><div><strong>'+Number(c.sessions||0)+'</strong><small>Mashg‘ulotlar</small></div></div><button class="appbtn small light" data-act="logout">Chiqish</button><div class="admin-tabs" id="admin-tabs"></div><div id="admin-tab-content"></div>';
       const root=$('admin-tabs');
-      for(const [id,title] of [['dashboard','Panel'],['groups','Guruhlar'],['students','O‘quvchilar'],['sessions','Mashg‘ulot'],['marks','Baholar'],['attendance','Davomat'],['analytics','Tahlil'],['notices','E’lonlar'],['archive','Arxiv'],['audit','Tarix'],['exports','CSV'],['security','Xavfsizlik'],['catalog','TOP 50']]){
+      for(const [id,title] of [['dashboard','Panel'],['groups','Guruhlar'],['students','O‘quvchilar'],['sessions','Mashg‘ulot'],['marks','Baholar'],['attendance','Davomat'],['analytics','Tahlil'],['ranking','Reyting'],['profiles','Profil'],['notices','E’lonlar'],['archive','Arxiv'],['audit','Tarix'],['security','Xavfsizlik'],['catalog','TOP 17']]){
         const b=el('button',state.adminTab===id?'on':'',title);b.dataset.tab=id;root.append(b);
       }
       await showAdminTab();
@@ -213,7 +221,9 @@
   async function showAdminTab(){
     const root=$('admin-tab-content');if(!root)return;
     $('admin-tabs')?.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.tab===state.adminTab));
-    if(window.NurPremium && ['dashboard','students','sessions','attendance','analytics','notices','archive','audit','exports','catalog','security'].includes(state.adminTab)) {
+    if(window.NurRankingUI && state.adminTab==='ranking') {await window.NurRankingUI.adminRanking(root,premiumCtx());return}
+    if(window.NurRankingUI && state.adminTab==='profiles') {await window.NurRankingUI.adminProfiles(root,premiumCtx());return}
+    if(window.NurPremium && ['dashboard','students','sessions','attendance','analytics','notices','archive','audit','catalog','security'].includes(state.adminTab)) {
       await window.NurPremium.renderTab(state.adminTab,premiumCtx());
       return;
     }
@@ -282,6 +292,7 @@
   async function onAdminSubmit(e){
     const form=e.target.closest('form[data-form]');if(!form)return;
     e.preventDefault();
+    if(form.dataset.form==='rank-settings' && window.NurRankingUI){await window.NurRankingUI.onAdminSubmit(form,premiumCtx());return}
     if(form.dataset.form?.startsWith('premium-') && window.NurPremium){await window.NurPremium.onSubmit(form,premiumCtx());return}
     const type=form.dataset.form;const data=Object.fromEntries(new FormData(form));const submit=form.querySelector('button[type=submit],button.appbtn');if(submit)submit.disabled=true;
     try{
@@ -308,7 +319,8 @@
     }catch(err){toast(err.message)}finally{if(submit)submit.disabled=false}
   }
   async function onAdminClick(e){
-    const btn=e.target.closest('button[data-act],button[data-tab]');if(!btn)return;
+    const btn=e.target.closest('button[data-act],button[data-tab],button[data-ranking-act]');if(!btn)return;
+    if(btn.dataset.rankingAct && window.NurRankingUI){await window.NurRankingUI.onAdminClick(btn,premiumCtx());return}
     if(btn.dataset.tab){state.adminTab=btn.dataset.tab;await showAdminTab();return}
     if(btn.dataset.act?.startsWith('premium-') && window.NurPremium){await window.NurPremium.onClick(btn,premiumCtx());return}
     const act=btn.dataset.act,id=Number(btn.dataset.id);
