@@ -110,7 +110,7 @@
     }catch(e){target.replaceChildren(el('div','empty',e.message))}
   }
   function renderNotices(){
-    let target=$('notices-panel');const root=$('home .content');
+    let target=$('notices-panel');const root=document.querySelector('#home .content');
     if(!root)return;
     if(!target){target=el('section','');target.id='notices-panel';root.append(target)}
     target.replaceChildren();
