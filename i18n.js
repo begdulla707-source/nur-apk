@@ -290,6 +290,7 @@ const additional=[
 ["Guruh yaratish","Create group","Создать группу","Topar jaratıw"]
 ];
 table.push(...additional);
+table.push(...[["Mashg‘ulot qo‘shish","Add result date","Добавить дату результата","Nátiyje kúnin qosıw"],["Mashg‘ulot yaratish","Add result date","Добавить дату результата","Nátiyje kúnin qosıw"],["Kiritilmagan natija topilmadi.","No missing results.","Незаполненных результатов нет.","Kirgizilmegen nátiyje joq."],["Hozircha reyting ma’lumotlari mavjud emas.","No ranking data yet.","Нет данных рейтинга.","Ele reyting maǵlıwmatı joq."],["Maktab","School","Школа","Mektep"],["Reytingdagi o‘rni:","Ranking position:","Место в рейтинге:","Reytingtegi ornı:"],["Reyting yakunlangan baholar asosida hisoblanadi.","Ranking is based on completed scores.","Рейтинг рассчитан по итоговым оценкам.","Reyting aqırǵı bahalar boyınsha esaplanadı."],["Oldingi sanadagi mashg‘ulot","Past lesson date","Дата прошлого занятия","Aldınǵı sabaq kúni"],["Mashg‘ulotni tahrirlash","Edit result date","Изменить дату результата","Nátiyje kúnin ózgertiw"],["Mashg‘ulotdan nusxa olish","Duplicate result date","Создать копию даты результата","Nátiyje kúninen nusqa alıw"],["Mashg‘ulot arxivlash","Archive result date","Архивировать дату результата","Nátiyje kúnin arxivlaw"],["Mashg‘ulotni tiklash","Restore result date","Восстановить дату результата","Nátiyje kúnin qaytarıw"]]);
 const languages={UZ:0,EN:1,RU:2,QQ:3};
 const native={UZ:'uz',EN:'en',RU:'ru',QQ:'kaa'};
 const normalized=s=>String(s).replace(/[‘’ʻʼ']/g,'’').replace(/\s+/g,' ').trim();
@@ -301,6 +302,15 @@ function formatDynamic(text,locale){
  const value=String(text),idx=languages[locale];
  if(idx===0)return value;
  const match=normalized(value);
+ // Translate metadata composed by the application (subject / group, group · count).
+ // Never alter personal names or arbitrary user-supplied text.
+ for(const delimiter of [' · ',' / ']){
+   if(match.includes(delimiter)){
+     const pieces=match.split(delimiter);
+     const translated=pieces.map(part=>translate(part,locale));
+     if(translated.some((part,i)=>part!==pieces[i]))return translated.join(delimiter);
+   }
+ }
  let m;
  if((m=match.match(/^([A-Z0-9]{1,4}) guruhi$/))) {
    return [null,'Group '+m[1],'Группа '+m[1],m[1]+' toparı'][idx];
