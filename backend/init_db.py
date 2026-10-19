@@ -7,7 +7,7 @@ def initialize():
     if not os.environ.get("DATABASE_URL"):
         raise RuntimeError("DATABASE_URL is required")
     statements = []
-    for filename in ("schema.sql", "premium.sql", "ranking.sql"):
+    for filename in ("schema.sql", "premium.sql", "ranking.sql", "contact.sql"):
         statements.extend(v.strip() for v in Path(__file__).with_name(filename).read_text().split(";") if v.strip())
     with connect(os.environ["DATABASE_URL"]) as conn:
         for statement in statements:
