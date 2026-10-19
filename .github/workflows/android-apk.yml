@@ -9,6 +9,7 @@ on:
       - "*.css"
       - "*.js"
       - "backend/**"
+      - "paynet_qr.png"
       - ".github/workflows/android-apk.yml"
 permissions:
   contents: write
@@ -30,7 +31,8 @@ jobs:
           node --check liquid-glass.js
           node --check i18n.js
           node --check contact-ui.js
-          python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/contact.py backend/init_db.py
+          node --check payment-ui.js
+          python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/contact.py backend/payments.py backend/init_db.py
           test -s android/app/src/main/res/drawable-nodpi/nur_premium_icon.webp
           test -s android/app/src/main/assets/index.html
           test -s android/app/src/main/assets/i18n.js
@@ -39,8 +41,11 @@ jobs:
       - name: Sync latest app UI into Android assets
         run: |
           mkdir -p android/app/src/main/assets
-          cp index.html features.css premium-admin.css ranking-ui.css liquid-glass.css polish-v08.css android/app/src/main/assets/
-          cp app-features.js premium-admin.js ranking-ui.js liquid-glass.js i18n.js contact-ui.js android/app/src/main/assets/
+          cp index.html features.css premium-admin.css ranking-ui.css liquid-glass.css polish-v08.css payment-ui.css android/app/src/main/assets/
+          cp paynet_qr.png android/app/src/main/assets/
+          cp app-features.js premium-admin.js ranking-ui.js liquid-glass.js i18n.js contact-ui.js payment-ui.js android/app/src/main/assets/
+          test -s android/app/src/main/assets/payment-ui.js
+          test -s android/app/src/main/assets/paynet_qr.png
           test -s android/app/src/main/assets/contact-ui.js
           test -s android/app/src/main/assets/polish-v08.css
       - name: Install Android SDK
@@ -64,7 +69,7 @@ jobs:
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" /tmp/signature-check.txt
           "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
-          grep -q "versionCode='8'" /tmp/apk-badging.txt
+          grep -q "versionCode='9'" /tmp/apk-badging.txt
           grep -q "application-icon" /tmp/apk-badging.txt
           unzip -l "$APK" | tee /tmp/apk-filelist.txt
           grep -q "res/drawable-nodpi.*nur_premium_icon" /tmp/apk-filelist.txt
@@ -74,20 +79,22 @@ jobs:
           grep -q "assets/app-features.js" /tmp/apk-filelist.txt
           grep -q "assets/contact-ui.js" /tmp/apk-filelist.txt
           grep -q "assets/polish-v08.css" /tmp/apk-filelist.txt
+          grep -q "assets/payment-ui.js" /tmp/apk-filelist.txt
+          grep -q "assets/paynet_qr.png" /tmp/apk-filelist.txt
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk nur-oqiw-orayi-liquid-v0.8.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk nur-oqiw-orayi-liquid-v0.9.apk
       - uses: actions/upload-artifact@v4
         with:
           name: nur-oqiw-orayi-preview-apk
-          path: nur-oqiw-orayi-liquid-v0.8.apk
+          path: nur-oqiw-orayi-liquid-v0.9.apk
           retention-days: 30
       - name: Publish preview release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.8.0-preview
-          name: Nur oqiw orayi — iOS menu 0.8 + admin inbox
+          tag_name: v0.9.0-preview
+          name: Nur oqiw orayi — iOS M4 F3 + Paynet payment requests v0.9
           prerelease: true
           make_latest: false
-          files: nur-oqiw-orayi-liquid-v0.8.apk
-          body: "Gradle-built, APK Signature v2 verified, unchanged premium icon, no native CSV bridge. Preview sideload may still trigger Android Play Protect; Play Store release requires secure production signing."
+          files: nur-oqiw-orayi-liquid-v0.9.apk
+          body: "M4/F3 math physics icons, Paynet payment requests, manual admin verification, unchanged main theme and launcher icon. Auto-payments are NOT live without official Paynet credentials; admin must verify real transactions."
