@@ -13,6 +13,8 @@
   };
   let auth = session.get();
   let refreshing = false;
+  let lastFetchAttempt=0,successFetchAt=0,requestErrorAt=0;
+  const translate=v=>window.NurI18n?.translate?.(v)||v;
   const choice = (rows, selected='') => rows.map(r=>'<option value="'+escape(r.value)+'"'+(String(r.value)===String(selected)?' selected':'')+'>'+escape(r.text)+'</option>').join('');
   const groupOptions = () => state.groups.map(g=>({value:g.id,text:(state.subjects.find(s=>s.id===g.subject_id)?.title||'')+' / '+g.title}));
   const el = (tag, cls, text) => {const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};
@@ -24,7 +26,7 @@
       headers['Authorization']='Bearer '+auth;
     }
     const controller = new AbortController();
-    const timeout=setTimeout(()=>controller.abort(), 15000);
+    const timeout=setTimeout(()=>controller.abort(), options.admin?7000:4800);
     try {
       const res=await fetch(API+path,{method:options.method||'GET',headers,body:options.body?JSON.stringify(options.body):undefined,signal:controller.signal,cache:'no-store'});
       const data=await res.json().catch(()=>({}));
@@ -44,17 +46,19 @@
     const p=el('div','floating-toast',text);document.body.append(p);setTimeout(()=>p.remove(),3400);
   }
   async function refresh(silent=false) {
-    if(refreshing)return;refreshing=true;
+    if(refreshing || document.hidden || !navigator.onLine)return;
+    if(silent && Date.now()-lastFetchAttempt < (state.online?24000:65000))return;
+    lastFetchAttempt=Date.now();refreshing=true;
     try {
       const data=await api('/bootstrap');
-      state.subjects=data.subjects||[];state.groups=data.groups||[];state.notices=data.notices||[];state.online=true;
+      state.subjects=data.subjects||[];state.groups=data.groups||[];state.notices=data.notices||[];state.online=true;successFetchAt=Date.now();
       const counter=document.querySelector('#home .stat strong');
       if(counter)counter.textContent=String(data.total_students);
       renderGroups();renderSubjects();renderNotices();renderFilters();
       if(['rating','results'].includes(document.querySelector('.view.show')?.id))await renderPublicResults();
       if(document.querySelector('.view.show')?.id==='group')await renderStudentList();
     } catch(err) {
-      state.online=false;
+      state.online=false;requestErrorAt=Date.now();
       if(!silent)toast(err.message);
     } finally {refreshing=false}
   }
@@ -349,25 +353,19 @@
     if(e.target.id==='admin-session'){state.sessionId=Number(e.target.value);await showAdminMarks()}
   }
   function bindLanguage(){
-    const dict={
-      UZ:['Bosh menyu','Reyting','Natijalar','Ta’lim yo‘nalishlari','Fan tanlang','Har bir qadam —','yangi imkoniyat.'],
-      QQ:['Bas bet','Reyting','Nátiyjeler','Oqıw baǵdarları','Pándi tańlań','Hár bir qádem —','jańa imkaniyat.'],
-      RU:['Главная','Рейтинг','Результаты','Направления','Выберите предмет','Каждый шаг —','новая возможность.']
-    };
-    window.lang=function(btn,name){
-      document.querySelectorAll('.langs button').forEach(x=>x.classList.remove('on'));btn.classList.add('on');
-      const d=dict[name]||dict.UZ;
-      document.querySelectorAll('.tabbar button').forEach((b,i)=>{const svg=b.querySelector('svg');b.textContent=d[i];b.prepend(svg)});
-      const head=$('home').querySelector('.section-head');if(head){head.querySelector('h2').textContent=d[3];head.querySelector('small').textContent=d[4]}
-      $('home').querySelector('.hero h1').textContent=d[5]+'\n'+d[6];
-      $('lang-msg').textContent=name+' tanlandi. Boshqa bo‘limlar tarjimasi ishlab chiqilmoqda.';
-      try{localStorage.setItem('nur-apk-language',name)}catch{}
-    };
+    // All visible pages, input hints and dynamic admin cards are translated
+    // centrally by i18n.js. No partial replacement of whole nodes or SVGs.
   }
   setupAdmin();bindLanguage();
   // The admin entry point is hidden from regular users. A signed session controls API rights.
   const adminEntrance=document.querySelector('.adminbtn');
-  function syncAdminEntry(){if(adminEntrance)adminEntrance.style.display=auth?'block':'none'}
+  function syncAdminEntry(){
+    if(adminEntrance){
+      adminEntrance.style.display='block';
+      adminEntrance.hidden=false;
+      adminEntrance.setAttribute('aria-label',translate('Admin panelga kirish'));
+    }
+  }
   syncAdminEntry();
   // Six deliberate taps on the N logo reveal the token login inside the Android app.
   // This is only a discovery gesture; server-side token verification remains mandatory.
@@ -393,6 +391,8 @@
   const oldGroupHandler=window.openSubject;
   window.openSubject=function(name){const s=state.subjects.find(x=>x.title===name);if(s)return openSubjectDynamic(s);return oldGroupHandler(name)};
   refresh(true).then(()=>renderPublicResults());
-  setInterval(()=>{if(!document.hidden)refresh(true)},20000);
+  setInterval(()=>{if(!document.hidden && navigator.onLine)refresh(true)},45000);
+  addEventListener('online',()=>{lastFetchAttempt=0;refresh(true)},{passive:true});
+  addEventListener('visibilitychange',()=>{if(!document.hidden && Date.now()-successFetchAt>90000){lastFetchAttempt=0;refresh(true)}},{passive:true});
   if(auth&&document.querySelector('.view.show')?.id==='admin')renderAdmin();
 })();
