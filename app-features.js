@@ -14,6 +14,7 @@
   let auth = session.get();
   let refreshing = false;
   let lastFetchAttempt=0,successFetchAt=0,requestErrorAt=0;
+  let lastBootstrapSignature='';
   const translate=v=>window.NurI18n?.translate?.(v)||v;
   const choice = (rows, selected='') => rows.map(r=>'<option value="'+escape(r.value)+'"'+(String(r.value)===String(selected)?' selected':'')+'>'+escape(r.text)+'</option>').join('');
   const groupOptions = () => state.groups.map(g=>({value:g.id,text:(state.subjects.find(s=>s.id===g.subject_id)?.title||'')+' / '+g.title}));
@@ -45,16 +46,20 @@
     document.querySelector('.floating-toast')?.remove();
     const p=el('div','floating-toast',text);document.body.append(p);setTimeout(()=>p.remove(),3400);
   }
-  async function refresh(silent=false) {
+  async function refresh(silent=false, force=false) {
     if(refreshing || document.hidden || !navigator.onLine)return;
-    if(silent && Date.now()-lastFetchAttempt < (state.online?24000:65000))return;
+    if(!force && silent && Date.now()-lastFetchAttempt < (state.online?45000:90000))return;
     lastFetchAttempt=Date.now();refreshing=true;
     try {
       const data=await api('/bootstrap');
       state.subjects=data.subjects||[];state.groups=data.groups||[];state.notices=data.notices||[];state.online=true;successFetchAt=Date.now();
-      const counter=document.querySelector('#home .stat strong');
-      if(counter)counter.textContent=String(data.total_students);
-      renderGroups();renderSubjects();renderNotices();renderFilters();
+      const signature=JSON.stringify([data.total_students,state.subjects,state.groups,state.notices]);
+      if(signature!==lastBootstrapSignature){
+        lastBootstrapSignature=signature;
+        const counter=document.querySelector('#home .stat strong');
+        if(counter && counter.textContent!==String(data.total_students))counter.textContent=String(data.total_students);
+        renderGroups();renderSubjects();renderNotices();renderFilters();
+      }
       if(['rating','results'].includes(document.querySelector('.view.show')?.id))await renderPublicResults();
       if(document.querySelector('.view.show')?.id==='group')await renderStudentList();
     } catch(err) {
@@ -200,9 +205,14 @@
     adminRoot.addEventListener('click',onAdminClick);
     adminRoot.addEventListener('change',onAdminChange);
   }
-  function premiumCtx(){return {root:$('admin-tab-content'),state,api,toast,refresh,renderAdmin,showAdminTab,dateText,tashkentDate}}
+  function premiumCtx(){return {root:$('admin-tab-content'),state,api,toast,refresh:(silent=true)=>refresh(silent,true),renderAdmin,showAdminTab,dateText,tashkentDate}}
+  function adminVerified(show){
+    const badge=$('admin-identity');
+    if(badge)badge.hidden=!show;
+  }
   async function renderAdmin(){
     if(!adminRoot)setupAdmin();
+    adminVerified(false);
     if(!auth){
       syncAdminEntry();
       adminRoot.innerHTML='<div class="appcard"><h3>Admin token bilan kirish</h3><form class="appform" data-form="login"><label>Maxfiy admin token<input name="token" type="password" autocomplete="off" required placeholder="Admin tokenni kiriting"></label><button class="appbtn" type="submit">Xavfsiz kirish</button><div class="page-message">Token ilova kodida saqlanmaydi; kirgandan keyin vaqtinchalik sessiya ishlatiladi.</div></form></div>';
@@ -210,7 +220,12 @@
     }
     adminRoot.innerHTML='<p class="loadertext">Boshqaruv paneli yuklanmoqda...</p>';
     try{
-      const [overview,bootstrap]=await Promise.all([api('/admin/overview',{admin:true}),api('/bootstrap')]);
+      const bootstrapReady=state.online && state.subjects.length>0 && Date.now()-successFetchAt<90000;
+      const [overview,bootstrap]=await Promise.all([
+        api('/admin/overview',{admin:true}),
+        bootstrapReady?Promise.resolve({groups:state.groups,subjects:state.subjects}):api('/bootstrap')
+      ]);
+      adminVerified(true);
       state.sessions=overview.sessions||[];
       state.groups=bootstrap.groups||[];state.subjects=bootstrap.subjects||[];
       const c=overview.counts||{};
@@ -220,7 +235,7 @@
         const b=el('button',state.adminTab===id?'on':'',title);b.dataset.tab=id;root.append(b);
       }
       await showAdminTab();
-    }catch(err){if(!auth)return renderAdmin();adminRoot.innerHTML='<div class="errorbox">'+escape(err.message)+'</div><button class="appbtn secondary" data-act="reload">Qayta urinish</button>'}
+    }catch(err){adminVerified(false);if(!auth)return renderAdmin();adminRoot.innerHTML='<div class="errorbox">'+escape(err.message)+'</div><button class="appbtn secondary" data-act="reload">Qayta urinish</button>'}
   }
   async function showAdminTab(){
     const root=$('admin-tab-content');if(!root)return;
@@ -322,7 +337,7 @@
         if(!marks.length)throw new Error('Kamida bitta ball yoki DQ kiriting');
         await api('/admin/marks',{method:'POST',admin:true,body:{session_id:Number(data.session_id),marks}});
       }
-      toast('Ma’lumotlar saqlandi');await refresh(true);await renderAdmin();
+      toast('Ma’lumotlar saqlandi');await refresh(true,true);await renderAdmin();
     }catch(err){toast(err.message)}finally{if(submit)submit.disabled=false}
   }
   async function onAdminClick(e){
@@ -333,13 +348,13 @@
     if(btn.dataset.tab){state.adminTab=btn.dataset.tab;await showAdminTab();return}
     if(btn.dataset.act?.startsWith('premium-') && window.NurPremium){await window.NurPremium.onClick(btn,premiumCtx());return}
     const act=btn.dataset.act,id=Number(btn.dataset.id);
-    if(act==='logout'){auth='';session.clear();syncAdminEntry();await renderAdmin();return}
+    if(act==='logout'){auth='';session.clear();adminVerified(false);syncAdminEntry();await renderAdmin();return}
     if(act==='reload'){await renderAdmin();return}
     if(act==='choose-session'){state.sessionId=id;state.adminTab='marks';await showAdminTab();return}
     if(['archive-group','archive-student','archive-session','archive-notice'].includes(act)){
       if(!confirm('Bu elementni arxivlamoqchimisiz? Oldingi ma’lumotlar saqlanadi.'))return;
       const collection=act.split('-')[1]+'s';
-      try{await api('/admin/'+collection+'/'+id,{admin:true,method:'DELETE'});if(act==='archive-session'&&state.sessionId===id)state.sessionId=null;toast('Arxivlandi');await refresh(true);await renderAdmin()}catch(err){toast(err.message)}
+      try{await api('/admin/'+collection+'/'+id,{admin:true,method:'DELETE'});if(act==='archive-session'&&state.sessionId===id)state.sessionId=null;toast('Arxivlandi');await refresh(true,true);await renderAdmin()}catch(err){toast(err.message)}
       return;
     }
     if(act==='rename-group'||act==='rename-student'){
@@ -348,7 +363,7 @@
       if(name===null)return;
       try{
         await api('/admin/'+(act==='rename-group'?'groups':'students')+'/'+id,{admin:true,method:'PATCH',body:act==='rename-group'?{title:name}:{full_name:name}});
-        toast('Nom yangilandi');await refresh(true);await renderAdmin()
+        toast('Nom yangilandi');await refresh(true,true);await renderAdmin()
       }catch(err){toast(err.message)}
     }
   }
