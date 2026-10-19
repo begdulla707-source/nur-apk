@@ -15,6 +15,7 @@
   let pointerId=null,startX=0,startY=0,dragging=false,longHeld=false;
   let downTime=0,locked=false,holdTimer=0,suppressClicksUntil=0;
   let redraw=0,bounceTimer=0,lastActive='',hintTarget=null;
+  let lastRenderedTarget=null, geometryDirty=true;
   const gap=9;
   function closest(clientX){
     let target=tabs[0],distance=Infinity;
@@ -27,9 +28,11 @@
   }
   function position(tab,options={}){
     if(!tab)return;
+    if(options.quiet && !options.immediate && !geometryDirty && lastRenderedTarget===tab)return;
     const bar=nav.getBoundingClientRect(),box=tab.getBoundingClientRect();
     const x=Math.round(box.left-bar.left);
     const y=Math.round(box.top-bar.top);
+    lastRenderedTarget=tab;geometryDirty=false;
     if(options.immediate)bubble.style.transition='none';
     bubble.style.width=Math.round(box.width)+'px';
     bubble.style.height=Math.round(box.height)+'px';
@@ -37,8 +40,8 @@
     if(options.immediate)requestAnimationFrame(()=>bubble.style.removeProperty('transition'));
     if(!options.quiet && !reduced.matches && lastActive!==tab.dataset.page){
       bubble.classList.remove('moving');
-      void bubble.offsetWidth;
-      bubble.classList.add('moving');
+      // Never force synchronous layout via offsetWidth during tab changes.
+      requestAnimationFrame(()=>{if(!dragging)bubble.classList.add('moving')});
       clearTimeout(bounceTimer);
       bounceTimer=setTimeout(()=>bubble.classList.remove('moving'),450);
     }
@@ -105,7 +108,7 @@
     const target=closest(event.clientX);
     if(hintTarget!==target){
       activePreview(target);
-      if(!reduced.matches && navigator.vibrate)navigator.vibrate(3);
+      // Avoid repeated vibration and Android compositor wake-ups while dragging.
     }
     // Liquid follows the tab nearest to the finger, smoothly.
     position(target,{quiet:true});
@@ -141,8 +144,8 @@
     }
   },true);
   nav.addEventListener('click',schedule);
-  addEventListener('resize',schedule,{passive:true});
-  addEventListener('orientationchange',()=>setTimeout(schedule,140));
+  addEventListener('resize',()=>{geometryDirty=true;schedule()},{passive:true});
+  addEventListener('orientationchange',()=>setTimeout(()=>{geometryDirty=true;schedule()},140));
   if(document.fonts?.ready)document.fonts.ready.then(schedule).catch(()=>{});
   addEventListener('pageshow',schedule);
   requestAnimationFrame(()=>position(tabs.find(tab=>tab.classList.contains('active'))||tabs[0],{immediate:true,quiet:true}));
