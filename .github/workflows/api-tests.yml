@@ -39,4 +39,4 @@ jobs:
       - name: Initialize disposable test database
         run: python -m backend.init_db
       - name: Run full API integration tests
-        run: python -m unittest backend.test_api -v
+        run: python -m unittest discover -s backend -p 'test_*.py' -v
