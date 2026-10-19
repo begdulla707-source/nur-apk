@@ -67,6 +67,7 @@
   function startDrag(event){
     if(dragging||pointerId===null)return;
     dragging=true;
+    try{nav.setPointerCapture(pointerId)}catch{}
     clearTimeout(holdTimer);
     nav.classList.add('glass-dragging');
     bubble.classList.remove('moving');
@@ -80,7 +81,7 @@
     pointerId=event.pointerId;
     startX=event.clientX;startY=event.clientY;
     downTime=performance.now();dragging=false;longHeld=false;
-    try{nav.setPointerCapture(pointerId)}catch{}
+    // Do not capture taps; Android must still dispatch normal button clicks.
     clearTimeout(holdTimer);
     holdTimer=setTimeout(()=>{
       if(pointerId!==null){
