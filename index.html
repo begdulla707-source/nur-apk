@@ -19,6 +19,7 @@ body.dark{color-scheme:dark;--bg:#101c16;--card:#1b2e23;--text:#e9f8ee;--muted:#
 <link rel="stylesheet" href="premium-admin.css">
 <link rel="stylesheet" href="ranking-ui.css">
 <link rel="stylesheet" href="liquid-glass.css">
+<link rel="stylesheet" href="polish-v08.css">
 </head>
 <body><main class="phone">
 <section id="home" class="view show"><header class="hero"><div class="top"><button class="menubtn" aria-label="Menyu" onclick="openMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><div class="brand"><div class="logo">N</div><div><small>TA’LIM MARKAZI</small><b>Nur oqiw orayi</b></div></div></div><h1>Har bir qadam —<br>yangi imkoniyat.</h1><p>O‘rganing, rivojlaning va natijalaringizni kuzatib boring.</p></header>
@@ -28,12 +29,12 @@ body.dark{color-scheme:dark;--bg:#101c16;--card:#1b2e23;--text:#e9f8ee;--muted:#
 <button class="subject" onclick="openSubject('Rus tili')"><span class="symbol">RU</span><span class="subject-info"><b>Rus tili</b><small>Ma’lumotlar tayyorlanmoqda</small></span><span class="arrow">›</span></button>
 <button class="subject" onclick="openSubject('Ingliz tili')"><span class="symbol">EN</span><span class="subject-info"><b>Ingliz tili</b><small>Ma’lumotlar tayyorlanmoqda</small></span><span class="arrow">›</span></button></div>
 <div class="note"><span class="i">i</span><div><b>Ma’lumot uchun</b><p>Reyting va natijalar xavfsiz bazaga ulangach avtomatik yangilanadi.</p></div></div></div></section>
-<section class="view subpage" id="rating"><button class="back" onclick="go('home')">← Bosh menyu</button><h2>Reyting</h2><p class="desc">O‘quvchilarning o‘zlashtirish ko‘rsatkichlari.</p><div id="rating-filters" class="filters"></div><div class="empty" id="ratingEmpty">Hozircha reyting ma’lumotlari mavjud emas. Administrator natijalarni kiritgach, reyting avtomatik ko‘rsatiladi.</div></section>
-<section class="view subpage" id="results"><button class="back" onclick="go('home')">← Bosh menyu</button><h2>Natijalar</h2><p class="desc">Mashg‘ulotlar va testlar bo‘yicha natijalar.</p><div id="results-filters" class="filters"></div><div class="empty" id="resultsEmpty">Hozircha natijalar joylanmagan. Administrator ma’lumot kiritgach, natijalarni shu yerda ko‘rasiz.</div></section>
-<section class="view subpage" id="groups"><button class="back" onclick="go('home')">← Bosh menyu</button><h2>Matematika guruhlari</h2><p class="desc">Guruhni tanlang.</p><div id="group-list" class="groups"></div></section>
-<section class="view subpage" id="group"><button class="back" onclick="go('groups')">← Guruhlarga qaytish</button><h2 id="group-title">A guruhi</h2><p class="desc">O‘quvchilar ro‘yxati va guruh natijalari.</p><div class="empty">O‘quvchilar ro‘yxati tez orada qo‘shiladi.</div></section>
-<section class="view subpage" id="subject"><button class="back" onclick="go('home')">← Bosh menyu</button><h2 id="subject-title"></h2><p class="desc">Fan bo‘yicha ma’lumotlar.</p><div class="empty">Bu fan bo‘yicha guruhlar hali yaratilmagan.</div></section>
-<section class="view subpage" id="admin"><button class="back" onclick="go('home')">← Bosh menyu</button><h2>Administrator</h2><p class="desc">Boshqaruv paneli faqat tasdiqlangan administratorlarga ochiladi.</p><div class="admin-mark">✓ Жанзаков Б · Admin</div><div class="empty" style="margin-top:18px">Xavfsiz kirish tizimi serverda sozlanmoqda. Bu versiyada admin huquqlari berilmaydi, maxfiy tokenlar saqlanmaydi.</div></section>
+<section class="view subpage" id="rating"><button class="back" onclick="go('home')">Bosh menyu</button><h2>Reyting</h2><p class="desc">O‘quvchilarning o‘zlashtirish ko‘rsatkichlari.</p><div id="rating-filters" class="filters"></div><div class="empty" id="ratingEmpty">Hozircha reyting ma’lumotlari mavjud emas. Administrator natijalarni kiritgach, reyting avtomatik ko‘rsatiladi.</div></section>
+<section class="view subpage" id="results"><button class="back" onclick="go('home')">Bosh menyu</button><h2>Natijalar</h2><p class="desc">Mashg‘ulotlar va testlar bo‘yicha natijalar.</p><div id="results-filters" class="filters"></div><div class="empty" id="resultsEmpty">Hozircha natijalar joylanmagan. Administrator ma’lumot kiritgach, natijalarni shu yerda ko‘rasiz.</div></section>
+<section class="view subpage" id="groups"><button class="back" onclick="go('home')">Bosh menyu</button><h2>Matematika guruhlari</h2><p class="desc">Guruhni tanlang.</p><div id="group-list" class="groups"></div></section>
+<section class="view subpage" id="group"><button class="back" onclick="go('groups')">Guruhlarga qaytish</button><h2 id="group-title">A guruhi</h2><p class="desc">O‘quvchilar ro‘yxati va guruh natijalari.</p><div class="empty">O‘quvchilar ro‘yxati tez orada qo‘shiladi.</div></section>
+<section class="view subpage" id="subject"><button class="back" onclick="go('home')">Bosh menyu</button><h2 id="subject-title"></h2><p class="desc">Fan bo‘yicha ma’lumotlar.</p><div class="empty">Bu fan bo‘yicha guruhlar hali yaratilmagan.</div></section>
+<section class="view subpage" id="admin"><button class="back" onclick="go('home')">Bosh menyu</button><h2>Administrator</h2><p class="desc">Boshqaruv paneli faqat tasdiqlangan administratorlarga ochiladi.</p><div class="admin-mark">✓ Жанзаков Б · Admin</div><div class="empty" style="margin-top:18px">Xavfsiz kirish tizimi serverda sozlanmoqda. Bu versiyada admin huquqlari berilmaydi, maxfiy tokenlar saqlanmaydi.</div></section>
 <section id="contact" class="view subpage"><button class="back" type="button" onclick="go('home')">Bosh menyu</button><h2>Написать администратору</h2><p class="desc">Xabar bevosita Nur Oqiw Orayi administratoriga keladi.</p>
 <form id="public-contact-form" class="appform">
 <label>Ism va familiya<input name="full_name" maxlength="120" autocomplete="name" required placeholder="Ism Familiya"></label>
@@ -64,4 +65,5 @@ addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 <script src="ranking-ui.js" defer></script>
 <script src="liquid-glass.js" defer></script>
 <script src="i18n.js" defer></script>
+<script src="contact-ui.js" defer></script>
 </body></html>
