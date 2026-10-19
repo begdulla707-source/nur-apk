@@ -152,11 +152,14 @@ def register_payments(app, db, admin_only, request_json, require_int, bad):
                 if row["status"] != "created":
                     return bad("Bu so‘rov allaqachon yuborilgan yoki ko‘rib chiqilgan",409)
                 try:
-                    updated = conn.execute("""UPDATE app_payment_requests
-                        SET claim_reference=%s,claim_note=%s,status='submitted',
-                        submitted_at=now(),updated_at=now()
-                        WHERE id=%s AND status='created' RETURNING id""",
-                        (transaction,note.strip(),row["id"])).fetchone()
+                    # A nested transaction (savepoint) protects the session when
+                    # a duplicate bank reference hits the unique constraint.
+                    with conn.transaction():
+                        updated = conn.execute("""UPDATE app_payment_requests
+                            SET claim_reference=%s,claim_note=%s,status='submitted',
+                            submitted_at=now(),updated_at=now()
+                            WHERE id=%s AND status='created' RETURNING id""",
+                            (transaction,note.strip(),row["id"])).fetchone()
                 except UniqueViolation:
                     return bad("Bu operatsiya raqami boshqa to‘lovda kiritilgan",409)
                 if not updated:
