@@ -15,8 +15,8 @@ body.dark{color-scheme:dark;--bg:#101c16;--card:#1b2e23;--text:#e9f8ee;--muted:#
 .overlay{position:fixed;inset:0;background:#061910aa;backdrop-filter:blur(4px);z-index:10;opacity:0;pointer-events:none;transition:opacity .2s}.overlay.open{opacity:1;pointer-events:auto}.drawer{position:fixed;left:max(0px,calc((100vw - 430px)/2));top:0;bottom:0;z-index:11;width:min(330px,87vw);background:var(--bg);padding:calc(29px + env(safe-area-inset-top)) 19px 20px;transform:translateX(-105%);transition:transform .25s ease;box-shadow:20px 0 50px #0002}.drawer.open{transform:translateX(0)}.drawer-head{display:flex;justify-content:space-between;align-items:center}.drawer-head h3{font-size:20px;margin:0}.x{border:0;background:var(--tint);color:var(--accent);border-radius:10px;width:34px;height:34px;font-size:20px}.drawer-info{font-size:11px;color:var(--muted);line-height:1.6;margin:13px 0 20px}.setting{padding:17px 0;border-bottom:1px solid var(--stroke);display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700}.switch{height:28px;width:50px;border:0;border-radius:30px;background:var(--stroke);position:relative}.switch:after{content:"";height:22px;width:22px;background:white;position:absolute;top:3px;left:3px;border-radius:50%;transition:transform .2s}.switch.on{background:#177455}.switch.on:after{transform:translateX(22px)}.langs{display:flex;gap:5px}.langs button{border:1px solid var(--stroke);background:var(--card);color:var(--text);border-radius:8px;padding:7px;font-size:11px}.langs .on{background:var(--tint);color:var(--accent);border-color:var(--accent)}.adminbtn{margin-top:19px;width:100%;border:1px solid var(--stroke);border-radius:15px;background:var(--tint);color:var(--accent);padding:16px;text-align:left;font-weight:750;font-size:13px}.fineprint{margin-top:25px;font-size:10px;color:var(--muted);line-height:1.6}
 @media(min-width:550px){body{padding:20px 0}.phone{min-height:850px;border-radius:27px;overflow:hidden;box-shadow:0 22px 70px #133c2a2b}.tabbar{bottom:20px;border-radius:0 0 27px 27px}.drawer{top:20px;bottom:20px;border-radius:25px 0 0 25px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
-<link rel="stylesheet" href="/features.css">
-<link rel="stylesheet" href="/premium-admin.css">
+<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="premium-admin.css">
 </head>
 <body><main class="phone">
 <section id="home" class="view show"><header class="hero"><div class="top"><button class="menubtn" aria-label="Menyu" onclick="openMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><div class="brand"><div class="logo">N</div><div><small>TA’LIM MARKAZI</small><b>Nur oqiw orayi</b></div></div></div><h1>Har bir qadam —<br>yangi imkoniyat.</h1><p>O‘rganing, rivojlaning va natijalaringizni kuzatib boring.</p></header>
@@ -49,6 +49,6 @@ function toggleTheme(){setTheme(!document.body.classList.contains('dark'))}
 try{setTheme(localStorage.getItem('nur-apk-theme')==='dark')}catch(e){}
 function lang(b,name){document.querySelectorAll('.langs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');find('lang-msg').textContent=name+' tanlandi. To‘liq tarjima keyingi bosqichda qo‘shiladi.'}
 addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
-</script><script src="/premium-admin.js" defer></script>
-<script src="/app-features.js" defer></script>
+</script><script src="premium-admin.js" defer></script>
+<script src="app-features.js" defer></script>
 </body></html>
