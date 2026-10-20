@@ -1,0 +1,91 @@
+/* Nur oqiw approved iOS-jade admin portfolio, scoped to the new page and drawer.
+   No change to existing Liquid Glass bottom tabs or launcher icon. */
+#home .subject .arrow::after{content:none!important;display:none!important}
+#home .subject .arrow svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#home .subject .symbol svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round}
+
+/* Preview teaser, placed under the admin and message controls. */
+.nur-portfolio-preview{margin-top:20px;flex:none;}
+.nur-portfolio-preview>h4{margin:0 0 11px 2px;font-size:12px;font-weight:800;letter-spacing:.05px;color:var(--text)}
+.nur-mini-id{border-radius:19px;padding:16px;position:relative;overflow:hidden;color:#ebfff1;
+  background:radial-gradient(circle at 7% 0%,#4f906050,transparent 65%),linear-gradient(125deg,#245b42,#143729);
+  border:1px solid #6b9d7a75;box-shadow:inset 0 1px #ffffff26,0 7px 19px #092a1a23}
+.nur-mini-id::before{content:"";position:absolute;right:-33px;top:-50px;height:120px;width:120px;border-radius:50%;border:1px solid #efffee14;box-shadow:0 0 0 28px #ffffff07,0 0 0 48px #ffffff04;pointer-events:none}
+.nur-mini-head{display:flex;align-items:center;gap:11px;position:relative}
+.nur-owner-avatar{display:inline-grid;place-items:center;flex:none;width:48px;height:48px;border-radius:15px;
+  color:#e9fff2;background:linear-gradient(135deg,#6aa382,#265f45);border:1px solid #b0dfb153;
+  font-weight:790;font-size:14px;text-align:center}
+.nur-mini-person{min-width:0;line-height:1.35}
+.nur-mini-person>b{font-size:12px;font-weight:800;vertical-align:middle}
+.nur-mini-person>small{display:block;font-size:10px;color:#b8d9c4;margin-top:4px}
+.nur-badge{display:inline-flex;vertical-align:middle;margin-left:5px;align-items:center;justify-content:center}
+.nur-badge svg{height:18px;width:18px;display:block;filter:drop-shadow(0 1px 3px #001d3c52)}
+.nur-mini-meta{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid #ffffff1c;position:relative}
+.nur-mini-meta strong{font-weight:800;font-size:25px;letter-spacing:-.8px}
+.nur-mini-meta span{font-size:10px;color:#b4d9c4;margin-left:6px}
+.nur-open-portfolio{display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:11px;
+  background:#35724f;color:#eaffef;border:1px solid #80c29b7b;font-weight:800;font-size:11px}
+.nur-open-portfolio svg{height:14px;width:14px;stroke:currentColor;fill:none;stroke-width:2.2}
+.nur-open-portfolio:active,.nur-owner-shortcut:active{transform:scale(.98)}
+/* Last quick-menu row is a real portfolio shortcut, not another admin login. */
+.nur-drawer-footer{margin-top:20px;padding-top:13px;border-top:1px solid var(--stroke);flex:none}
+.nur-owner-shortcut{display:flex;align-items:center;gap:10px;padding:10px;width:100%;text-align:left;
+  background:var(--card);border:1px solid var(--stroke);border-radius:18px;color:var(--text)}
+.nur-owner-shortcut .nur-owner-avatar{width:39px;height:39px;border-radius:13px;font-size:12px}
+.nur-owner-shortcut-text{display:grid;flex:1;gap:3px;min-width:0}
+.nur-owner-shortcut-text strong{font-size:11px;font-weight:800}
+.nur-owner-shortcut-text small{font-size:10px;color:var(--muted)}
+.nur-owner-shortcut>svg{width:18px;height:18px;stroke:var(--accent);stroke-width:2.2;fill:none;flex:none}
+
+/* ID card is public by design; administrator controls remain server-authenticated. */
+.nur-portfolio-page{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+.nur-portfolio-kicker{margin-top:19px;margin-bottom:5px;color:var(--accent);font-size:10px;font-weight:800;letter-spacing:1.5px}
+.nur-portfolio-page>h2{margin-top:6px;font-size:26px;letter-spacing:-.8px}
+.nur-portfolio-page>.desc{margin-bottom:22px}
+.nur-id-card{border-radius:24px;min-height:226px;overflow:hidden;padding:20px;position:relative;color:#effff4;
+  background:linear-gradient(126deg,#2a704f,#163b2b 65%,#102a1e);
+  border:1px solid #6ea58398;box-shadow:0 17px 35px #122b1e32,inset 0 1px #ffffff35}
+.nur-id-card::before{content:"";position:absolute;right:-130px;top:-150px;width:320px;height:320px;border:1px solid #e3ffe91a;border-radius:50%;
+  box-shadow:0 0 0 36px #eaffed08,0 0 0 73px #eaffed04;pointer-events:none}
+.nur-id-head{display:flex;align-items:center;justify-content:space-between;position:relative}
+.nur-id-head b{letter-spacing:1.7px;font-size:10px;color:#ceefdc}
+.nur-id-head span{font-size:9px;letter-spacing:.5px;color:#b9d5c1}
+.nur-id-person{display:flex;align-items:center;gap:14px;margin-top:29px;position:relative}
+.nur-id-person .nur-owner-avatar{width:69px;height:74px;border-radius:18px;font-size:21px;
+  background:linear-gradient(135deg,#6b9f80,#225941)}
+.nur-id-name>b{font-size:19px;line-height:1.25;letter-spacing:-.5px;vertical-align:middle}
+.nur-id-name>.nur-badge{margin-left:7px}
+.nur-id-name>.nur-badge svg{width:20px;height:20px}
+.nur-id-name p{font-size:10px;color:#c6e0cd;line-height:1.5;margin:7px 0 0;max-width:190px}
+.nur-id-bottom{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-top:25px;padding-top:14px;border-top:1px solid #c0eec52e;position:relative}
+.nur-id-bottom span{display:flex;align-items:baseline;gap:8px}
+.nur-id-bottom strong{font-size:27px;letter-spacing:-.6px}
+.nur-id-bottom small{font-size:10px;color:#c6e0cd}
+.nur-id-bottom em{font-style:normal;font-size:9px;color:#add3b9;letter-spacing:1px}
+.nur-contact-card,.nur-skills{margin-top:18px;padding:16px;background:var(--card);border:1px solid var(--stroke);border-radius:20px}
+.nur-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.nur-card-head b{font-size:13px;font-weight:800;color:var(--text)}
+.nur-card-head small{font-size:9px;letter-spacing:1.3px;color:var(--muted)}
+.nur-phone-link{display:flex;align-items:center;gap:12px;padding:12px;margin-top:13px;border-radius:16px;
+  border:1px solid var(--stroke);background:var(--tint);text-decoration:none;color:var(--text)}
+.nur-phone-icon{display:grid;place-items:center;width:39px;height:39px;background:var(--card);border-radius:13px;color:var(--accent)}
+.nur-phone-icon svg{width:21px;height:21px;stroke-width:1.95;fill:none;stroke:currentColor}
+.nur-phone-link small{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}
+.nur-phone-link strong{font-weight:800;font-size:15px;letter-spacing:.2px}
+.nur-social-links{display:flex;gap:11px;margin-top:15px}
+.nur-social-links a{display:grid;place-items:center;width:57px;height:57px;border:1px solid #8fc6a575;
+  border-radius:18px;background:radial-gradient(circle at 20% 0%,#ffffff7a,transparent 65%),linear-gradient(140deg,#4d997355,#3c8f6550);
+  box-shadow:0 6px 14px #092b1820,inset 0 1px #ffffff60;color:var(--accent);text-decoration:none;
+  -webkit-tap-highlight-color:transparent;transition:transform .16s}
+.nur-social-links a svg{height:28px;width:28px;stroke:currentColor;stroke-width:1.9;fill:none}
+.nur-social-links a:active{transform:scale(.94)}
+.nur-social-help{font-size:10px;color:var(--muted);margin:10px 0 0}
+.nur-skill-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:15px}
+.nur-skill{border:1px solid var(--stroke);border-radius:16px;padding:14px 5px;text-align:center;
+  background:linear-gradient(160deg,var(--tint),var(--card));min-width:0}
+.nur-skill>span{display:grid;place-items:center;height:43px;width:43px;max-width:95%;margin:0 auto 10px;
+  border-radius:14px;color:var(--accent);background:var(--card);border:1px solid var(--stroke)}
+.nur-skill svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nur-skill b{font-size:11px;color:var(--text)}
+@media(max-width:350px){.nur-skill-grid{gap:5px}.nur-skill{padding:12px 1px}.nur-id-person{gap:10px}.nur-id-name>b{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.nur-social-links a,.nur-open-portfolio{transition:none}}
