@@ -147,7 +147,7 @@
     addEventListener('online',()=>refresh(true),{passive:true});
     addEventListener('visibilitychange',()=>{if(!document.hidden)refresh(true)},{passive:true});
   }
-  window.NurNotifications={addTicket,refresh,open};
+  window.NurNotifications={addTicket,refresh,open,close,isOpen:()=>active};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
