@@ -10,6 +10,7 @@ on:
       - "*.js"
       - "backend/**"
       - "paynet_qr.png"
+      - "android/app/google-services.json"
       - ".github/workflows/android-apk.yml"
 permissions:
   contents: write
@@ -32,10 +33,12 @@ jobs:
           node --check i18n.js
           node --check contact-ui.js
           node --check payment-ui.js
+          node --check portfolio-ui.js
           python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/contact.py backend/payments.py backend/init_db.py
           test -s android/app/src/main/res/drawable-nodpi/nur_premium_icon.webp
           test -s android/app/src/main/assets/index.html
           test -s android/app/src/main/assets/i18n.js
+          test -s android/app/google-services.json
           test -s android/app/src/main/assets/app-features.js
           grep -q 'id="admin-identity"' index.html
           grep -q 'adminVerified(true)' app-features.js
@@ -43,9 +46,9 @@ jobs:
       - name: Sync latest app UI into Android assets
         run: |
           mkdir -p android/app/src/main/assets
-          cp index.html features.css premium-admin.css ranking-ui.css liquid-glass.css polish-v08.css payment-ui.css android/app/src/main/assets/
+          cp index.html features.css premium-admin.css ranking-ui.css liquid-glass.css polish-v08.css payment-ui.css portfolio-ui.css android/app/src/main/assets/
           cp paynet_qr.png android/app/src/main/assets/
-          cp app-features.js premium-admin.js ranking-ui.js liquid-glass.js i18n.js contact-ui.js payment-ui.js android/app/src/main/assets/
+          cp app-features.js premium-admin.js ranking-ui.js liquid-glass.js i18n.js contact-ui.js payment-ui.js portfolio-ui.js android/app/src/main/assets/
           test -s android/app/src/main/assets/payment-ui.js
           test -s android/app/src/main/assets/paynet_qr.png
           test -s android/app/src/main/assets/contact-ui.js
@@ -71,7 +74,7 @@ jobs:
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" /tmp/signature-check.txt
           "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
-          grep -q "versionCode='10'" /tmp/apk-badging.txt
+          grep -q "versionCode='11'" /tmp/apk-badging.txt
           grep -q "application-icon" /tmp/apk-badging.txt
           grep -q "application-label:'Nur oqiw'" /tmp/apk-badging.txt
           unzip -l "$APK" | tee /tmp/apk-filelist.txt
@@ -83,6 +86,8 @@ jobs:
           grep -q "assets/contact-ui.js" /tmp/apk-filelist.txt
           grep -q "assets/polish-v08.css" /tmp/apk-filelist.txt
           grep -q "assets/payment-ui.js" /tmp/apk-filelist.txt
+          grep -q "assets/portfolio-ui.js" /tmp/apk-filelist.txt
+          grep -q "assets/portfolio-ui.css" /tmp/apk-filelist.txt
           grep -q "assets/paynet_qr.png" /tmp/apk-filelist.txt
       - name: Rename APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk Nur_oqiw.apk
@@ -95,9 +100,9 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-10
+          tag_name: build-11
           name: Nur oqiw
           prerelease: true
           make_latest: false
           files: Nur_oqiw.apk
-          body: "Nur oqiw: blue admin verification badge shown only after login; smoother Liquid Glass motion, lighter rendering, offline interface, Paynet payment requests (manual verification only). Existing premium icon unchanged. Debug-signed preview; not a Play Store release."
+          body: "Nur oqiw Android preview with core Firebase SDK initialized using the matching project app ID, approved owner portfolio, clickable social icons, four-language Open button and matched subject icons. Existing backend and premium icon preserved. Firebase service access not validated on a physical device; Paynet remains manual admin verification. Debug-signed preview, not Play Store."
