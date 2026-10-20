@@ -27,7 +27,7 @@
       headers['Authorization']='Bearer '+auth;
     }
     const controller = new AbortController();
-    const timeout=setTimeout(()=>controller.abort(), options.admin?7000:4800);
+    const timeout=setTimeout(()=>controller.abort(), options.admin?13000:11000);
     try {
       const res=await fetch(API+path,{method:options.method||'GET',headers,body:options.body?JSON.stringify(options.body):undefined,signal:controller.signal,cache:'no-store'});
       const data=await res.json().catch(()=>({}));
@@ -48,7 +48,7 @@
   }
   async function refresh(silent=false, force=false) {
     if(refreshing || document.hidden || !navigator.onLine)return;
-    if(!force && silent && Date.now()-lastFetchAttempt < (state.online?45000:90000))return;
+    if(!force && silent && Date.now()-lastFetchAttempt < 25000)return;
     lastFetchAttempt=Date.now();refreshing=true;
     try {
       const data=await api('/bootstrap');
@@ -382,8 +382,9 @@
   const adminEntrance=document.querySelector('.adminbtn');
   function syncAdminEntry(){
     if(adminEntrance){
-      adminEntrance.style.display='block';
-      adminEntrance.hidden=false;
+      // Hidden from non-admin users. The six-tap N-logo gesture reveals
+      // the token login. Server still authorizes every privileged request.
+      adminEntrance.hidden=!auth;
       adminEntrance.setAttribute('aria-label',translate('Admin panelga kirish'));
     }
   }
@@ -412,7 +413,7 @@
   const oldGroupHandler=window.openSubject;
   window.openSubject=function(name){const s=state.subjects.find(x=>x.title===name);if(s)return openSubjectDynamic(s);return oldGroupHandler(name)};
   refresh(true).then(()=>renderPublicResults());
-  setInterval(()=>{if(!document.hidden && navigator.onLine)refresh(true)},45000);
+  setInterval(()=>{if(!document.hidden && navigator.onLine)refresh(true)},28000);
   addEventListener('online',()=>{lastFetchAttempt=0;refresh(true)},{passive:true});
   addEventListener('visibilitychange',()=>{if(!document.hidden && Date.now()-successFetchAt>90000){lastFetchAttempt=0;refresh(true)}},{passive:true});
   if(auth&&document.querySelector('.view.show')?.id==='admin')renderAdmin();
