@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS app_contact_messages (
 CREATE INDEX IF NOT EXISTS app_contact_unread ON app_contact_messages(is_read,created_at DESC) WHERE NOT archived;
 
 -- Each anonymous sender holds a high-entropy, one-time-issued reply capability.
--- The database stores only its SHA-256; legacy messages remain without a token.
+-- The database stores only its SHA-256 and legacy messages remain without a token.
 ALTER TABLE app_contact_messages ADD COLUMN IF NOT EXISTS reply_token_hash VARCHAR(64);
 CREATE UNIQUE INDEX IF NOT EXISTS app_contact_token_hash_unique
     ON app_contact_messages(reply_token_hash)
