@@ -76,3 +76,6 @@
     backdrop-filter:none!important;
   }
 }
+
+/* Strictly hide privileged entry for guests, even against legacy !important display. */
+.drawer .adminbtn[hidden]{display:none!important}
