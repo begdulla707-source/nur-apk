@@ -12,6 +12,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebSettings;
 import android.widget.FrameLayout;
+import android.util.Log;
+import com.google.firebase.FirebaseApp;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -47,6 +49,16 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Google Services supplies Android-package-matched Firebase options.
+        // A missing/mismatched configuration is logged, never hard-coded
+        // into the offline HTML or exposed to the WebView.
+        try {
+            FirebaseApp app = FirebaseApp.initializeApp(getApplicationContext());
+            if (app == null) Log.w("NurOqiwFirebase", "Firebase config unavailable");
+            else Log.i("NurOqiwFirebase", "Firebase initialized for Android app");
+        } catch (Exception exception) {
+            Log.e("NurOqiwFirebase", "Firebase initialization failed", exception);
+        }
         getWindow().setStatusBarColor(Color.rgb(15, 72, 58));
         getWindow().setNavigationBarColor(Color.rgb(239, 246, 241));
         webView = new WebView(this);
