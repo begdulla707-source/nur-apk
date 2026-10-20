@@ -1,0 +1,50 @@
+/* Nur oqiw — small Liquid Glass in-app notification center */
+.nur-notify-button{position:fixed;top:calc(10px + env(safe-area-inset-top));right:max(18px,calc((100vw - 430px)/2 + 18px));
+ z-index:9;display:grid;place-items:center;width:43px;height:43px;border:1px solid #ffffff47;
+ border-radius:15px;background:linear-gradient(145deg,#358261ee,#134c38f5);
+ color:#e7fff2;box-shadow:0 4px 16px #15372329,inset 0 1px #ffffff34;
+ padding:0;transition:transform .15s ease;-webkit-tap-highlight-color:transparent}
+.nur-notify-button svg{width:23px;height:23px;stroke:currentColor}
+.nur-notify-button:active{transform:scale(.94)}
+.nur-notify-badge{position:absolute;right:-5px;top:-5px;min-width:19px;height:19px;
+ background:#db3e4d;color:white;font-weight:800;font-size:10px;line-height:17px;
+ border-radius:100px;border:1.5px solid var(--bg);padding:0 3px;text-align:center}
+.nur-notify-badge[hidden],.nur-notify-backdrop[hidden],.nur-notify-panel[hidden]{display:none!important}
+.nur-notify-backdrop{position:fixed;inset:0;background:#061a1252;z-index:24}
+.nur-notify-panel{position:fixed;top:calc(62px + env(safe-area-inset-top));
+ right:max(11px,calc((100vw - 430px)/2 + 10px));width:min(382px,calc(100vw - 22px));
+ z-index:25;max-height:min(70dvh,590px);display:flex;flex-direction:column;overflow:hidden;
+ background:var(--card);color:var(--text);border:1px solid var(--stroke);border-radius:22px;
+ box-shadow:0 20px 56px #09291a4b,inset 0 1px #ffffff46}
+.nur-notify-header{padding:16px 17px 12px;border-bottom:1px solid var(--stroke);
+ display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none}
+.nur-notify-header div{display:grid;gap:4px}
+.nur-notify-header b{font-size:15px;font-weight:800;letter-spacing:-.2px}
+.nur-notify-header small{color:var(--muted);font-size:10px;line-height:1.4}
+.nur-notify-header button{display:grid;place-items:center;flex:none;width:32px;height:32px;
+ border:1px solid var(--stroke);border-radius:11px;background:var(--tint);color:var(--accent)}
+.nur-notify-header button svg{width:18px;height:18px}
+.nur-notify-body{overflow-y:auto;overscroll-behavior:contain;padding:9px 12px 15px;min-height:80px}
+.nur-notify-item{padding:13px 12px;margin-top:9px;background:var(--bg);border:1px solid var(--stroke);border-radius:15px}
+.nur-notify-meta{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:8px}
+.nur-notify-kind{color:var(--accent);font-weight:800;font-size:10px}
+.nur-notify-meta time{font-size:10px;color:var(--muted);white-space:nowrap}
+.nur-notify-item>b{font-size:12px;line-height:1.4}
+.nur-notify-item p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.55;margin:6px 0 0}
+.nur-notify-empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:12px}
+.nur-notify-warning{font-size:11px;color:#be6041;margin:11px 6px;line-height:1.6}
+.nur-notify-footer{flex:none;display:flex;align-items:center;gap:13px;justify-content:space-between;
+ padding:11px 15px;border-top:1px solid var(--stroke)}
+.nur-notify-footer button{background:var(--tint);color:var(--accent);border:1px solid var(--stroke);
+ border-radius:10px;padding:9px 12px;font-size:11px;font-weight:800}
+.nur-notify-footer span{font-size:10px;color:var(--muted);text-align:right}
+.nur-admin-reply{background:var(--tint);border:1px solid var(--stroke);border-radius:14px;
+ padding:11px 12px;margin:8px 0;overflow-wrap:anywhere}
+.nur-admin-reply small{color:var(--muted);font-size:10px}
+.nur-admin-reply p{font-size:12px;line-height:1.6;margin:7px 0 0;white-space:pre-wrap}
+.nur-admin-reply-form{margin:12px 0;padding:11px;border:1px solid var(--stroke);border-radius:13px}
+.nur-admin-reply-form label{display:grid;gap:7px;color:var(--text);font-size:12px;font-weight:750}
+.nur-admin-reply-form textarea{width:100%;min-height:70px;padding:11px;border-radius:10px;border:1px solid var(--stroke);
+ background:var(--bg);color:var(--text);font-size:12px;font:inherit;resize:vertical}
+.nur-admin-reply-form button{margin-top:11px}
+@media(prefers-reduced-motion:reduce){.nur-notify-button{transition:none}}
