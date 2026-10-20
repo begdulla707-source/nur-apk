@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1023539144417",
+    "project_id": "nur-oqiw",
+    "storage_bucket": "nur-oqiw.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1023539144417:android:2a69b6bb4bbd40a82979a0",
+        "android_client_info": {
+          "package_name": "uz.nuroqiworayi.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFbMbcQHtIibeuPRdQAhyvw5TkNsO0i18"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
