@@ -52,3 +52,7 @@
 .nur-notify-download{display:inline-flex;margin-top:10px;padding:10px 12px;border-radius:11px;
  border:1px solid #9bccac;background:var(--tint);color:var(--accent);
  text-decoration:none;font-size:11px;font-weight:800}
+
+/* The panel itself must be opaque; only the outside dimmer is translucent.
+   This avoids hero text bleeding through the notification messages. */
+.nur-notify-panel{background:var(--bg)!important}
