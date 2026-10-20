@@ -103,6 +103,13 @@ public class MainActivity extends Activity {
                     uri.getPath() != null && uri.getPath().startsWith("/assets/")) {
                     return false;
                 }
+                if ("tel".equals(uri.getScheme())) {
+                    try {
+                        // Open the dialer; never place a call without the user's action.
+                        startActivity(new Intent(Intent.ACTION_DIAL, uri));
+                    } catch (Exception ignored) { }
+                    return true;
+                }
                 if ("https".equals(uri.getScheme()) || "mailto".equals(uri.getScheme())) {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, uri));
