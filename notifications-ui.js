@@ -27,7 +27,7 @@
   function dateText(input){
     const d=new Date(input);
     if(Number.isNaN(d.getTime()))return '';
-    return new Intl.DateTimeFormat('uz-UZ',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tashkent'}).format(d);
+    return new Intl.DateTimeFormat('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tashkent'}).format(d);
   }
   function build(){
     if(!$('home')||$('nur-notify-button'))return;
