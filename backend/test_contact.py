@@ -21,6 +21,25 @@ class ContactTests(unittest.TestCase):
         r=self.client.post("/api/contact",json=data)
         self.assertEqual(r.status_code,201,r.json)
         id=r.json["reference"]
+        ticket=r.json.get("reply_ticket")
+        self.assertTrue(isinstance(ticket,str) and len(ticket)>=40)
+        empty=self.client.post("/api/notifications/sync",json={"tickets":[]})
+        self.assertEqual(empty.status_code,200,empty.json)
+        self.assertFalse(empty.json["replies"])
+        no_ownership=self.client.post("/api/notifications/sync",
+                json={"tickets":["a"*43]})
+        self.assertEqual(no_ownership.status_code,200,no_ownership.json)
+        self.assertFalse(no_ownership.json["replies"])
+        self.assertEqual(self.client.post("/api/notifications/sync",json={"tickets":["bad"]}).status_code,400)
+        self.assertEqual(self.client.post("/api/admin/inbox/"+str(id)+"/reply",
+                 json={"message":"Salom, bu sizga javob"}).status_code,401)
+        reply=self.client.post("/api/admin/inbox/"+str(id)+"/reply",
+                 json={"message":"Salom, bu sizga javob"},headers=self.header)
+        self.assertEqual(reply.status_code,201,reply.json)
+        mine=self.client.post("/api/notifications/sync",json={"tickets":[ticket]})
+        self.assertEqual(mine.status_code,200,mine.json)
+        self.assertTrue(any(x["reference"]==id for x in mine.json["replies"]))
+        self.assertFalse(any(x["reference"]==id for x in empty.json["replies"]))
         self.assertEqual(self.client.get("/api/admin/inbox").status_code,401)
         inbox=self.client.get("/api/admin/inbox",headers=self.header)
         self.assertEqual(inbox.status_code,200,inbox.json)
