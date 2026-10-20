@@ -34,6 +34,8 @@ jobs:
           node --check contact-ui.js
           node --check payment-ui.js
           node --check portfolio-ui.js
+          node --check notifications-ui.js
+          node --check navigation-ui.js
           python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/contact.py backend/payments.py backend/init_db.py
           test -s android/app/src/main/res/drawable-nodpi/nur_premium_icon.webp
           test -s android/app/src/main/assets/index.html
@@ -46,12 +48,15 @@ jobs:
       - name: Sync latest app UI into Android assets
         run: |
           mkdir -p android/app/src/main/assets
-          cp index.html features.css premium-admin.css ranking-ui.css liquid-glass.css polish-v08.css payment-ui.css portfolio-ui.css android/app/src/main/assets/
+          cp index.html features.css premium-admin.css ranking-ui.css liquid-glass.css polish-v08.css payment-ui.css portfolio-ui.css notifications-ui.css android/app/src/main/assets/
           cp paynet_qr.png android/app/src/main/assets/
-          cp app-features.js premium-admin.js ranking-ui.js liquid-glass.js i18n.js contact-ui.js payment-ui.js portfolio-ui.js android/app/src/main/assets/
+          cp app-features.js premium-admin.js ranking-ui.js liquid-glass.js i18n.js contact-ui.js payment-ui.js portfolio-ui.js notifications-ui.js navigation-ui.js android/app/src/main/assets/
           test -s android/app/src/main/assets/payment-ui.js
           test -s android/app/src/main/assets/paynet_qr.png
           test -s android/app/src/main/assets/contact-ui.js
+          test -s android/app/src/main/assets/notifications-ui.js
+          test -s android/app/src/main/assets/navigation-ui.js
+          test -s android/app/src/main/res/drawable/nur_launch_background.xml
           test -s android/app/src/main/assets/polish-v08.css
       - name: Install Android SDK
         run: |
@@ -74,7 +79,7 @@ jobs:
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" /tmp/signature-check.txt
           "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
-          grep -q "versionCode='11'" /tmp/apk-badging.txt
+          grep -q "versionCode='12'" /tmp/apk-badging.txt
           grep -q "application-icon" /tmp/apk-badging.txt
           grep -q "application-label:'Nur oqiw'" /tmp/apk-badging.txt
           unzip -l "$APK" | tee /tmp/apk-filelist.txt
@@ -88,6 +93,9 @@ jobs:
           grep -q "assets/payment-ui.js" /tmp/apk-filelist.txt
           grep -q "assets/portfolio-ui.js" /tmp/apk-filelist.txt
           grep -q "assets/portfolio-ui.css" /tmp/apk-filelist.txt
+          grep -q "assets/notifications-ui.js" /tmp/apk-filelist.txt
+          grep -q "assets/notifications-ui.css" /tmp/apk-filelist.txt
+          grep -q "assets/navigation-ui.js" /tmp/apk-filelist.txt
           grep -q "assets/paynet_qr.png" /tmp/apk-filelist.txt
       - name: Rename APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk Nur_oqiw.apk
@@ -100,9 +108,9 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-11
+          tag_name: build-12
           name: Nur oqiw
           prerelease: true
           make_latest: false
           files: Nur_oqiw.apk
-          body: "Nur oqiw Android preview with core Firebase SDK initialized using the matching project app ID, approved owner portfolio, clickable social icons, four-language Open button and matched subject icons. Existing backend and premium icon preserved. Firebase service access not validated on a physical device; Paynet remains manual admin verification. Debug-signed preview, not Play Store."
+          body: "Nur oqiw Android preview: brand-logo native emerald startup progress screen; one-step Android Back with exit confirmation; anonymous sender ticket-protected admin replies; in-app notices, replies and new-APK notifications; refreshed API data, owner portfolio, manual Paynet requests. Existing launcher icon unchanged. Debug-signed preview, NOT Play Store. Google Play Protect warnings cannot be bypassed and the Play release still requires a stable keystore."
