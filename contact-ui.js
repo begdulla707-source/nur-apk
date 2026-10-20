@@ -23,7 +23,18 @@
     finally{clearTimeout(timer)}
     const payload=await response.json().catch(()=>({}));
     if(!response.ok)throw new Error(payload.error||'Xabarni yuborib bo‘lmadi');
-    feed.textContent='Xabaringiz administratorga yuborildi. Raqam: '+payload.reference;
+    // Store the one-time reply capability locally. Never put it into page URLs.
+    if(payload.reply_ticket && window.NurNotifications?.addTicket){
+      window.NurNotifications.addTicket(payload.reply_ticket,payload.reference);
+    } else if(payload.reply_ticket) {
+      try {
+        const tickets=JSON.parse(localStorage.getItem('nur-reply-tickets')||'[]');
+        if(!tickets.includes(payload.reply_ticket))tickets.unshift(payload.reply_ticket);
+        localStorage.setItem('nur-reply-tickets',JSON.stringify(tickets.slice(0,30)));
+      } catch(_) {}
+    }
+    feed.textContent='Xabaringiz administratorga yuborildi. Raqam: '+payload.reference+
+      '. Javob yuqoridagi bildirishnoma belgisiga keladi.';
     feed.className='okbox';
     form.elements.namedItem('message').value='';
    }catch(e){feed.className='errorbox';feed.textContent=e.name==='AbortError'?'Server kech javob bermoqda. Keyinroq qayta urinib ko‘ring.':e.message}
@@ -32,6 +43,26 @@
  }
  async function inbox(root,ctx){
    root.innerHTML='<div class="premium-heading"><h3>Admin xabarlari</h3><small>Faqat admin uchun</small></div><div class="inbox-controls"><button type="button" class="appbtn secondary" data-inbox-action="refresh">Yangilash</button><button type="button" class="appbtn light" data-inbox-action="unread">O‘qilmaganlar</button><button type="button" class="appbtn light" data-inbox-action="active">Barcha xabarlar</button></div><div id="inbox-items">Xabarlar yuklanmoqda...</div>';
+   // No data-form attribute: generic admin form handler does not intercept replies.
+   if(!root.dataset.replyEventsReady){
+     root.dataset.replyEventsReady='1';
+     root.addEventListener('submit',async event=>{
+       const form=event.target.closest('form[data-inbox-reply]');
+       if(!form)return;
+       event.preventDefault();event.stopPropagation();
+       const btn=form.querySelector('button[type=submit]');
+       const textarea=form.querySelector('textarea[name=message]');
+       const message=textarea?.value.trim()||'';
+       if(!message){ctx.toast('Javobni kiriting');return}
+       if(btn)btn.disabled=true;
+       try{
+         const id=Number(form.dataset.inboxReply);
+         await ctx.api('/admin/inbox/'+id+'/reply',{admin:true,method:'POST',body:{message}});
+         ctx.toast('Javob yuborildi. Userga bildirishnoma yetadi.');
+         await loadInbox(ctx,'active');
+       }catch(e){ctx.toast(e.message);if(btn)btn.disabled=false}
+     });
+   }
    await loadInbox(ctx,'active');
  }
  async function loadInbox(ctx,status){
@@ -47,7 +78,11 @@
      card.className='appcard inbox-card'+(m.is_read?'':' unread');
      const who=m.sender_type==='parent'?'Ota-ona':'O‘quvchi';
      const subject={mat:'Matematika',fiz:'Fizika',rus:'Rus tili',eng:'Ingliz tili',other:'Boshqa'}[m.subject_code]||'—';
+     const history=(m.replies||[]).map(r=>'<div class="nur-admin-reply"><small>Admin · '+clean(messageDate(r.created_at))+'</small><p>'+clean(r.body)+'</p></div>').join('');
      card.innerHTML='<h4>'+clean(m.full_name)+'</h4><p class="page-message">'+clean(who)+' · '+clean(subject)+' · '+clean(messageDate(m.created_at))+'</p><p class="inbox-body">'+clean(m.message)+'</p>'+
+      (history?'<div class="nur-reply-thread">'+history+'</div>':'')+
+      (m.can_reply?'<form class="nur-admin-reply-form" data-inbox-reply="'+Number(m.id)+'"><label>Javob yozish<textarea name="message" required maxlength="1500" rows="3" placeholder="O‘quvchiga javobingiz..."></textarea></label><button type="submit" class="appbtn small">Javob yuborish</button></form>':
+       '<div class="page-message">Bu eski xabarga javob yuborib bo‘lmaydi. Foydalanuvchi yangidan yozishi kerak.</div>')+
       '<div class="action-row">'+(m.is_read?'':'<button type="button" class="appbtn secondary small" data-inbox-action="read" data-id="'+m.id+'">O‘qildi</button>')+
       '<button type="button" class="appbtn danger small" data-inbox-action="archive" data-id="'+m.id+'">Arxivlash</button></div>';
      root.append(card);
