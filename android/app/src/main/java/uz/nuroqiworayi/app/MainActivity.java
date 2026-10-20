@@ -12,6 +12,17 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebSettings;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.content.res.ColorStateList;
+import android.view.Gravity;
+import android.view.View;
+import android.os.SystemClock;
 import android.util.Log;
 import com.google.firebase.FirebaseApp;
 
@@ -36,11 +47,78 @@ public class MainActivity extends Activity {
     private static final Set<String> WEB_ASSETS = new HashSet<String>(Arrays.asList(
         "index.html", "features.css", "premium-admin.css", "ranking-ui.css",
         "liquid-glass.css", "polish-v08.css", "payment-ui.css", "portfolio-ui.css",
+        "notifications-ui.css",
         "app-features.js", "premium-admin.js", "ranking-ui.js",
         "liquid-glass.js", "i18n.js", "contact-ui.js", "payment-ui.js", "portfolio-ui.js",
+        "notifications-ui.js", "navigation-ui.js",
         "paynet_qr.png"
     ));
     private WebView webView;
+    private FrameLayout splashOverlay;
+    private long splashOpenedAt;
+    private long lastBackRequestAt;
+    private boolean splashFinished=false;
+    private boolean backCheckInProgress=false;
+
+    private int dp(float dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
+    /** Branded, nonblocking native startup screen; real launcher icon is unchanged. */
+    private FrameLayout makeSplash() {
+        final FrameLayout splash=new FrameLayout(this);
+        GradientDrawable background=new GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            new int[]{Color.rgb(11,51,38),Color.rgb(30,105,72)});
+        splash.setBackground(background);
+
+        LinearLayout stack=new LinearLayout(this);
+        stack.setOrientation(LinearLayout.VERTICAL);
+        stack.setGravity(Gravity.CENTER);
+        stack.setPadding(dp(18),dp(18),dp(18),dp(18));
+
+        ImageView icon=new ImageView(this);
+        icon.setImageResource(R.drawable.nur_premium_icon);
+        icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams iconParams=new LinearLayout.LayoutParams(dp(122),dp(122));
+        iconParams.bottomMargin=dp(23);
+        stack.addView(icon,iconParams);
+
+        TextView title=new TextView(this);
+        title.setText("Nur oqiw");
+        title.setTextColor(Color.rgb(239,255,244));
+        title.setTextSize(22);
+        title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams titleParams=new LinearLayout.LayoutParams(-2,-2);
+        titleParams.bottomMargin=dp(19);
+        stack.addView(title,titleParams);
+
+        ProgressBar line=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
+        line.setIndeterminate(true);
+        line.setIndeterminateTintList(ColorStateList.valueOf(Color.rgb(184,237,204)));
+        line.setProgressBackgroundTintList(ColorStateList.valueOf(Color.rgb(66,123,90)));
+        stack.addView(line,new LinearLayout.LayoutParams(dp(178),dp(5)));
+        splash.addView(stack,new FrameLayout.LayoutParams(-1,-1));
+        return splash;
+    }
+
+    private void dismissSplash() {
+        if(splashFinished || splashOverlay==null)return;
+        splashFinished=true;
+        final FrameLayout toHide=splashOverlay;
+        // Brief real progress display, but never force a multi-second white frame.
+        long elapsed=SystemClock.uptimeMillis()-splashOpenedAt;
+        toHide.postDelayed(()->{
+            if(isFinishing()||isDestroyed())return;
+            toHide.animate().alpha(0f).setDuration(240L).withEndAction(()->{
+                if(toHide.getParent() instanceof FrameLayout) {
+                    ((FrameLayout)toHide.getParent()).removeView(toHide);
+                }
+                if(splashOverlay==toHide)splashOverlay=null;
+            }).start();
+        },Math.max(0L,650L-elapsed));
+    }
 
     private WebResourceResponse deny() {
         return new WebResourceResponse("text/plain", "UTF-8",
@@ -59,10 +137,10 @@ public class MainActivity extends Activity {
         } catch (Exception exception) {
             Log.e("NurOqiwFirebase", "Firebase initialization failed", exception);
         }
-        getWindow().setStatusBarColor(Color.rgb(15, 72, 58));
-        getWindow().setNavigationBarColor(Color.rgb(239, 246, 241));
+        getWindow().setStatusBarColor(Color.rgb(11, 51, 38));
+        getWindow().setNavigationBarColor(Color.rgb(11, 51, 38));
         webView = new WebView(this);
-        webView.setBackgroundColor(Color.rgb(239, 246, 241));
+        webView.setBackgroundColor(Color.rgb(13, 62, 43));
         final WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
@@ -76,6 +154,10 @@ public class MainActivity extends Activity {
         }
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view,url);
+                if(url!=null && url.startsWith(HOME))dismissSplash();
+            }
             @Override public WebResourceResponse shouldInterceptRequest(
                     WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
@@ -120,7 +202,17 @@ public class MainActivity extends Activity {
         });
         FrameLayout layout = new FrameLayout(this);
         layout.addView(webView, new FrameLayout.LayoutParams(-1, -1));
+        splashOpenedAt=SystemClock.uptimeMillis();
+        splashOverlay=makeSplash();
+        layout.addView(splashOverlay,new FrameLayout.LayoutParams(-1,-1));
         setContentView(layout);
+        // Handle the Android 13+ system gesture via the same safe in-app stack.
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
+        }
+        // Safety fallback prevents indefinite blocking if a WebView error occurs.
+        splashOverlay.postDelayed(this::dismissSplash,9000L);
         if (savedInstanceState == null) webView.loadUrl(HOME);
         else webView.restoreState(savedInstanceState);
     }
@@ -129,10 +221,35 @@ public class MainActivity extends Activity {
         if (webView != null) webView.saveState(state);
         super.onSaveInstanceState(state);
     }
-    @Override public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
+    private void confirmExit() {
+        long now=SystemClock.uptimeMillis();
+        if(now-lastBackRequestAt<=1900L) {
+            finish();
+        } else {
+            lastBackRequestAt=now;
+            Toast.makeText(this,"Ilovadan chiqish uchun yana bir marta Orqaga bosing",Toast.LENGTH_SHORT).show();
+        }
     }
+
+    private void handleBack() {
+        if(webView==null||backCheckInProgress){return;}
+        backCheckInProgress=true;
+        // SPA page navigation does not add WebView URL history. Ask the JS
+        // navigation stack to go back by exactly one view first.
+        webView.evaluateJavascript(
+            "(function(){try{return typeof window.NurAndroidBack==='function' && window.NurAndroidBack()===true}catch(e){return false}})();",
+            result->{
+                backCheckInProgress=false;
+                if(isFinishing()||isDestroyed())return;
+                if("true".equals(result))return;
+                if(webView!=null && webView.canGoBack()){
+                    webView.goBack();return;
+                }
+                confirmExit();
+            });
+    }
+
+    @Override public void onBackPressed() {handleBack();}
     @Override protected void onDestroy() {
         if (webView != null) {
             webView.stopLoading();
