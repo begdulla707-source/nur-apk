@@ -35,9 +35,9 @@ public class MainActivity extends Activity {
     private static final String HOME = "https://" + APP_HOST + "/assets/index.html";
     private static final Set<String> WEB_ASSETS = new HashSet<String>(Arrays.asList(
         "index.html", "features.css", "premium-admin.css", "ranking-ui.css",
-        "liquid-glass.css", "polish-v08.css", "payment-ui.css",
+        "liquid-glass.css", "polish-v08.css", "payment-ui.css", "portfolio-ui.css",
         "app-features.js", "premium-admin.js", "ranking-ui.js",
-        "liquid-glass.js", "i18n.js", "contact-ui.js", "payment-ui.js",
+        "liquid-glass.js", "i18n.js", "contact-ui.js", "payment-ui.js", "portfolio-ui.js",
         "paynet_qr.png"
     ));
     private WebView webView;
