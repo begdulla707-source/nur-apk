@@ -1,4 +1,7 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+    id 'com.google.gms.google-services'
+}
 android {
     namespace 'uz.nuroqiworayi.app'
     compileSdk 35
@@ -6,8 +9,8 @@ android {
         applicationId 'uz.nuroqiworayi.app'
         minSdk 24
         targetSdk 35
-        versionCode 10
-        versionName '1.0.0'
+        versionCode 11
+        versionName '1.0.1'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -18,4 +21,11 @@ android {
             minifyEnabled false
         }
     }
+}
+
+// Core Firebase SDK only. We do not enable Analytics, Authentication or
+// Firestore until the owner explicitly configures those services.
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:34.19.0')
+    implementation 'com.google.firebase:firebase-common'
 }
