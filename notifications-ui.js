@@ -10,7 +10,9 @@
   const $=id=>document.getElementById(id);
   const bell='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9M10 21h4"/></svg>';
   const xicon='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg>';
+  const INSTALLED_BUILD=12;
   let items=[],lastSignature='',active=false,waiting=false,previousError='',lastChecked=0;
+  let appUpdate=null,lastReleaseCheck=0;
   function readArray(key,max){
     try{const v=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(v)?v.filter(x=>typeof x==='string').slice(0,max):[]}catch{return []}
   }
@@ -76,12 +78,20 @@
     const article=document.createElement('article');article.className='nur-notify-item';
     const upper=document.createElement('div');upper.className='nur-notify-meta';
     const kind=document.createElement('span');kind.className='nur-notify-kind';
-    kind.textContent=translated(item.type==='reply'?'Administrator javobi':'E’lon');
+    kind.textContent=translated(item.type==='reply'?'Administrator javobi':item.type==='update'?'Yangi versiya':'E’lon');
     const time=document.createElement('time');time.textContent=dateText(item.created_at);
     upper.append(kind,time);
     const name=document.createElement('b');name.textContent=item.title;
     const msg=document.createElement('p');msg.textContent=item.body;
     article.append(upper,name,msg);
+    if(item.type==='update' && typeof item.url==='string' &&
+       /^https:\/\/github\.com\/begdulla707-source\/nur-apk\/releases\/download\//.test(item.url)){
+      const link=document.createElement('a');
+      link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';
+      link.className='nur-notify-download';
+      link.textContent=translated('Yangilangan APKni yuklab olish');
+      article.append(link);
+    }
     return article;
   }
   function updateList(){
@@ -125,6 +135,7 @@
       const data=await response.json().catch(()=>({}));
       if(!response.ok)throw new Error(data.error||'Server javob bermadi');
       const feed=[
+        ...(appUpdate?[appUpdate]:[]),
         ...(data.notices||[]).map(n=>({key:'n:'+n.id,type:'notice',
           title:String(n.title||'E’lon'),body:String(n.body||''),created_at:n.created_at})),
         ...(data.replies||[]).map(r=>({key:'r:'+r.id,type:'reply',
@@ -141,11 +152,42 @@
       const status=$('nur-notify-status');if(status)status.textContent=translated('Serverga ulanib bo‘lmadi');
     }finally{clearTimeout(timer);waiting=false}
   }
+  async function checkRelease(force=false){
+    if(document.hidden||!navigator.onLine)return;
+    if(!force&&Date.now()-lastReleaseCheck<30*60*1000)return;
+    lastReleaseCheck=Date.now();
+    try{
+      const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),6500);
+      let res;
+      try{
+        res=await fetch('https://api.github.com/repos/begdulla707-source/nur-apk/releases?per_page=12',
+          {cache:'no-store',headers:{Accept:'application/vnd.github+json'},signal:controller.signal});
+      }finally{clearTimeout(timeout)}
+      if(!res.ok)return;
+      const releases=await res.json();
+      if(!Array.isArray(releases))return;
+      const builds=releases.filter(x=>!x.draft).map(x=>({
+        number:Number((x.tag_name||'').match(/^build-(\d+)$/)?.[1]||0),
+        asset:(x.assets||[]).find(a=>a.name==='Nur_oqiw.apk'),
+        published_at:x.published_at
+      })).filter(x=>x.number>INSTALLED_BUILD&&x.asset?.browser_download_url);
+      builds.sort((a,b)=>b.number-a.number);
+      if(builds.length){
+        const newest=builds[0];
+        appUpdate={key:'u:'+newest.number,type:'update',
+          title:'Yangi ilova versiyasi mavjud',
+          body:'Nur oqiw ilovasi yangilandi. Xavfsiz yuklab olish uchun rasmiy GitHub Release sahifasini oching.',
+          created_at:newest.published_at||new Date().toISOString(),url:newest.asset.browser_download_url};
+      }else appUpdate=null;
+      // Update the rendered feed without waiting for the next network poll.
+      lastChecked=0;refresh(true);
+    }catch(err){/* An update lookup must never interrupt messages. */}
+  }
   function init(){
-    build();refresh(true);
-    setInterval(()=>{if(!document.hidden)refresh()},28000);
-    addEventListener('online',()=>refresh(true),{passive:true});
-    addEventListener('visibilitychange',()=>{if(!document.hidden)refresh(true)},{passive:true});
+    build();refresh(true);checkRelease(true);
+    setInterval(()=>{if(!document.hidden){refresh();checkRelease()}},28000);
+    addEventListener('online',()=>{refresh(true);checkRelease(true)},{passive:true});
+    addEventListener('visibilitychange',()=>{if(!document.hidden){refresh(true);checkRelease()}},{passive:true});
   }
   window.NurNotifications={addTicket,refresh,open,close,isOpen:()=>active};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
