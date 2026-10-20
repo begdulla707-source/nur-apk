@@ -21,6 +21,7 @@ body.dark{color-scheme:dark;--bg:#101c16;--card:#1b2e23;--text:#e9f8ee;--muted:#
 <link rel="stylesheet" href="liquid-glass.css">
 <link rel="stylesheet" href="polish-v08.css">
 <link rel="stylesheet" href="payment-ui.css">
+<link rel="stylesheet" href="portfolio-ui.css">
 </head>
 <body><main class="phone">
 <section id="home" class="view show"><header class="hero"><div class="top"><button class="menubtn" aria-label="Menyu" onclick="openMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><div class="brand"><div class="logo">N</div><div><small>TA’LIM MARKAZI</small><b>Nur oqiw orayi</b></div></div></div><h1>Har bir qadam —<br>yangi imkoniyat.</h1><p>O‘rganing, rivojlaning va natijalaringizni kuzatib boring.</p></header>
@@ -89,7 +90,7 @@ body.dark{color-scheme:dark;--bg:#101c16;--card:#1b2e23;--text:#e9f8ee;--muted:#
 const find=id=>document.getElementById(id),groups=['A','B','C','V','G','J','H'];
 for(const g of groups){const b=document.createElement('button');b.className='group';b.textContent=g+' guruhi';const small=document.createElement('small');small.textContent='Guruhni ochish';b.append(small);b.onclick=()=>{find('group-title').textContent=g+' guruhi';go('group')};find('group-list').append(b)}
 for(const id of ['rating-filters','results-filters']){const root=find(id);for(const name of ['Barchasi',...groups]){const b=document.createElement('button');b.className='chip'+(name==='Barchasi'?' on':'');b.textContent=name==='Barchasi'?name:name+' guruhi';b.onclick=()=>{root.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));b.classList.add('on')};root.append(b)}}
-function go(id){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('show',x.id===id));const current=id==='student-profile'?'rating':['groups','group','subject','admin','contact','payments'].includes(id)?'home':id;document.querySelectorAll('.tabbar button').forEach(x=>x.classList.toggle('active',x.dataset.page===current));closeMenu();scrollTo({top:0,behavior:'instant'})}
+function go(id){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('show',x.id===id));const current=id==='student-profile'?'rating':['groups','group','subject','admin','contact','payments','portfolio'].includes(id)?'home':id;document.querySelectorAll('.tabbar button').forEach(x=>x.classList.toggle('active',x.dataset.page===current));closeMenu();scrollTo({top:0,behavior:'instant'})}
 function openSubject(name){find('subject-title').textContent=name;go('subject')}
 function openMenu(){find('drawer').classList.add('open');find('overlay').classList.add('open');find('drawer').setAttribute('aria-hidden','false')}
 function closeMenu(){find('drawer').classList.remove('open');find('overlay').classList.remove('open');find('drawer').setAttribute('aria-hidden','true')}
@@ -105,4 +106,5 @@ addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 <script src="i18n.js" defer></script>
 <script src="contact-ui.js" defer></script>
 <script src="payment-ui.js" defer></script>
+<script src="portfolio-ui.js" defer></script>
 </body></html>
