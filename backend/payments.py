@@ -71,7 +71,9 @@ def register_payments(app, db, admin_only, request_json, require_int, bad):
                 FROM app_payment_tariffs t JOIN app_groups g ON g.id=t.group_id
                 JOIN app_subjects s ON s.id=g.subject_id
                 WHERE t.active AND NOT g.archived ORDER BY s.id,g.id""").fetchall()
-        ready = is_active(settings)
+        # A checked recipient alone does not make payments available. At least
+        # one non-archived group must have a real admin-entered tariff.
+        ready = is_active(settings) and bool(groups)
         return jsonify({
             "ready": ready,
             "mode": "paynet_qr_manual_review",
