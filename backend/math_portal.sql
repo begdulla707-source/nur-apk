@@ -25,3 +25,27 @@ CREATE TABLE IF NOT EXISTS math_results (
  PRIMARY KEY(test_id,student_id),
  CONSTRAINT math_score_valid CHECK ((status='dq' AND correct_answers IS NULL) OR (status='present' AND correct_answers BETWEEN 0 AND 200))
 );
+CREATE INDEX IF NOT EXISTS math_results_student ON math_results(student_id,test_id);
+CREATE TABLE IF NOT EXISTS math_monthly_payments (
+ student_id BIGINT NOT NULL REFERENCES math_students(id),
+ month DATE NOT NULL,
+ paid BOOLEAN NOT NULL DEFAULT FALSE,
+ amount_uzs INTEGER CHECK(amount_uzs IS NULL OR amount_uzs BETWEEN 1000 AND 100000000),
+ admin_note VARCHAR(250),
+ paid_at TIMESTAMPTZ,
+ updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+ PRIMARY KEY(student_id,month)
+);
+CREATE TABLE IF NOT EXISTS math_revision (
+ singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK(singleton),
+ revision BIGINT NOT NULL DEFAULT 1,
+ updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+INSERT INTO math_revision(singleton) VALUES(TRUE) ON CONFLICT DO NOTHING;
+CREATE TABLE IF NOT EXISTS math_import_audit (
+ id BIGSERIAL PRIMARY KEY,
+ test_id BIGINT REFERENCES math_tests(id),
+ imported_rows INTEGER NOT NULL,
+ source VARCHAR(32) NOT NULL,
+ imported_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
