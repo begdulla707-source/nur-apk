@@ -127,7 +127,7 @@ def register_math(app, db, admin_only, bad):
         out=[]
         for src in rows:
             s=dict(src)
-            if s["monthly_tests"]>0:
+            if s["attended"]>0:
                 if previous != s["monthly_points"]:
                     rank+=1
                     previous=s["monthly_points"]
