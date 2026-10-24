@@ -8,6 +8,9 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.webkit.WebChromeClient;
+import android.webkit.ValueCallback;
+import android.content.ClipData;
+import java.util.ArrayList;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -55,6 +58,8 @@ public class MainActivity extends Activity {
         "notifications-ui.js", "navigation-ui.js", "math-portal.js", "math-portal.js",
         "paynet_qr.png"
     ));
+    private static final int FILE_CHOOSER_CODE = 5042;
+    private ValueCallback<Uri[]> pendingFileUris;
     private WebView webView;
     private FrameLayout splashOverlay;
     private long splashOpenedAt;
@@ -150,14 +155,40 @@ public class MainActivity extends Activity {
         settings.setUserAgentString(settings.getUserAgentString()+" NurOqiwAndroid/1.0");
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
+        // Content access is needed only for explicit Android document-picker
+        // results; file:// access remains disabled.
+        settings.setAllowContentAccess(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
         settings.setSupportMultipleWindows(false);
         if (android.os.Build.VERSION.SDK_INT >= 26) {
             settings.setSafeBrowsingEnabled(true);
         }
-        webView.setWebChromeClient(new WebChromeClient());
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override public boolean onShowFileChooser(
+                    WebView view, ValueCallback<Uri[]> callback,
+                    WebChromeClient.FileChooserParams params) {
+                if(pendingFileUris!=null)pendingFileUris.onReceiveValue(null);
+                pendingFileUris=callback;
+                try {
+                    Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("*/*");
+                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{
+                        "text/csv","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "image/jpeg","image/png","image/webp","application/octet-stream"
+                    });
+                    startActivityForResult(Intent.createChooser(intent,
+                        "Excel, CSV yoki rasm fayllarini tanlang"),FILE_CHOOSER_CODE);
+                } catch(Exception error) {
+                    Log.w("NurOqiwFiles","File chooser failed",error);
+                    pendingFileUris.onReceiveValue(null);
+                    pendingFileUris=null;
+                }
+                return true;
+            }
+        });
         webView.setWebViewClient(new WebViewClient() {
             @Override public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view,url);
@@ -236,6 +267,29 @@ public class MainActivity extends Activity {
         splashOverlay.postDelayed(this::dismissSplash,9000L);
         if (savedInstanceState == null) webView.loadUrl(HOME);
         else webView.restoreState(savedInstanceState);
+    }
+
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent intent) {
+        super.onActivityResult(requestCode,resultCode,intent);
+        if(requestCode!=FILE_CHOOSER_CODE)return;
+        ValueCallback<Uri[]> callback=pendingFileUris;
+        pendingFileUris=null;
+        if(callback==null)return;
+        if(resultCode!=RESULT_OK||intent==null) {
+            callback.onReceiveValue(null);return;
+        }
+        ArrayList<Uri> files=new ArrayList<>();
+        ClipData clips=intent.getClipData();
+        if(clips!=null){
+            int count=Math.min(clips.getItemCount(),8);
+            for(int i=0;i<count;i++) {
+                Uri uri=clips.getItemAt(i).getUri();
+                if(uri!=null)files.add(uri);
+            }
+        }else if(intent.getData()!=null){
+            files.add(intent.getData());
+        }
+        callback.onReceiveValue(files.isEmpty()?null:files.toArray(new Uri[0]));
     }
 
     @Override protected void onSaveInstanceState(Bundle state) {
