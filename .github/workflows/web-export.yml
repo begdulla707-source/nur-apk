@@ -24,6 +24,8 @@ on:
       - "notifications-ui.js"
       - "notifications-ui.css"
       - "navigation-ui.js"
+      - "math-portal.js"
+      - "math-portal.css"
       - "ranking-ui.css"
       - "ranking-ui.js"
 jobs:
@@ -43,6 +45,7 @@ jobs:
           node --check portfolio-ui.js
           node --check notifications-ui.js
           node --check navigation-ui.js
+          node --check math-portal.js
           python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/contact.py backend/payments.py backend/init_db.py
           test -s index.html
           test -s features.css
@@ -53,6 +56,7 @@ jobs:
           test -s payment-ui.css
           test -s portfolio-ui.css
           test -s notifications-ui.css
+          test -s math-portal.css
           test -s paynet_qr.png
           grep -q 'ranking-ui.js' index.html
           grep -q 'liquid-glass.js' index.html
@@ -61,6 +65,7 @@ jobs:
           grep -q 'portfolio-ui.js' index.html
           grep -q 'notifications-ui.js' index.html
           grep -q 'navigation-ui.js' index.html
+          grep -q 'math-portal.js' index.html
       - uses: actions/upload-artifact@v4
         with:
           name: nur-apk-mobile-html
@@ -84,5 +89,7 @@ jobs:
             notifications-ui.js
             notifications-ui.css
             navigation-ui.js
+            math-portal.js
+            math-portal.css
             paynet_qr.png
           retention-days: 30
