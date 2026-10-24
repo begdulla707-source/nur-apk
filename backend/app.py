@@ -14,9 +14,14 @@ from psycopg import connect
 from psycopg.rows import dict_row
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 128 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
 logging.basicConfig(level=logging.INFO)
 ALLOWED_ORIGINS = set(os.environ.get("ALLOWED_ORIGINS", "https://nur-apk.vercel.app").split(","))
+ALLOWED_ORIGINS.update({
+    "https://appassets.androidplatform.net",
+    "https://oqiw.vercel.app",
+    "https://nur-apk.vercel.app"
+})
 TOKEN_HASH = os.environ.get("ADMIN_TOKEN_SHA256", "")
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
 _login_failures = {}
@@ -338,3 +343,7 @@ from backend.contact import register_contact
 register_contact(app, db, admin_only, request_json, bad)
 from backend.payments import register_payments
 register_payments(app, db, admin_only, request_json, require_int, bad)
+
+# Mathematics-only portal, separate from historical groups and Telegram bot.
+from backend.math_portal import register_math
+register_math(app, db, admin_only, bad)
