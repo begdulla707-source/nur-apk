@@ -64,6 +64,9 @@ class MathPortalTests(unittest.TestCase):
 
         # Changing the question count for the same dated test is rejected.
         payload["question_count"]=28
+        for entry in payload["entries"]:
+            if entry.get("correct") is not None:
+                entry["correct"]=min(entry["correct"],28)
         self.assertEqual(self.client.post("/api/admin/math/commit",
                  json=payload,headers=self.auth).status_code,409)
 
