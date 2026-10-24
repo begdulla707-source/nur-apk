@@ -213,6 +213,54 @@ def register_math(app, db, admin_only, bad):
         return Response(stream_with_context(generator()),mimetype="text/event-stream",
             headers={"Cache-Control":"no-cache, no-transform","X-Accel-Buffering":"no"})
 
+    @app.post("/api/admin/math/students")
+    @admin_only
+    def add_math_student():
+        data=request.get_json(silent=True)
+        if not isinstance(data,dict):return bad("JSON ma’lumot kerak")
+        name=text(data,"name",NAME_LIMIT)
+        grade=data.get("grade")
+        if grade in (None,""):grade=None
+        else:
+            try:grade=int(grade)
+            except (ValueError,TypeError):return bad("Sinf 2–7 raqam bo‘lishi kerak")
+            if grade not in range(2,8):return bad("Sinf 2–7 bo‘lishi kerak")
+        with db() as conn:
+            with conn.transaction():
+                if conn.execute("""SELECT id FROM math_students WHERE
+                   lower(trim(full_name))=lower(trim(%s)) AND NOT archived""",
+                   (name,)).fetchone():
+                    return bad("Bu ism allaqachon ro‘yxatda bor",409)
+                student=conn.execute("""INSERT INTO math_students(full_name,grade)
+                     VALUES(%s,%s) RETURNING id""",(name,grade)).fetchone()
+                bump(conn)
+        return jsonify({"ok":True,"id":student["id"]}),201
+
+    @app.patch("/api/admin/math/students/<int:student_id>")
+    @admin_only
+    def update_math_student(student_id):
+        data=request.get_json(silent=True)
+        if not isinstance(data,dict):return bad("JSON ma’lumot kerak")
+        name=text(data,"name",NAME_LIMIT)
+        grade=data.get("grade")
+        if grade in (None,""):grade=None
+        else:
+            try:grade=int(grade)
+            except (ValueError,TypeError):return bad("Sinf raqami noto‘g‘ri")
+            if not 2<=grade<=7:return bad("Sinf 2–7")
+        with db() as conn:
+            with conn.transaction():
+                exist=conn.execute("""SELECT id FROM math_students WHERE
+                    lower(trim(full_name))=lower(trim(%s))
+                    AND id<>%s AND NOT archived""",(name,student_id)).fetchone()
+                if exist:return bad("Bu ism boshqa o‘quvchida mavjud",409)
+                result=conn.execute("""UPDATE math_students SET full_name=%s,
+                     grade=%s WHERE id=%s AND NOT archived RETURNING id""",
+                     (name,grade,student_id)).fetchone()
+                if not result:return bad("O‘quvchi topilmadi",404)
+                bump(conn)
+        return jsonify({"ok":True})
+
     @app.post("/api/admin/math/commit")
     @admin_only
     def math_commit():
