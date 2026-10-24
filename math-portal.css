@@ -1,0 +1,119 @@
+/* Nur oqiw — single Mathematics 2–7 interface, online ranking and settings.
+   Existing premium brand and original launcher icon are preserved. */
+.nur-math-home{padding:17px;border-radius:21px;background:var(--card);border:1px solid var(--stroke);
+ color:var(--text);width:100%;display:flex;gap:13px;align-items:center;text-align:left;min-height:79px;
+ box-shadow:0 8px 23px #173e2810}
+.nur-math-home .m-symbol{width:45px;height:45px;border-radius:15px;background:var(--tint);
+ display:grid;place-items:center;color:var(--accent);flex:none}
+.nur-math-home .m-symbol svg{height:25px;width:25px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nur-math-home .m-copy{flex:1;min-width:0}
+.nur-math-home .m-copy b{font-size:14px;font-weight:850;display:block}
+.nur-math-home .m-copy small{display:block;color:var(--muted);font-size:11px;margin-top:5px}
+.nur-math-home .m-chevron{width:19px;height:19px;stroke:var(--accent);fill:none;stroke-width:2.5}
+#home .payment-home-card{margin-top:23px!important}
+#home .note{margin-top:20px}
+.nur-math-loading,.nur-math-empty{border:1px solid var(--stroke);border-radius:18px;
+ padding:25px 18px;background:var(--card);color:var(--muted);font-size:12px;line-height:1.6}
+.nur-math-live{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-size:10px;font-weight:750}
+.nur-math-live:before{content:"";width:7px;height:7px;border-radius:50%;background:#36b580;box-shadow:0 0 0 3px #36b58018}
+.nur-math-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.nur-math-tools input[type="date"],.nur-math-tools input[type="month"]{border:1px solid var(--stroke);background:var(--card);color:var(--text);
+ border-radius:12px;padding:12px;min-height:42px;font:inherit;font-size:12px;max-width:195px}
+.nur-date-links{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 12px}
+.nur-date-links button{border:1px solid var(--stroke);border-radius:999px;background:var(--card);color:var(--text);
+ font-size:10px;padding:9px 12px;white-space:nowrap}
+.nur-date-links button.on{background:var(--tint);color:var(--accent);border-color:var(--accent)}
+.nur-math-subhead{display:flex;align-items:center;justify-content:space-between;margin:19px 0 11px}
+.nur-math-subhead b{font-size:14px;font-weight:850}
+.nur-math-subhead small{color:var(--muted);font-size:10px}
+.nur-stat-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0 20px}
+.nur-stat-box{border:1px solid var(--stroke);background:var(--card);border-radius:15px;padding:12px 8px;text-align:center}
+.nur-stat-box b{display:block;font-size:19px;color:var(--text)}
+.nur-stat-box small{display:block;color:var(--muted);font-size:9px;margin-top:4px}
+.nur-score-list,.nur-leaderboard,.nur-monthly-list{display:grid;gap:9px}
+.nur-score-row,.nur-rank-row,.nur-payment-row{display:flex;align-items:center;gap:10px;padding:13px 12px;border-radius:16px;
+ border:1px solid var(--stroke);background:var(--card);min-width:0}
+.nur-score-row .name,.nur-rank-row .name,.nur-payment-row .name{font-size:12px;font-weight:800;line-height:1.35;overflow-wrap:anywhere;flex:1;min-width:0}
+.nur-score-row small,.nur-rank-row small,.nur-payment-row small{font-size:10px;color:var(--muted);display:block;margin-top:5px}
+.nur-score-row .score{font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--accent);text-align:right;flex:none}
+.nur-score-row.dq .score{color:#c94955}
+.nur-mini-dq{font-weight:800;font-size:10px;color:#bf3f4b;background:#fbe2e5;padding:6px 8px;border-radius:9px}
+.nur-rank-row{cursor:pointer;min-height:72px;text-align:left;width:100%;color:var(--text)}
+.nur-rank-row .rank{border:1px solid var(--stroke);background:var(--tint);color:var(--accent);
+ width:38px;height:39px;flex:none;display:grid;place-items:center;border-radius:12px;font-weight:900;font-size:15px}
+.nur-rank-row.rank-1{border-color:#d2b15eaa;box-shadow:inset 0 0 0 1px #d2b15e46}
+.nur-rank-row.rank-1 .rank{background:#fff2c9;color:#997119}
+.nur-rank-row.rank-2{border-color:#abc0cbd4;box-shadow:inset 0 0 0 1px #a7b5c73b}
+.nur-rank-row.rank-2 .rank{background:#edf3fa;color:#627d93}
+.nur-rank-row.rank-3{border-color:#bd8b6fba}
+.nur-rank-row.rank-3 .rank{background:#fae7dc;color:#a36c48}
+.nur-rank-row .points{font-size:14px;font-weight:900;color:var(--text);text-align:right;white-space:nowrap}
+.nur-math-profile{position:fixed;inset:0;z-index:31;background:#0b221790;display:flex;align-items:end;justify-content:center}
+.nur-math-profile[hidden]{display:none}
+.nur-math-profile-card{width:min(430px,100vw);background:var(--bg);color:var(--text);border-radius:25px 25px 0 0;
+ padding:23px 19px calc(31px + env(safe-area-inset-bottom));max-height:80dvh;overflow-y:auto;box-shadow:0 -18px 48px #0003}
+.nur-math-profile-card header{display:flex;justify-content:space-between;align-items:center;gap:15px}
+.nur-math-profile-card header h2{font-size:20px;margin:0}
+.nur-math-profile-card header button{width:34px;height:34px;border:1px solid var(--stroke);background:var(--tint);border-radius:10px;color:var(--accent)}
+.nur-math-profile-row{padding:12px 0;border-bottom:1px solid var(--stroke);display:flex;justify-content:space-between;gap:15px;font-size:12px}
+.nur-math-profile-row span:last-child{font-weight:800}
+.nur-paid-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;white-space:nowrap;
+ border-radius:100px;padding:7px 9px;background:#e1f5e8;color:#196d42}
+.nur-paid-pill.pending{background:#fff0ca;color:#9b680e}
+.nur-paid-pill svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none}
+.nur-math-panel{margin-top:12px;background:var(--card);border:1px solid var(--stroke);padding:15px;border-radius:19px}
+.nur-math-panel>h3{margin:0 0 7px;font-size:16px}
+.nur-math-panel>p{font-size:11px;line-height:1.6;color:var(--muted);margin:4px 0 13px}
+.nur-math-form{display:grid;gap:12px}
+.nur-math-form label{display:grid;gap:6px;font-size:11px;font-weight:750;color:var(--text)}
+.nur-math-form input,.nur-math-form select,.nur-math-form textarea{
+ width:100%;max-width:100%;min-height:42px;border:1px solid var(--stroke);border-radius:11px;
+ background:var(--bg);color:var(--text);font:inherit;font-size:12px;padding:10px 12px}
+.nur-math-form button,.nur-btn{border:1px solid var(--accent);border-radius:12px;padding:11px 13px;
+ color:#fff;background:#176e50;font-size:12px;font-weight:800}
+.nur-btn.alt{background:var(--tint);color:var(--accent);border-color:var(--stroke)}
+.nur-math-upload{padding:23px 15px;border:1.5px dashed var(--accent);border-radius:17px;
+ background:var(--tint);text-align:center;cursor:pointer;display:grid;gap:6px;place-items:center}
+.nur-math-upload svg{height:28px;width:28px;color:var(--accent)}
+.nur-math-upload b{font-size:13px}
+.nur-math-upload small{font-size:10px;color:var(--muted)}
+.nur-import-warning{padding:11px 12px;border-radius:12px;border:1px solid #e8cb76;background:#fff2d3;color:#76521a;
+ margin:9px 0;font-size:11px;line-height:1.55}
+.nur-import-row{padding:12px;border-radius:13px;border:1px solid var(--stroke);background:var(--bg);margin-bottom:8px}
+.nur-import-row.unresolved{border-color:#d5b44c;background:#fff1c980}
+.nur-import-row .row-line{display:grid;grid-template-columns:2fr 1fr;gap:7px}
+.nur-import-row input,.nur-import-row select{border:1px solid var(--stroke);background:var(--card);color:var(--text);
+ border-radius:9px;padding:8px;min-width:0;width:100%;font-size:12px}
+.nur-import-row label{display:block;font-size:10px;color:var(--muted);margin:4px 0 6px}
+.nur-import-row .row-line + .row-line{margin-top:7px}
+.nur-math-amount{max-width:108px!important;min-width:0}
+.nur-math-pay-action{font-weight:800;font-size:10px;border:1px solid var(--stroke);background:var(--tint);
+ color:var(--accent);border-radius:10px;padding:10px;flex:none}
+.nur-math-pay-action:disabled{opacity:.6}
+.nur-math-payment-controls{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+.nur-math-payment-controls input{padding:9px;border:1px solid var(--stroke);background:var(--bg);color:var(--text);
+ border-radius:10px;max-width:100%;min-width:0;font-size:11px}
+.nur-settings-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}
+.nur-settings-options button{padding:12px 6px;border:1px solid var(--stroke);border-radius:14px;
+ background:var(--card);color:var(--text);font-size:11px;font-weight:750}
+.nur-settings-options button.chosen{border-color:var(--accent);background:var(--tint);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.nur-settings-options .swatch{width:25px;height:25px;border-radius:9px;margin:0 auto 9px;border:1px solid #ffffff77}
+body[data-nur-accent="blue"]{--accent:#3274aa;--tint:#e2effb}
+body.dark[data-nur-accent="blue"]{--accent:#a3d2ff;--tint:#24394e}
+body[data-nur-accent="blue"] .hero{background:linear-gradient(135deg,#194469,#2d72a7)!important}
+body[data-nur-accent="graphite"]{--accent:#50636b;--tint:#e7ecee}
+body.dark[data-nur-accent="graphite"]{--accent:#c2d0d3;--tint:#384249}
+body[data-nur-accent="graphite"] .hero{background:linear-gradient(135deg,#252f34,#536268)!important}
+.nur-compact-owner-wrap{padding-top:13px;margin-top:15px;border-top:1px solid var(--stroke)}
+.nur-compact-owner{display:flex;gap:9px;align-items:center;text-align:left;width:100%;padding:10px;
+ border-radius:14px;background:var(--card);border:1px solid var(--stroke);color:var(--text)}
+.nur-compact-avatar{width:37px;height:37px;border-radius:12px;background:#285b43;color:white;display:grid;place-items:center;
+ font-size:12px;font-weight:850;flex:none}
+.nur-compact-title{flex:1;min-width:0}
+.nur-compact-title strong{font-size:11px;display:block}
+.nur-compact-title small{font-size:10px;color:var(--muted);display:block;margin-top:3px}
+.nur-mini-verified{width:19px;height:19px;flex:none}
+.nur-settings-open{width:100%;border:1px solid var(--stroke);background:var(--card);border-radius:13px;
+ color:var(--text);padding:13px 14px;font-size:12px;font-weight:750;display:flex;justify-content:space-between;margin:10px 0}
+#home .math-sync-info{font-size:10px;margin-top:12px;color:var(--muted)}
+@media(max-width:350px){.nur-math-tools input[type="date"]{max-width:160px}.nur-payment-row{gap:6px}.nur-rank-row{gap:6px}}
