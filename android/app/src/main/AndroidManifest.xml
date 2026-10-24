@@ -6,11 +6,30 @@
         android:usesCleartextTraffic="false" android:allowBackup="false"
         android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true"
-            android:screenOrientation="unspecified">
+            android:screenOrientation="unspecified"/>
+        <activity-alias android:name=".LauncherOriginal" android:enabled="true"
+            android:exported="true" android:targetActivity=".MainActivity"
+            android:label="Nur oqiw" android:icon="@drawable/nur_premium_icon">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias android:name=".LauncherEmerald" android:enabled="false"
+            android:exported="true" android:targetActivity=".MainActivity"
+            android:label="Nur oqiw" android:icon="@drawable/nur_icon_emerald">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".LauncherNight" android:enabled="false"
+            android:exported="true" android:targetActivity=".MainActivity"
+            android:label="Nur oqiw" android:icon="@drawable/nur_icon_night">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
     </application>
 </manifest>
