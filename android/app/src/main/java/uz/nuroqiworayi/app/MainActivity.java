@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.content.Intent;
 import android.content.ComponentName;
 import android.content.pm.PackageManager;
+import android.content.ComponentName;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.webkit.WebChromeClient;
@@ -145,6 +147,7 @@ public class MainActivity extends Activity {
         webView.setBackgroundColor(Color.rgb(13, 62, 43));
         final WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
+        settings.setUserAgentString(settings.getUserAgentString()+" NurOqiwAndroid/1.0");
         // Marker lets the bundled settings page offer Android-only launcher icon
         // variants without injecting a Javascript bridge.
         settings.setUserAgentString(settings.getUserAgentString()+" NurOqiwAndroid/1.0");
@@ -206,6 +209,15 @@ public class MainActivity extends Activity {
                     }
                     return true;
                 }
+                if ("nuricon".equals(uri.getScheme())) {
+                    if ("change".equals(uri.getHost())) {
+                        String mode=uri.getLastPathSegment();
+                        if ("original".equals(mode)||"emerald".equals(mode)||"night".equals(mode)) {
+                            setLauncherIcon(mode);
+                        }
+                    }
+                    return true;
+                }
                 if ("tel".equals(uri.getScheme())) {
                     try {
                         // Open the dialer; never place a call without the user's action.
@@ -263,6 +275,29 @@ public class MainActivity extends Activity {
             }
         }
         Toast.makeText(this,"Ikonka yangilandi",Toast.LENGTH_SHORT).show();
+    }
+
+    private void setLauncherIcon(String mode) {
+        String[] aliases={".LauncherOriginal",".LauncherEmerald",".LauncherNight"};
+        String chosen="original".equals(mode)?aliases[0]:"emerald".equals(mode)?aliases[1]:aliases[2];
+        PackageManager pm=getPackageManager();
+        try {
+            pm.setComponentEnabledSetting(
+                new ComponentName(this,getPackageName()+chosen),
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+            for(String alias:aliases) {
+                if(alias.equals(chosen))continue;
+                pm.setComponentEnabledSetting(
+                    new ComponentName(this,getPackageName()+alias),
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
+            }
+            Toast.makeText(this,"Ilova belgisi yangilandi",Toast.LENGTH_SHORT).show();
+        }catch(Exception error){
+            Log.e("NurOqiwIcon","Launcher icon update failed",error);
+            Toast.makeText(this,"Belgini almashtirib bo‘lmadi",Toast.LENGTH_LONG).show();
+        }
     }
 
     private void confirmExit() {
