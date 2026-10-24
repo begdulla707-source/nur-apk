@@ -5,7 +5,7 @@
   const $ = id => document.getElementById(id);
   const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const state = { subjects:[], groups:[], notices:[], selectedGroup:null, subject:null,
-    rankingGroup:'', resultGroup:'', adminTab:'dashboard', sessions:[], sessionId:null, online:false };
+    rankingGroup:'', resultGroup:'', adminTab:'math', sessions:[], sessionId:null, online:false };
   const session = {
     get:()=>{try{return sessionStorage.getItem('nur-apk-admin-session')||''}catch{return ''}},
     set:v=>{try{sessionStorage.setItem('nur-apk-admin-session',v)}catch{}},
@@ -57,7 +57,7 @@
       if(signature!==lastBootstrapSignature){
         lastBootstrapSignature=signature;
         const counter=document.querySelector('#home .stat strong');
-        if(counter && counter.textContent!==String(data.total_students))counter.textContent=String(data.total_students);
+        if(counter && !window.NurMath && counter.textContent!==String(data.total_students))counter.textContent=String(data.total_students);
         renderGroups();renderSubjects();renderNotices();renderFilters();
       }
       if(['rating','results'].includes(document.querySelector('.view.show')?.id))await renderPublicResults();
@@ -229,9 +229,9 @@
       state.sessions=overview.sessions||[];
       state.groups=bootstrap.groups||[];state.subjects=bootstrap.subjects||[];
       const c=overview.counts||{};
-      adminRoot.innerHTML='<div class="admin-grid"><div><strong>'+Number(c.groups||0)+'</strong><small>Guruhlar</small></div><div><strong>'+Number(c.students||0)+'</strong><small>O‘quvchilar</small></div><div><strong>'+Number(c.sessions||0)+'</strong><small>Mashg‘ulotlar</small></div></div><button class="appbtn small light" data-act="logout">Chiqish</button><div class="admin-tabs" id="admin-tabs"></div><div id="admin-tab-content"></div>';
+      adminRoot.innerHTML='<div class="nur-math-subhead"><b>Matematika · 2–7-sinflar</b><button class="appbtn small light" data-act="logout">Chiqish</button></div><div class="admin-tabs" id="admin-tabs"></div><div id="admin-tab-content"></div>';
       const root=$('admin-tabs');
-      for(const [id,title] of [['dashboard','Panel'],['groups','Guruhlar'],['students','O‘quvchilar'],['sessions','Mashg‘ulot'],['marks','Baholar'],['attendance','Davomat'],['analytics','Tahlil'],['ranking','Reyting'],['profiles','Profil'],['inbox','Xabarlar'],['payments','To‘lovlar'],['notices','E’lonlar'],['archive','Arxiv'],['audit','Tarix'],['security','Xavfsizlik'],['catalog','TOP 17']]){
+      for(const [id,title] of [['math','Natijalar / Import'],['math-students','O‘quvchilar'],['math-payments','Oylik to‘lov'],['inbox','Xabarlar'],['notices','E’lonlar']]){
         const b=el('button',state.adminTab===id?'on':'',title);b.dataset.tab=id;root.append(b);
       }
       await showAdminTab();
@@ -240,6 +240,7 @@
   async function showAdminTab(){
     const root=$('admin-tab-content');if(!root)return;
     $('admin-tabs')?.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.tab===state.adminTab));
+    if(state.adminTab.startsWith('math') && window.NurMath){await window.NurMath.renderAdmin(root,premiumCtx(),state.adminTab);return}
     if(state.adminTab==='payments' && window.NurPayments){await window.NurPayments.admin(root,premiumCtx());return}
     if(state.adminTab==='inbox' && window.NurContact) {await window.NurContact.inbox(root,premiumCtx());return}
     if(window.NurRankingUI && state.adminTab==='ranking') {await window.NurRankingUI.adminRanking(root,premiumCtx());return}
@@ -389,24 +390,8 @@
     }
   }
   syncAdminEntry();
-  // Six deliberate taps on the N logo reveal the token login inside the Android app.
-  // This is only a discovery gesture; server-side token verification remains mandatory.
-  const launchLogo=document.querySelector('#home .brand .logo');
-  if(launchLogo){
-    launchLogo.setAttribute('tabindex','0');
-    launchLogo.setAttribute('role','button');
-    launchLogo.setAttribute('aria-label','Administrator hisobiga kirish');
-    let count=0,last=0;
-    const launchAdmin=()=>{
-      if(auth){go('admin');return}
-      const now=Date.now();
-      if(now-last>5000)count=0;
-      last=now;
-      if(++count>=6){count=0;go('admin')}
-    };
-    launchLogo.addEventListener('click',launchAdmin);
-    launchLogo.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();launchAdmin()}});
-  }
+  // Administrator access is now the compact double-tap owner row in drawer.
+  // Only the server can authorize private API requests.
   const intendedAdmin=new URLSearchParams(location.search).get('admin')==='1';
   if(intendedAdmin)go('admin');
 
