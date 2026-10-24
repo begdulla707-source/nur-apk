@@ -3,6 +3,8 @@ package uz.nuroqiworayi.app;
 import android.app.Activity;
 import android.os.Bundle;
 import android.content.Intent;
+import android.content.ComponentName;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.webkit.WebChromeClient;
@@ -47,10 +49,10 @@ public class MainActivity extends Activity {
     private static final Set<String> WEB_ASSETS = new HashSet<String>(Arrays.asList(
         "index.html", "features.css", "premium-admin.css", "ranking-ui.css",
         "liquid-glass.css", "polish-v08.css", "payment-ui.css", "portfolio-ui.css",
-        "notifications-ui.css",
+        "notifications-ui.css", "math-portal.css",
         "app-features.js", "premium-admin.js", "ranking-ui.js",
         "liquid-glass.js", "i18n.js", "contact-ui.js", "payment-ui.js", "portfolio-ui.js",
-        "notifications-ui.js", "navigation-ui.js",
+        "notifications-ui.js", "navigation-ui.js", "math-portal.js",
         "paynet_qr.png"
     ));
     private WebView webView;
@@ -143,6 +145,9 @@ public class MainActivity extends Activity {
         webView.setBackgroundColor(Color.rgb(13, 62, 43));
         final WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
+        // Marker lets the bundled settings page offer Android-only launcher icon
+        // variants without injecting a Javascript bridge.
+        settings.setUserAgentString(settings.getUserAgentString()+" NurOqiwAndroid/1.0");
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
@@ -185,6 +190,22 @@ public class MainActivity extends Activity {
                     uri.getPath() != null && uri.getPath().startsWith("/assets/")) {
                     return false;
                 }
+                if ("nuricon".equals(uri.getScheme())) {
+                    // Strictly allowlisted internal icon selection, no remote or
+                    // third-party page is loaded inside this WebView.
+                    if("change".equalsIgnoreCase(uri.getHost()) &&
+                       uri.getPath()!=null &&
+                       uri.getPath().matches("^/(original|emerald|night)$")) {
+                        try {
+                            changeLauncherIcon(uri.getPath().substring(1));
+                        } catch (Exception iconError) {
+                            Log.w("NurOqiwIcon","Cannot change launcher alias",iconError);
+                            Toast.makeText(MainActivity.this,
+                                "Bosh ekran ikonkasi o‘zgarmadi",Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    return true;
+                }
                 if ("tel".equals(uri.getScheme())) {
                     try {
                         // Open the dialer; never place a call without the user's action.
@@ -221,6 +242,29 @@ public class MainActivity extends Activity {
         if (webView != null) webView.saveState(state);
         super.onSaveInstanceState(state);
     }
+    private void changeLauncherIcon(String variant) {
+        final String prefix=getPackageName()+".Launcher";
+        final String chosen;
+        if("emerald".equals(variant)) chosen="Emerald";
+        else if("night".equals(variant)) chosen="Night";
+        else chosen="Original";
+        PackageManager pm=getPackageManager();
+        String[] aliases={"Original","Emerald","Night"};
+        // Enable the destination before disabling alternatives, so the app
+        // never loses all launcher entrypoints.
+        pm.setComponentEnabledSetting(new ComponentName(this,prefix+chosen),
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            PackageManager.DONT_KILL_APP);
+        for(String item:aliases){
+            if(!chosen.equals(item)){
+                pm.setComponentEnabledSetting(new ComponentName(this,prefix+item),
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
+            }
+        }
+        Toast.makeText(this,"Ikonka yangilandi",Toast.LENGTH_SHORT).show();
+    }
+
     private void confirmExit() {
         long now=SystemClock.uptimeMillis();
         if(now-lastBackRequestAt<=1900L) {
