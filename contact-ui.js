@@ -37,12 +37,12 @@
       '. Javob yuqoridagi bildirishnoma belgisiga keladi.';
     feed.className='okbox';
     form.elements.namedItem('message').value='';
-   }catch(e){feed.className='errorbox';feed.textContent=e.name==='AbortError'?'Server kech javob bermoqda. Keyinroq qayta urinib ko‘ring.':e.message}
+   }catch(e){feed.className='errorbox';feed.textContent='Xabar yuborilmadi. Qayta urinib ko‘ring.'}
    finally{button.disabled=false}
   });
  }
  async function inbox(root,ctx){
-   root.innerHTML='<div class="premium-heading"><h3>Admin xabarlari</h3><small>Faqat admin uchun</small></div><div class="inbox-controls"><button type="button" class="appbtn secondary" data-inbox-action="refresh">Yangilash</button><button type="button" class="appbtn light" data-inbox-action="unread">O‘qilmaganlar</button><button type="button" class="appbtn light" data-inbox-action="active">Barcha xabarlar</button></div><div id="inbox-items">Xabarlar yuklanmoqda...</div>';
+   root.innerHTML='<div class="premium-heading"><h3>Admin xabarlari</h3><small>Faqat admin uchun</small></div><div class="inbox-controls"><button type="button" class="appbtn secondary" data-inbox-action="refresh">Yangilash</button><button type="button" class="appbtn light" data-inbox-action="unread">O‘qilmaganlar</button><button type="button" class="appbtn light" data-inbox-action="active">Barcha xabarlar</button></div><div id="inbox-items"></div>';
    // No data-form attribute: generic admin form handler does not intercept replies.
    if(!root.dataset.replyEventsReady){
      root.dataset.replyEventsReady='1';
@@ -67,7 +67,7 @@
  }
  async function loadInbox(ctx,status){
    const root=$('inbox-items');if(!root)return;
-   root.textContent='Xabarlar yuklanmoqda...';
+   root.replaceChildren();
    try{
     const result=await ctx.api('/admin/inbox?status='+encodeURIComponent(status),{admin:true});
     root.replaceChildren();
@@ -87,7 +87,7 @@
       '<button type="button" class="appbtn danger small" data-inbox-action="archive" data-id="'+m.id+'">Arxivlash</button></div>';
      root.append(card);
     }
-   }catch(err){root.textContent=err.message}
+   }catch(err){root.textContent='Xabarlarni qayta tekshiring'}
  }
  async function click(button,ctx){
   const action=button.dataset.inboxAction;
