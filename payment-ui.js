@@ -73,7 +73,7 @@
   }
   async function loadPublic(){
     if(!$('payments'))return;
-    setStatus('To‘lov ma’lumotlari yuklanmoqda...');
+    setStatus('');
     try{
       config=await fetchJson('/payments/config');
       renderGroupOptions(config.groups||[]);
@@ -89,7 +89,7 @@
       updateAmount();
       renderHistory();
     }catch(error){
-      setStatus(error.message,'warning');
+      setStatus('');
       if($('payment-public-form'))$('payment-public-form').hidden=false;
       config=null;updateAmount();
       renderHistory();
@@ -216,7 +216,7 @@
     return '<span class="payment-status-chip '+esc(value)+'">'+esc(statusLabels[value]||value)+'</span>';
   }
   async function admin(root,ctx){
-    root.innerHTML='<div class="loadertext">To‘lovlar yuklanmoqda...</div>';
+    root.replaceChildren();
     try{
       const data=await ctx.api('/admin/payments/overview',{admin:true});
       const settings=data.settings||{};
