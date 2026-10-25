@@ -106,12 +106,12 @@
    const settings=document.createElement('section');
    settings.id='nur-settings';settings.className='view subpage';
    settings.innerHTML='<button class="back" type="button">Bosh menyu</button>'+
-      '<h2>Sozlamalar</h2><p class="desc">Ranglar, tungi rejim va telefon ilovasi belgisi.</p>'+
+      '<h2>Sozlamalar</h2><p class="desc">Ilova ko‘rinishi va tungi rejim.</p>'+
       '<div id="nur-appearance-settings"></div>';
    settings.querySelector('.back').addEventListener('click',()=>window.go?.('home'));
    if(bar)bar.before(settings);
    const open=document.createElement('button');open.className='nur-settings-open';open.type='button';
-   open.innerHTML='<span>Sozlamalar · Dizayn va ikonka</span><span>›</span>';
+   open.innerHTML='<span>Sozlamalar</span><span>›</span>';
    open.addEventListener('click',()=>{window.closeMenu?.();window.go?.('nur-settings')});
    const drawer=$('drawer'),language=drawer?.querySelector('.language-panel');
    if(language)language.after(open);else drawer?.append(open);
@@ -283,26 +283,10 @@
      modal.querySelector('header h2').textContent=details.student.full_name;
    }catch(e){root.textContent=e.message}
  }
- function launcherThumb(mode){
-   const klass=mode.replace(/[^a-z-]/g,'');
-   const season=mode==='winter'
-     ? '<path d="M12 12v12m-6-6h12m-9-9 6 18m-6 0 6-18M52 45v12m-6-6h12" stroke="#D8EDFF" stroke-width="1.8"/>'
-     : mode==='spring'
-     ? '<path d="M6 48q10-15 17-4Q14 60 6 48M43 8q11-10 16-1Q48 18 43 8" fill="#A3E5B1"/>'
-     : mode.startsWith('autumn')
-     ? '<path d="M7 47 12 37 19 40 24 36 27 44 22 50 16 53 12 49Z M47 13 52 6 58 9 60 17 52 19Z" fill="#F5A43C"/>'
-     : '';
-   return '<span class="nur-launcher-thumb icon-'+klass+'" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none">'+
-     season+'<path d="M32 10 54 20 32 29 10 20Z" fill="#FFF1A1" stroke="#D39B32" stroke-width="2"/>'+
-     '<path d="M19 26q13 10 26 0" stroke="#FFF7D9" stroke-width="2.6"/>'+
-     '<circle cx="32" cy="31" r="5.3" fill="#F3C346"/>'+
-     '<path d="M30 43 11 32Q7 30 7 35V53Q20 52 30 59ZM34 43 53 32Q57 30 57 35V53Q44 52 34 59Z" fill="#F5C244" stroke="#FFF9E9" stroke-width="2"/>'+
-     '<path d="M32 40V59" stroke="#FFF7D9" stroke-width="2.2"/></svg></span>';
- }
  function renderAppearance(){
    const root=$('nur-appearance-settings');if(!root)return;
-   let saved='emerald',icon='original';
-   try{saved=localStorage.getItem('nur-accent')||'emerald';icon=localStorage.getItem('nur-icon-mode')||'original'}catch{}
+   let saved='emerald';
+   try{saved=localStorage.getItem('nur-accent')||'emerald'}catch{}
    root.innerHTML='<div class="nur-math-panel"><h3>Ilova mavzusi</h3>'+
      '<p>Tungi rejim va ranglar barcha sahifalarda saqlanadi.</p>'+
      '<div class="nur-settings-options" id="nur-theme-options">'+
@@ -313,13 +297,7 @@
      [['emerald','Zumrad','#227351'],['blue','Ko‘k','#357bba'],['graphite','Grafit','#54636b']].map(([k,t,c])=>
       '<button type="button" data-accent="'+k+'" class="'+(saved===k?'chosen':'')+'">'+
       '<span class="swatch" style="display:block;background:'+c+'"></span>'+t+'</button>').join('')+'</div></div>'+
-     '<div class="nur-math-panel"><h3>Tashqi APK ikonkasi</h3>'+
-     '<p>Asl oltin logotip saqlanadi. Tanlangan ikonka keyingi ishga tushishda ham qoladi.</p>'+
-     '<div class="nur-settings-options" id="nur-icon-options">'+
-     [['original','Asl oltin','linear-gradient(140deg,#f8e7a4,#b99037)'],['autumn-one','Kuz 1','linear-gradient(140deg,#f4c45c,#a45a24)'],['autumn-two','Kuz 2','linear-gradient(140deg,#d9813b,#e6c36c)'],['spring','Bahor','linear-gradient(140deg,#86cfa4,#206c49)'],['winter','Qish','linear-gradient(140deg,#b3dff3,#2675b4)']].map(([k,t,c])=>
-      '<button type="button" data-icon="'+k+'" class="'+(icon===k?'chosen':'')+'">'+
-      launcherThumb(k)+'<span>'+t+'</span></button>').join('')+
-     '</div><p id="nur-icon-help">O‘zgarish telefon launcheriga bog‘liq. APKning asl premium ikonkasini doim qayta tanlash mumkin.</p></div>';
+     '';
    for(const b of root.querySelectorAll('button[data-theme]')){
      const selected=b.dataset.theme===(document.body.classList.contains('dark')?'dark':'light');
      b.classList.toggle('chosen',selected);
@@ -331,18 +309,6 @@
      document.body.dataset.nurAccent=b.dataset.accent;
      try{localStorage.setItem('nur-accent',b.dataset.accent)}catch{}
      renderAppearance();
-   });
-   for(const b of root.querySelectorAll('button[data-icon]'))b.addEventListener('click',()=>{
-     const icon=b.dataset.icon;
-     try{localStorage.setItem('nur-icon-mode',icon)}catch{}
-     renderAppearance();
-     // Only Android's explicitly allowlisted custom URL handler can modify
-     // launcher aliases. Web previews display a clear non-native message.
-     if(navigator.userAgent.includes('NurOqiwAndroid')){
-       location.href='nuricon://change/'+icon;
-     }else{
-       $('nur-icon-help').textContent='Bosh ekran ikonkasi faqat Nur oqiw Android APK ichida o‘zgaradi.';
-     }
    });
  }
  function bindAdmin(root,ctx){
