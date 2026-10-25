@@ -13,6 +13,7 @@
  const arrow='<svg class="m-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';
  let pageDate='',month='',data=null,loading=false,lastSuccess=0,pollInFlight=false,eventSource=null;
  let ctxAdmin=null,draft=[],draftWarnings=[],importFiles=[],adminMode='math',adminBound=false,uploadBusy=false;
+ let minimumPhotoRows=0;
  function today(){
    const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
    const val=k=>parts.find(x=>x.type===k)?.value||'';
@@ -418,6 +419,8 @@
          if(pending.length)throw Error(pending.length+' ta sariq natijani tekshiring (DQ yoki 0, yoki ball).');
          const named=draft.filter(x=>x.name.trim());
          if(!named.length)throw Error('Kamida bitta o‘quvchi kiriting');
+         if(minimumPhotoRows && named.length<minimumPhotoRows)
+           throw Error('Rasm jadvalida '+minimumPhotoRows+' nafar o‘quvchi bor, lekin '+named.length+' ta ism kiritilgan. Yetishmaganlarni qo‘shing.');
          if(new Set(named.map(x=>x.name.trim().toLowerCase())).size!==named.length)
            throw Error('Bir xil ism takrorlangan; qatorlarni tahrirlang');
          if(named.some(x=>x.status==='present'&&Number(x.correct)>questions))
@@ -428,7 +431,7 @@
              entries:named.map(x=>({name:x.name.trim(),status:x.status,
                correct:x.status==='dq'?null:Number(x.correct),
                grade:x.grade===null?null:Number(x.grade)}))}});
-         draft=[];importFiles=[];draftWarnings=[];
+         draft=[];importFiles=[];draftWarnings=[];minimumPhotoRows=0;
          notice(post.saved+' ta natija saqlandi. Reyting barcha ulangan ilovalarda yangilanadi.');
          pageDate=value.date;month=pageDate.slice(0,7);
          await reload(true);await renderAdmin(root,ctxAdmin,'math');
@@ -462,7 +465,18 @@
      draftWarnings.push(filename+': OCR moduli yuklanmadi');
    }else{
      const rows=result.rows||[];
+     const summary=result.summary||{};
      for(const warning of result.warnings||[])draftWarnings.push(filename+': '+warning);
+     if(Number.isInteger(summary.present)&&Number.isInteger(summary.absent)){
+       minimumPhotoRows=Math.max(minimumPhotoRows,summary.present+summary.absent);
+       draftWarnings.push(filename+': davomat xulosasi — '+summary.present+' qatnashgan, '+summary.absent+' qatnashmagan. 0 ball = DQ deb avtomatik belgilanmaydi.');
+     }
+     if(Number.isInteger(summary.questions)&&summary.questions>=1&&summary.questions<=200){
+       const form=$('admin-tab-content')?.querySelector('form[data-math-form="commit"]');
+       const questionInput=form?.querySelector('input[name="question_count"]');
+       if(questionInput && questionInput.value==='32')questionInput.value=String(summary.questions);
+       draftWarnings.push(filename+': rasmdagi savollar soni '+summary.questions+'. Test sanasi va savollar sonini tasdiqlang.');
+     }
      if(rows.length){
        if(!importFiles.includes(filename))importFiles.push(filename);
        draft.push(...rows);
@@ -562,7 +576,7 @@
        '<label>Savollar soni<input type="number" name="question_count" required min="1" max="200" value="32"></label></div>'+
        '<label>Test nomi<input name="title" required maxlength="120" value="Matematika testi"></label>'+
        '<label class="nur-math-upload" for="nur-math-files"><b>Fayllarni tanlash yoki shu yerga tashlash</b>'+
-       '<small>Bir necha Excel, CSV yoki rasm · har biri 2 MB gacha</small></label>'+
+       '<small>Bir nechta fayl: Excel/CSV 2 MB gacha; rasm telefonda OCR orqali o‘qiladi</small></label>'+
        '<input id="nur-math-files" data-math-files type="file" accept=".csv,.xlsx,.png,.jpg,.jpeg,.webp" multiple style="position:absolute;opacity:0;max-width:1px;max-height:1px">'+
        '<div id="nur-file-status" style="font-size:11px;color:var(--muted)">'+esc(importFiles.join(', '))+'</div>'+
        '<div class="nur-math-subhead"><b>Topilgan o‘quvchilar</b><small id="nur-math-warning-count"></small></div>'+
