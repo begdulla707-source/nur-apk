@@ -9,7 +9,7 @@
 })(function(){
   'use strict';
   const NAME_LIMIT=120;
-  function norm(s){return String(s||'').trim().replace(/\s+/g,' ')}
+  function norm(s){return String(s||'').replace(/[|_]/g,'').replace(/^[.,:;!?-]+|[.,:;!?-]+$/g,'').trim().replace(/\s+/g,' ')}
   function median(nums){if(!nums.length)return 0;let a=[...nums].sort((x,y)=>x-y);return a[Math.floor(a.length/2)]}
   function isTitle(s){return /^(f\.?a\.?|d[uú]r[iı]s[iı]|100%|№|no|test|result|natija|familiya)$/i.test(norm(s))}
   function headerScore(s){return /d[uú]r[iı]s[iı]|to[gǵg']ri|correct|ball|natija/i.test(norm(s))}
@@ -18,6 +18,34 @@
     return v.length>=2 && v.length<=NAME_LIMIT &&
       /[A-Za-zÀ-žʻʼ‘’]/.test(v) && !isTitle(v) &&
       !/^\d/.test(v) && !/^(o'rtacha|sorawlar|testke|testga|okt[yi]abr|guruh|gruppa|jami|qatnas|matematika|nur oqiw)/i.test(v);
+  }
+  // Header totals identify attendance at the GROUP level, not individual DQ.
+  // Never silently treat a zero score as an absence.
+  function summaryFromSidePanel(tokens,rowTol){
+    const side=tokens.filter(z=>z.x+z.w/2>.72 && z.y<.55).sort((a,b)=>a.y-b.y||a.x-b.x);
+    const lines=[];
+    for(const z of side){
+      const cy=z.y+z.h/2;
+      let line=lines.find(g=>Math.abs(g.y-cy)<Math.max(.014,rowTol*.8));
+      if(!line){line={y:cy,words:[]};lines.push(line)}
+      line.words.push(z);
+    }
+    const totals={};
+    for(const line of lines){
+      line.words.sort((a,b)=>a.x-b.x);
+      const label=line.words.map(z=>z.t.toLowerCase()).join(' ');
+      const values=line.words.filter(z=>/^\d{1,3}$/.test(z.t)).sort((a,b)=>b.x-a.x);
+      if(!values.length)continue;
+      const count=Number(values[0].t);
+      if(!Number.isInteger(count)||count>450)continue;
+      if(/s[oó]ra[wuv]lar|s[aá]voll?ar|questions?/.test(label)){
+        if(count>0&&count<=200)totals.questions=count;
+      }else if(/qatnas|qatnash/.test(label)){
+        if(/pa[gǵg']an|magan|m[aá]gan|[eé]mes/.test(label))totals.absent=count;
+        else totals.present=count;
+      }
+    }
+    return totals;
   }
   function parse(input){
     const raw=Array.isArray(input)?input:input&&Array.isArray(input.elements)?input.elements:[];
@@ -99,9 +127,22 @@
       seen.add(key);
       rows.push({name:r.name,grade:null,correct:r.correct,status:r.status});
     }
+    const summary=summaryFromSidePanel(tokens,rowTol);
+    if(Number.isInteger(summary.present)||Number.isInteger(summary.absent)){
+      const p=summary.present??'?',a=summary.absent??'?';
+      warnings.push('Jadval jami: '+p+' ta qatnashgan, '+a+' ta qatnashmagan. 0 ball olganlarning DQ holatini qo\u2018lda tekshiring.');
+      if(Number.isInteger(summary.present)&&Number.isInteger(summary.absent)&&
+         rows.length!==summary.present+summary.absent){
+        warnings.push('DIQQAT: rasmda '+(summary.present+summary.absent)+
+          ' o\u2018quvchi qayd etilgan, ammo OCR '+rows.length+
+          ' ta ismni topdi. Yetishmagan qatorlarni qo\u2018shmasdan e\u2019lon qilmang.');
+        summary.missingRows=true;
+      }
+    }
+    if(summary.questions)warnings.push('Rasmdagi savollar soni: '+summary.questions+' — tasdiqlang.');
     if(!rows.length)warnings.push('O\u2018quvchi qatorlari aniqlanmadi. Rasmni to\u2018g\u2018rilab yoki Excel orqali kiriting.');
     else warnings.unshift(rows.length+' ta o\u2018quvchi topildi. BARCHA ismlar va ballarni tasdiqlang.');
-    return {rows,warnings,requires_confirmation:true,engine:'android-mlkit'};
+    return {rows,warnings,summary,requires_confirmation:true,engine:'android-mlkit'};
   }
   return {parse};
 });
