@@ -74,8 +74,7 @@
      pay.querySelector('strong').textContent='Oylik to‘lovlar';
      pay.querySelector('small').textContent='To‘lov qilindi yoki kutilmoqda';
    }
-   const hint=home.querySelector('.note p');
-   if(hint)hint.textContent='Natijalar, davomat va reyting serverdan yangilanadi. Internet zarur.';
+   home.querySelector('.note')?.remove();
    for(const [page,description] of [
      ['rating','Oylik to‘plangan ballar va davomat · teng ball — teng o‘rin'],
      ['results','Bugungi natijalar va oldingi sanalardagi testlar']]){
@@ -85,7 +84,7 @@
      element.querySelector('.filters')?.remove();
      element.querySelector('#'+(page==='rating'?'ratingEmpty':'resultsEmpty'))?.remove();
      const region=document.createElement('div');region.id='nur-math-'+page;
-     region.className='nur-math-loading';region.textContent='Natijalar yuklanmoqda...';
+     region.className='nur-math-initial';region.setAttribute('aria-label','Natijalar');
      element.append(region);
    }
    const phone=document.querySelector('main.phone');
@@ -93,7 +92,7 @@
    monthly.id='math-monthly';monthly.className='view subpage';
    monthly.innerHTML='<button class="back" type="button">Bosh menyu</button><h2>Oylik to‘lovlar</h2>'+
      '<p class="desc">Admin tomonidan belgilangan holat. Pul o‘tkazilganini avtomatik tasdiqlamaydi.</p>'+
-     '<div id="nur-math-monthly" class="nur-math-loading">To‘lovlar yuklanmoqda...</div>';
+     '<div id="nur-math-monthly" class="nur-math-initial" aria-label="Oylik to‘lovlar"></div>';
    monthly.querySelector('.back').addEventListener('click',()=>window.go?.('home'));
    const bar=phone?.querySelector('.tabbar');if(bar)bar.before(monthly);
    const modal=document.createElement('div');modal.id='nur-math-profile';modal.className='nur-math-profile';modal.hidden=true;
@@ -115,9 +114,7 @@
    open.addEventListener('click',()=>{window.closeMenu?.();window.go?.('nur-settings')});
    const drawer=$('drawer'),language=drawer?.querySelector('.language-panel');
    if(language)language.after(open);else drawer?.append(open);
-   const paymentCard=home.querySelector('.payment-home-card');
-   if(paymentCard){const sync=document.createElement('div');sync.className='math-sync-info';
-     sync.id='nur-math-sync';sync.textContent='Server orqali yangilanadi';paymentCard.after(sync)}
+   
    renderAppearance();
  }
  async function reload(silent=false){
@@ -139,12 +136,18 @@
        data.day!==response.day||data.month!==response.month;
      data=response;lastSuccess=Date.now();
      if(changed)render();
-     const status=$('nur-math-sync');if(status)status.textContent='Ulangan · oxirgi tekshiruv '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+     
    }catch(err){
-     const status=$('nur-math-sync');if(status)status.textContent='Server bilan ulanishda muammo · qayta tekshiriladi';
-     if(!silent && !data){for(const id of ['nur-math-rating','nur-math-results','nur-math-monthly']){
-       if($(id))$(id).textContent=err.message;
-     }}
+     if(!silent&&!data)for(const id of ['nur-math-rating','nur-math-results','nur-math-monthly']){
+        const region=$(id);if(!region)continue;
+        region.replaceChildren();
+        const retry=document.createElement('button');
+        retry.type='button';retry.className='nur-math-retry';
+        retry.textContent='↻';retry.title='Qayta urinish';
+        retry.setAttribute('aria-label','Qayta urinish');
+        retry.addEventListener('click',()=>reload(false));
+        region.append(retry);
+      }
    }finally{loading=false}
  }
  async function refreshRevision(){
@@ -185,7 +188,7 @@
    const count=current.reduce((n,t)=>n+t.rows.length,0);
    root.innerHTML='<div class="nur-math-tools"><label><span style="font-size:11px">Sana</span> '+
       '<input id="nur-math-date" type="date" value="'+esc(pageDate)+'"></label>'+
-      '<span class="nur-math-live">Server bilan sinxron</span></div>'+
+      '</div>'+
      '<div id="nur-date-links" class="nur-date-links"></div>'+
      '<div class="nur-stat-row"><div class="nur-stat-box"><b>'+current.length+'</b><small>Test</small></div>'+
      '<div class="nur-stat-box"><b>'+count+'</b><small>Kiritilgan natija</small></div>'+
@@ -273,7 +276,7 @@
    if(!modal)return;
    modal.hidden=false;
    const root=$('nur-math-profile-content');
-   root.innerHTML='<p class="nur-math-loading">Ma’lumotlar yuklanmoqda...</p>';
+   root.replaceChildren();
    try{
      const details=await api('/math/student/'+st.id);
      let content='<div class="nur-stat-row">'+
