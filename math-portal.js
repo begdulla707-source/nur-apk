@@ -446,9 +446,8 @@
  }
  function addImportWarning(message){
    const value=String(message||'').trim().slice(0,180);
-   if(!value||draftWarnings.includes(value))return;
-   draftWarnings.push(value);
-   if(draftWarnings.length>4)draftWarnings.splice(0,draftWarnings.length-4);
+   if(!value)return;
+   draftWarnings=[value];
  }
  function mergeDraftRows(rows){
    const key=v=>String(v||'').trim().toLocaleLowerCase('uz').replace(/\s+/g,' ');
@@ -556,15 +555,15 @@
    if(warning){
       const pending=draft.filter(r=>r.status==='unresolved'||
         (r.status==='present'&&r.correct===null)||!r.name.trim()).length;
-      if(!draft.length&&!draftWarnings.length)warning.textContent='';
+      if(!pending&&!draftWarnings.length)warning.textContent='';
       else warning.innerHTML='<div class="nur-import-warning"><b>'+
-        esc(pending?pending+' ta ball yoki davomatni tasdiqlang. ':
-          draft.length+' ta natija o‘qildi. ')+
+        esc(pending?pending+' ta qatorni tekshiring. ':'')+
         '</b>'+esc(draftWarnings.slice(-1).join(' '))+'</div>';
     }
     table.replaceChildren();
    const sorted=[...draft.map((x,i)=>({x,i}))].sort((a,b)=>
      Number(a.x.status!=='unresolved'&&a.x.name.trim()!=='')-Number(b.x.status!=='unresolved'&&b.x.name.trim()!==''));
+   const fragment=document.createDocumentFragment();
    for(const {x,i} of sorted){
      const cell=document.createElement('div');
      cell.className='nur-import-row'+(x.status==='unresolved'||!x.name.trim()?' unresolved':'');
@@ -581,8 +580,9 @@
         (x.status==='unresolved'?'<div style="display:flex;gap:7px;margin-top:9px">'+
         '<button class="nur-btn alt" type="button" data-math-action="resolve" data-idx="'+i+'" data-status="dq">DQ</button>'+
         '<button class="nur-btn alt" type="button" data-math-action="resolve" data-idx="'+i+'" data-status="present">0 ball</button></div>':'');
-     table.append(cell);
+     fragment.append(cell);
    }
+   table.append(fragment);
    updateWarningCount(root);
  }
  async function renderAdmin(root,ctx,tab='math'){
