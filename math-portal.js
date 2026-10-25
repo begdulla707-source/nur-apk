@@ -298,9 +298,9 @@
       '<button type="button" data-accent="'+k+'" class="'+(saved===k?'chosen':'')+'">'+
       '<span class="swatch" style="display:block;background:'+c+'"></span>'+t+'</button>').join('')+'</div></div>'+
      '<div class="nur-math-panel"><h3>Tashqi APK ikonkasi</h3>'+
-     '<p>Android bosh ekranidagi ikonka uchun oldindan tayyorlangan 3 variant. Ayrim launcherlar yangilanishi bir necha soniya oladi.</p>'+
+     '<p>Asl oltin logotip saqlanadi. Tanlangan ikonka keyingi ishga tushishda ham qoladi.</p>'+
      '<div class="nur-settings-options" id="nur-icon-options">'+
-     [['original','Asl','linear-gradient(140deg,#b99037,#244d39)'],['emerald','Zumrad','linear-gradient(140deg,#287a55,#143525)'],['night','Tungi','linear-gradient(140deg,#2e3d43,#0e1517)']].map(([k,t,c])=>
+     [['original','Asl oltin','linear-gradient(140deg,#f8e7a4,#b99037)'],['autumn-one','Kuz 1','linear-gradient(140deg,#f4c45c,#a45a24)'],['autumn-two','Kuz 2','linear-gradient(140deg,#d9813b,#e6c36c)'],['spring','Bahor','linear-gradient(140deg,#86cfa4,#206c49)'],['winter','Qish','linear-gradient(140deg,#b3dff3,#2675b4)'],['emerald','Zumrad','linear-gradient(140deg,#287a55,#143525)'],['night','Tungi','linear-gradient(140deg,#2e3d43,#0e1517)']].map(([k,t,c])=>
       '<button type="button" data-icon="'+k+'" class="'+(icon===k?'chosen':'')+'">'+
       '<span class="swatch" style="display:block;background:'+c+'"></span>'+t+'</button>').join('')+
      '</div><p id="nur-icon-help">O‘zgarish telefon launcheriga bog‘liq. APKning asl premium ikonkasini doim qayta tanlash mumkin.</p></div>';
