@@ -137,7 +137,7 @@ public class MainActivity extends Activity {
         line.setMax(100);
         line.setProgress(0);
         splashProgress=line;
-        stack.addView(line,new LinearLayout.LayoutParams(dp(206),dp(10)));
+        stack.addView(line,new LinearLayout.LayoutParams(dp(206),dp(7)));
         splash.addView(stack,new FrameLayout.LayoutParams(-1,-1));
         return splash;
     }
