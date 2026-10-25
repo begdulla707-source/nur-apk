@@ -13,7 +13,7 @@
  const arrow='<svg class="m-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';
  let pageDate='',month='',data=null,loading=false,lastSuccess=0,pollInFlight=false,eventSource=null;
  let ctxAdmin=null,draft=[],draftWarnings=[],importFiles=[],adminMode='math',adminBound=false,uploadBusy=false;
- let minimumPhotoRows=0;
+ let minimumPhotoRows=0, initialDateResolved=false, ocrBatchHandle=null, pendingImages=0;
  function today(){
    const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
    const val=k=>parts.find(x=>x.type===k)?.value||'';
@@ -125,7 +125,16 @@
    loading=true;
    try{
      const query='?date='+encodeURIComponent(pageDate)+'&month='+encodeURIComponent(month);
-     const response=await api('/math/overview'+query);
+     let response=await api('/math/overview'+query);
+      // First launch: display latest published test if today's result is absent.
+      if(!initialDateResolved){
+        initialDateResolved=true;
+        if(!(response.tests||[]).length && response.dates?.length){
+          pageDate=response.dates[0].date;month=pageDate.slice(0,7);
+          response=await api('/math/overview?date='+encodeURIComponent(pageDate)+
+            '&month='+encodeURIComponent(month));
+        }
+      }
      const changed=!data||data.revision!==response.revision||
        data.day!==response.day||data.month!==response.month;
      data=response;lastSuccess=Date.now();
@@ -183,14 +192,14 @@
      '<div class="nur-stat-box"><b>'+current.reduce((n,t)=>n+t.rows.filter(r=>r.status==='dq').length,0)+
         '</b><small>DQ</small></div></div>'+
      '<div id="nur-results-tables"></div>';
-   $('nur-math-date').addEventListener('change',e=>{pageDate=e.target.value;month=pageDate.slice(0,7);reload(true)});
+   $('nur-math-date').addEventListener('change',e=>{initialDateResolved=true;pageDate=e.target.value;month=pageDate.slice(0,7);reload(true)});
    const links=$('nur-date-links');
    const unique=[...new Set(dates.map(d=>d.date))].slice(0,30);
    for(const day of unique){
      const b=document.createElement('button');b.type='button';
      b.className=day===pageDate?'on':'';
      b.textContent=prettyDay(day);
-     b.addEventListener('click',()=>{pageDate=day;month=day.slice(0,7);reload(true)});
+     b.addEventListener('click',()=>{initialDateResolved=true;pageDate=day;month=day.slice(0,7);reload(true)});
      links.append(b);
    }
    const table=$('nur-results-tables');
@@ -413,7 +422,7 @@
              entries:named.map(x=>({name:x.name.trim(),status:x.status,
                correct:x.status==='dq'?null:Number(x.correct),
                grade:x.grade===null?null:Number(x.grade)}))}});
-         draft=[];importFiles=[];draftWarnings=[];minimumPhotoRows=0;
+         draft=[];importFiles=[];draftWarnings=[];minimumPhotoRows=0;pendingImages=0;
          notice(post.saved+' ta natija saqlandi. Reyting barcha ulangan ilovalarda yangilanadi.');
          pageDate=value.date;month=pageDate.slice(0,7);
          await reload(true);await renderAdmin(root,ctxAdmin,'math');
@@ -435,44 +444,69 @@
    const count=root.querySelector('#nur-math-warning-count');
    if(count)count.textContent=missing?missing+' ta natija tekshirishni kutmoqda':'Barcha qatorlar tekshirildi';
  }
- // Photo recognition runs locally in the Android file picker. Only the
- // admin can confirm and publish any extracted names, attendance or scores.
- window.NurImageOCRDeliver=function(payload){
-   const filename=String(payload?.file||'Rasm').slice(0,150);
-   const result=window.NurOCR?.parse(payload);
-   if(payload?.error){
-     draftWarnings.push(filename+': '+payload.error);
-     notice('Rasmni o\u2018qishda xatolik. Tekshiring.');
-   }else if(!result){
-     draftWarnings.push(filename+': OCR moduli yuklanmadi');
-   }else{
-     const rows=result.rows||[];
-     const summary=result.summary||{};
-     for(const warning of result.warnings||[])draftWarnings.push(filename+': '+warning);
-     if(Number.isInteger(summary.present)&&Number.isInteger(summary.absent)){
-       minimumPhotoRows=Math.max(minimumPhotoRows,summary.present+summary.absent);
-       draftWarnings.push(filename+': davomat xulosasi — '+summary.present+' qatnashgan, '+summary.absent+' qatnashmagan. 0 ball = DQ deb avtomatik belgilanmaydi.');
-     }
-     if(Number.isInteger(summary.questions)&&summary.questions>=1&&summary.questions<=200){
-       const form=$('admin-tab-content')?.querySelector('form[data-math-form="commit"]');
-       const questionInput=form?.querySelector('input[name="question_count"]');
-       if(questionInput && questionInput.value==='32')questionInput.value=String(summary.questions);
-       draftWarnings.push(filename+': rasmdagi savollar soni '+summary.questions+'. Test sanasi va savollar sonini tasdiqlang.');
-     }
-     if(rows.length){
-       if(!importFiles.includes(filename))importFiles.push(filename);
-       draft.push(...rows);
-       notice(filename+': '+rows.length+' ta o\u2018quvchi topildi. Tekshirib tasdiqlang.');
+ function addImportWarning(message){
+   const value=String(message||'').trim().slice(0,180);
+   if(!value||draftWarnings.includes(value))return;
+   draftWarnings.push(value);
+   if(draftWarnings.length>4)draftWarnings.splice(0,draftWarnings.length-4);
+ }
+ function mergeDraftRows(rows){
+   const key=v=>String(v||'').trim().toLocaleLowerCase('uz').replace(/\\s+/g,' ');
+   const index=new Map(draft.map((r,i)=>[key(r.name),i]));
+   let conflicts=0;
+   for(const row of rows||[]){
+     if(!row||!key(row.name))continue;
+     const k=key(row.name),i=index.get(k);
+     if(i===undefined){
+       index.set(k,draft.length);
+       draft.push({name:row.name,grade:row.grade??null,
+         status:row.status||'unresolved',correct:row.correct??null});
      }else{
-       notice('Rasmdan o\u2018quvchilarni aniqlab bo\u2018lmadi.');
+       const old=draft[i];
+       if(old.correct!==null && row.correct!==null &&
+          Number(old.correct)!==Number(row.correct)){
+         old.correct=null;old.status='unresolved';conflicts++;
+       }else if(old.correct===null&&row.correct!==null&&old.status==='unresolved'){
+         old.correct=row.correct;old.status=row.status||'present';
+       }
      }
    }
-   const root=$('admin-tab-content');
-   if(root){
-     const status=root.querySelector('#nur-file-status');
-     if(status)status.textContent=importFiles.join(', ')||filename;
+   if(conflicts)addImportWarning(conflicts+' ta takroriy ismdagi ball farq qiladi.');
+ }
+ function scheduleDraftRender(){
+   if(ocrBatchHandle!==null)clearTimeout(ocrBatchHandle);
+   ocrBatchHandle=setTimeout(()=>{
+     ocrBatchHandle=null;
+     const root=$('admin-tab-content');if(!root)return;
      renderDraft(root);
-   }
+     const el=root.querySelector('#nur-file-status');
+     if(el)el.textContent=(pendingImages?pendingImages+' ta rasm o‘qilmoqda · ':'')+
+       draft.length+' ta o‘quvchi topildi. Tekshirib tasdiqlang.';
+   },240);
+ }
+ // On-device recognition produces editable suggestions; never auto-publishes.
+ window.NurImageOCRDeliver=function(payload){
+   pendingImages=Math.max(0,pendingImages-1);
+   const filename=String(payload?.file||'Rasm').slice(0,150);
+   if(payload?.error)addImportWarning(filename+': rasmni o‘qib bo‘lmadi.');
+   else if(!window.NurOCR?.parse)addImportWarning('OCR moduli yuklanmadi.');
+   else try{
+     const result=window.NurOCR.parse(payload);
+     const summary=result.summary||{};
+     if(Number.isInteger(summary.present)&&Number.isInteger(summary.absent))
+       minimumPhotoRows=Math.max(minimumPhotoRows,summary.present+summary.absent);
+     if(Number.isInteger(summary.questions)&&summary.questions>=1&&summary.questions<=200){
+       const input=$('admin-tab-content')?.querySelector('input[name="question_count"]');
+       if(input&&input.value==='32')input.value=String(summary.questions);
+     }
+     if((result.rows||[]).length){
+       if(!importFiles.includes(filename))importFiles.push(filename);
+       mergeDraftRows(result.rows);
+     }else addImportWarning(filename+': o‘quvchi qatorlari topilmadi.');
+     if(summary.missingRows)addImportWarning(filename+': jami '+(summary.present+summary.absent)+
+       ' nafar, OCR '+(result.rows||[]).length+' nafarni topdi.');
+   }catch(error){addImportWarning(filename+': rasm jadvalini ajratib bo‘lmadi.');}
+   scheduleDraftRender();
  };
  async function previewFiles(root,files){
    if(uploadBusy)return;
@@ -484,9 +518,10 @@
    const info=root.querySelector('#nur-file-status');
    if(images.length){
      if(navigator.userAgent.includes('NurOqiwAndroid')){
+       pendingImages+=images.length;
        if(info)info.textContent=images.length+' ta rasm tanildi. Telefonda matni tekshirilmoqda...';
      }else{
-       draftWarnings.push('Rasm OCR faqat Android APK ichida ishlaydi; brauzerda Excel/CSV tanlang.');
+       addImportWarning('Rasm OCR faqat Android APK ichida ishlaydi.');
        renderDraft(root);
      }
    }
@@ -502,14 +537,14 @@
      const output=await api('/admin/math/preview',{admin:true,method:'POST',body:form});
      const incoming=[];
      for(const entry of output.files||[]){
-       importFiles.push(entry.file);
-       for(const w of entry.warnings||[])draftWarnings.push(entry.file+': '+w);
+       if(!importFiles.includes(entry.file))importFiles.push(entry.file);
+       for(const w of (entry.warnings||[]).slice(0,2))addImportWarning(entry.file+': '+w);
        for(const row of entry.rows||[])incoming.push({
          name:row.name||'',grade:row.grade??null,status:row.status,
          correct:row.correct??null
        });
      }
-     draft=[...draft,...incoming];
+     mergeDraftRows(incoming);
      renderDraft(root);
      if(info)info.textContent=selected.map(x=>x.name).join(', ');
    }catch(err){notice(err.message);if(info)info.textContent='Faylni o\u2018qishda xatolik'}
@@ -518,7 +553,7 @@
  function renderDraft(root){
    const table=root.querySelector('#nur-import-rows');if(!table)return;
    const warning=root.querySelector('#nur-import-warnings');
-   if(warning)warning.innerHTML=draftWarnings.slice(-12).map(s=>
+   if(warning)warning.innerHTML=draftWarnings.slice(-2).map(s=>
      '<div class="nur-import-warning">'+esc(s)+'</div>').join('');
    table.replaceChildren();
    const sorted=[...draft.map((x,i)=>({x,i}))].sort((a,b)=>
