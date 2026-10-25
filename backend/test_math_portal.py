@@ -77,6 +77,32 @@ class MathPortalTests(unittest.TestCase):
         self.assertEqual(self.client.post("/api/admin/math/commit",
                  json=payload,headers=self.auth).status_code,400)
 
+    def test_latest_results_follow_last_published_test_not_today(self):
+        first={"date":"2026-10-23","title":"Recent dated test",
+               "question_count":30,"entries":[{"name":"Newest Test Alpha","correct":20}]}
+        second={"date":"2026-10-19","title":"Uploaded later backdated test",
+                "question_count":30,"entries":[{"name":"Newest Test Beta","correct":27}]}
+        r=self.client.post("/api/admin/math/commit",json=first,headers=self.auth)
+        self.assertEqual(r.status_code,201,r.json)
+        current=self.client.get("/api/math/overview?date=latest").json
+        self.assertEqual(current["day"],"2026-10-23")
+        self.assertEqual(current["month"],"2026-10")
+        self.assertEqual(current["tests"][0]["title"],first["title"])
+        # Even though the second test is dated earlier, admin published it
+        # after the first; all unpinned clients must follow this latest upload.
+        r=self.client.post("/api/admin/math/commit",json=second,headers=self.auth)
+        self.assertEqual(r.status_code,201,r.json)
+        latest=self.client.get("/api/math/overview?date=latest").json
+        self.assertEqual(latest["day"],"2026-10-19")
+        self.assertEqual(latest["tests"][0]["title"],second["title"])
+        # The older test remains selectable by its saved calendar date.
+        historical=self.client.get("/api/math/overview?date=2026-10-23").json
+        self.assertEqual(historical["tests"][0]["title"],first["title"])
+        # Newest result stays pinned to the saved test date, independent
+        # of the current day or a user's phone's clock.
+        self.assertEqual(self.client.get("/api/math/overview?date=latest").json["day"],
+                         "2026-10-19")
+
     def test_bulk_csv_and_excel_preview(self):
         csv_file=b"name,correct,status,grade\nMalika Test,24,present,5\nAli Test,,DQ,4\nUnknown Test,,,3\n"
         payload={"files":[(io.BytesIO(csv_file),"results.csv")]}
