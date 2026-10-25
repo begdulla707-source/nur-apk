@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
         "notifications-ui.css", "math-portal.css", "math-portal.css",
         "app-features.js", "premium-admin.js", "ranking-ui.js",
         "liquid-glass.js", "i18n.js", "contact-ui.js", "payment-ui.js", "portfolio-ui.js",
-        "notifications-ui.js", "navigation-ui.js", "math-portal.js", "math-portal.js",
+        "notifications-ui.js", "navigation-ui.js", "math-ocr.js", "math-portal.js",
         "paynet_qr.png"
     ));
     private static final int FILE_CHOOSER_CODE = 5042;
