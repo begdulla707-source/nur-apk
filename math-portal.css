@@ -97,6 +97,18 @@
 .nur-settings-options button{padding:12px 6px;border:1px solid var(--stroke);border-radius:14px;
  background:var(--card);color:var(--text);font-size:11px;font-weight:750}
 .nur-settings-options button.chosen{border-color:var(--accent);background:var(--tint);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+#nur-icon-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#nur-icon-options button{min-height:106px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px}
+.nur-launcher-thumb{display:grid;place-items:center;position:relative;width:62px;height:62px;overflow:hidden;
+ border-radius:17px;border:1.4px solid #ffffff7a;box-shadow:inset 0 3px 4px #ffffff60,0 5px 12px #0002;
+ background:linear-gradient(145deg,#f6dfab,#bc832b)}
+.nur-launcher-thumb svg{width:52px;height:52px;filter:drop-shadow(0 2px 2px #422d2030)}
+.nur-launcher-thumb.icon-autumn-one{background:radial-gradient(at 20% 10%,#ffd77d,#b6681c 72%,#6a351a)}
+.nur-launcher-thumb.icon-autumn-two{background:radial-gradient(at 70% 20%,#ffebac,#d7a267 63%,#9c5e33)}
+.nur-launcher-thumb.icon-spring{background:radial-gradient(at 20% 10%,#66d8a2,#17674d 67%,#073627)}
+.nur-launcher-thumb.icon-winter{background:radial-gradient(at 25% 15%,#b8edff,#4288d1 63%,#142d67)}
+.nur-launcher-thumb.icon-emerald{background:linear-gradient(145deg,#238569,#093c2b)}
+.nur-launcher-thumb.icon-night{background:linear-gradient(145deg,#344e5a,#121b23)}
 .nur-settings-options .swatch{width:25px;height:25px;border-radius:9px;margin:0 auto 9px;border:1px solid #ffffff77}
 body[data-nur-accent="blue"]{--accent:#3274aa;--tint:#e2effb}
 body.dark[data-nur-accent="blue"]{--accent:#a3d2ff;--tint:#24394e}
