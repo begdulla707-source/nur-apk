@@ -6,6 +6,11 @@ import android.content.Intent;
 import android.content.ComponentName;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.animation.ObjectAnimator;
+import android.graphics.drawable.ClipDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.view.animation.LinearInterpolator;
 import android.net.Uri;
 import android.webkit.WebChromeClient;
 import android.webkit.ValueCallback;
@@ -74,7 +79,7 @@ public class MainActivity extends Activity {
     private WebView webView;
     private FrameLayout splashOverlay;
     private ProgressBar splashProgress;
-    private int splashValue=0;
+    private ObjectAnimator splashAnimator;
     private long splashOpenedAt;
     private long lastBackRequestAt;
     private boolean splashFinished=false;
@@ -115,13 +120,24 @@ public class MainActivity extends Activity {
         stack.addView(title,titleParams);
 
         ProgressBar line=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
+        // An iOS-like, visibly thick rounded track filling once from 0 to 100.
+        GradientDrawable track=new GradientDrawable();
+        track.setColor(Color.argb(95,216,251,229));
+        track.setCornerRadius(dp(7));
+        GradientDrawable fill=new GradientDrawable(
+            GradientDrawable.Orientation.LEFT_RIGHT,
+            new int[]{Color.rgb(202,254,222),Color.rgb(255,225,146)});
+        fill.setCornerRadius(dp(7));
+        ClipDrawable clipped=new ClipDrawable(fill,Gravity.LEFT,ClipDrawable.HORIZONTAL);
+        LayerDrawable drawable=new LayerDrawable(new Drawable[]{track,clipped});
+        drawable.setId(0,android.R.id.background);
+        drawable.setId(1,android.R.id.progress);
+        line.setProgressDrawable(drawable);
         line.setIndeterminate(false);
         line.setMax(100);
         line.setProgress(0);
         splashProgress=line;
-        line.setIndeterminateTintList(ColorStateList.valueOf(Color.rgb(184,237,204)));
-        line.setProgressBackgroundTintList(ColorStateList.valueOf(Color.rgb(66,123,90)));
-        stack.addView(line,new LinearLayout.LayoutParams(dp(190),dp(10)));
+        stack.addView(line,new LinearLayout.LayoutParams(dp(206),dp(10)));
         splash.addView(stack,new FrameLayout.LayoutParams(-1,-1));
         return splash;
     }
@@ -129,18 +145,29 @@ public class MainActivity extends Activity {
     private void dismissSplash() {
         if(splashFinished || splashOverlay==null)return;
         splashFinished=true;
-        if(splashProgress!=null)splashProgress.setProgress(100);
-        final FrameLayout toHide=splashOverlay;
-        // Brief real progress display, but never force a multi-second white frame.
+        if(splashAnimator!=null){
+            splashAnimator.cancel();
+            splashAnimator=null;
+        }
+        final FrameLayout overlay=splashOverlay;
+        final ProgressBar bar=splashProgress;
         long elapsed=SystemClock.uptimeMillis()-splashOpenedAt;
-        toHide.postDelayed(()->{
+        overlay.postDelayed(()->{
             if(isFinishing()||isDestroyed())return;
-            toHide.animate().alpha(0f).setDuration(240L).withEndAction(()->{
-                if(toHide.getParent() instanceof FrameLayout) {
-                    ((FrameLayout)toHide.getParent()).removeView(toHide);
-                }
-                if(splashOverlay==toHide)splashOverlay=null;
-            }).start();
+            if(bar!=null){
+                ObjectAnimator last=ObjectAnimator.ofInt(bar,"progress",bar.getProgress(),100);
+                last.setDuration(320L);
+                last.start();
+            }
+            overlay.postDelayed(()->{
+                if(isFinishing()||isDestroyed())return;
+                overlay.animate().alpha(0f).setDuration(230L).withEndAction(()->{
+                    if(overlay.getParent() instanceof FrameLayout)
+                        ((FrameLayout)overlay.getParent()).removeView(overlay);
+                    if(splashOverlay==overlay)splashOverlay=null;
+                    splashProgress=null;
+                }).start();
+            },325L);
         },Math.max(0L,650L-elapsed));
     }
 
@@ -422,14 +449,10 @@ public class MainActivity extends Activity {
     }
     private void animateSplashProgress(){
         if(splashProgress==null)return;
-        splashProgress.postDelayed(new Runnable(){
-            @Override public void run(){
-                if(splashFinished||splashProgress==null)return;
-                splashValue=Math.min(94,splashValue+3);
-                splashProgress.setProgress(splashValue);
-                splashProgress.postDelayed(this,65);
-            }
-        },65);
+        splashAnimator=ObjectAnimator.ofInt(splashProgress,"progress",0,96);
+        splashAnimator.setInterpolator(new LinearInterpolator());
+        splashAnimator.setDuration(7900L);
+        splashAnimator.start();
     }
     private void changeLauncherIcon(String variant){
         String[] names={"Original","Emerald","Night","AutumnOne","AutumnTwo","Spring","Winter"};
