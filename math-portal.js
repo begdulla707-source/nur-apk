@@ -13,7 +13,7 @@
  const arrow='<svg class="m-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';
  let pageDate='',month='',data=null,loading=false,lastSuccess=0,pollInFlight=false,eventSource=null;
  let ctxAdmin=null,draft=[],draftWarnings=[],importFiles=[],adminMode='math',adminBound=false,uploadBusy=false;
- let minimumPhotoRows=0, datePinned=false, ocrBatchHandle=null, pendingImages=0;
+ let minimumPhotoRows=0, datePinned=false, monthPinned=false, ocrBatchHandle=null, pendingImages=0;
  function today(){
    const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
    const val=k=>parts.find(x=>x.type===k)?.value||'';
@@ -123,11 +123,11 @@
    try{
      // Unpinned screens follow the newest published test in a single request.
      // Explicitly selected dates remain fixed.
-     const query=datePinned
-       ?'?date='+encodeURIComponent(pageDate)+'&month='+encodeURIComponent(month)
-       :'?date=latest';
+     const query='?date='+encodeURIComponent(datePinned?pageDate:'latest')+
+       ((datePinned||monthPinned)?'&month='+encodeURIComponent(month):'');
      const response=await api('/math/overview'+query);
-     if(!datePinned){pageDate=response.day;month=response.month}
+     if(!datePinned)pageDate=response.day;
+     if(!monthPinned&&!datePinned)month=response.month;
      const changed=!data||data.revision!==response.revision||
        data.day!==response.day||data.month!==response.month;
      data=response;lastSuccess=Date.now();
@@ -183,7 +183,8 @@
    const current=data.tests||[];
    const count=current.reduce((n,t)=>n+t.rows.length,0);
    root.innerHTML='<div class="nur-math-tools"><label><span style="font-size:11px">Sana</span> '+
-      '<input id="nur-math-date" type="date" value="'+esc(pageDate)+'"></label>'+
+      '<input id="nur-math-date" type="date" value="'+esc(pageDate)+'"></label>'+ 
+      '<button type="button" id="nur-results-latest" class="nur-latest-button">Oxirgi test</button>'+
       '</div>'+
      '<div id="nur-date-links" class="nur-date-links"></div>'+
      '<div class="nur-stat-row"><div class="nur-stat-box"><b>'+current.length+'</b><small>Test</small></div>'+
@@ -191,14 +192,15 @@
      '<div class="nur-stat-box"><b>'+current.reduce((n,t)=>n+t.rows.filter(r=>r.status==='dq').length,0)+
         '</b><small>DQ</small></div></div>'+
      '<div id="nur-results-tables"></div>';
-   $('nur-math-date').addEventListener('change',e=>{datePinned=true;pageDate=e.target.value;month=pageDate.slice(0,7);reload(true)});
+   $('nur-math-date').addEventListener('change',e=>{if(!e.target.value)return;datePinned=true;monthPinned=false;pageDate=e.target.value;month=pageDate.slice(0,7);reload(true)});
+   $('nur-results-latest').addEventListener('click',()=>{datePinned=false;monthPinned=false;reload(true)});
    const links=$('nur-date-links');
    const unique=[...new Set(dates.map(d=>d.date))].slice(0,30);
    for(const day of unique){
      const b=document.createElement('button');b.type='button';
      b.className=day===pageDate?'on':'';
      b.textContent=prettyDay(day);
-     b.addEventListener('click',()=>{datePinned=true;pageDate=day;month=day.slice(0,7);reload(true)});
+     b.addEventListener('click',()=>{datePinned=true;monthPinned=false;pageDate=day;month=day.slice(0,7);reload(true)});
      links.append(b);
    }
    const table=$('nur-results-tables');
@@ -235,7 +237,7 @@
      '<span class="nur-math-live">Avtomatik reyting</span></div>'+
      '<div class="nur-math-subhead"><b>Umumiy oylik reyting</b><small>Teng ball — teng o‘rin</small></div>'+
      '<div id="nur-rank-rows" class="nur-leaderboard"></div>';
-   $('nur-rank-month').addEventListener('change',e=>{datePinned=true;month=e.target.value;pageDate=month+'-01';reload(true)});
+   $('nur-rank-month').addEventListener('change',e=>{if(!e.target.value)return;monthPinned=true;month=e.target.value;reload(true)});
    const list=$('nur-rank-rows');
    if(!ranking.length){list.innerHTML='<div class="nur-math-empty">Reyting uchun hali o‘quvchi qo‘shilmagan.</div>';return}
    for(const x of ranking){
@@ -256,7 +258,7 @@
       '<input type="month" id="nur-payment-month" value="'+esc(month)+'"></label>'+
       '<small style="color:var(--muted)">Admin tasdiqlaydi</small></div>'+
       '<div id="nur-payment-rows" class="nur-monthly-list"></div>';
-   $('nur-payment-month').addEventListener('change',e=>{month=e.target.value;pageDate=month+'-01';reload(true)});
+   $('nur-payment-month').addEventListener('change',e=>{if(!e.target.value)return;monthPinned=true;month=e.target.value;reload(true)});
    const list=$('nur-payment-rows');
    if(!data.students.length){list.innerHTML='<div class="nur-math-empty">Hozircha o‘quvchilar yo‘q.</div>';return}
    for(const x of data.students){
@@ -423,7 +425,7 @@
                grade:x.grade===null?null:Number(x.grade)}))}});
          draft=[];importFiles=[];draftWarnings=[];minimumPhotoRows=0;pendingImages=0;
          notice(post.saved+' ta natija saqlandi. Reyting barcha ulangan ilovalarda yangilanadi.');
-         datePinned=true;pageDate=value.date;month=pageDate.slice(0,7);
+         datePinned=false;monthPinned=false;pageDate=value.date;month=pageDate.slice(0,7);
          await reload(true);await renderAdmin(root,ctxAdmin,'math');
        }
      }catch(e){notice(e.message)}
@@ -615,7 +617,7 @@
        '<label>Oy <input id="nur-admin-paymonth" type="month" value="'+esc(month)+'"></label>'+
        '<div id="nur-admin-pay-list" class="nur-monthly-list" style="margin-top:14px"></div></section>';
      root.querySelector('#nur-admin-paymonth').onchange=async e=>{
-       datePinned=true;month=e.target.value;pageDate=month+'-01';await reload(true);await renderAdmin(root,ctx,'math-payments');
+       monthPinned=true;month=e.target.value;await reload(true);await renderAdmin(root,ctx,'math-payments');
      };
      const list=root.querySelector('#nur-admin-pay-list');
      for(const x of data?.students||[]){
