@@ -34,7 +34,7 @@
     const el=ensurePublic();
     if(!el)return;
     const call=++requestId;
-    el.innerHTML='<div class="rank-top-title"><h3>TOP 15</h3><small>Yuklanmoqda...</small></div>';
+    el.replaceChildren();
     const q=selectedPublicGroup?'?group_id='+encodeURIComponent(selectedPublicGroup):'';
     try{
       const response=await fetch(base+'/top15'+q,{cache:'no-store'});
@@ -142,7 +142,7 @@
     await loadProfiles(ctx);
   }
   async function loadProfiles(ctx){
-    const root=$('rank-profiles-list');if(!root)return;root.innerHTML='<div class="empty">O‘quvchilar yuklanmoqda...</div>';
+    const root=$('rank-profiles-list');if(!root)return;root.replaceChildren();
     const q=new URLSearchParams();
     const group=$('rank-profiles-group')?.value,query=$('rank-profiles-search')?.value;
     if(group)q.set('group_id',group);
@@ -162,7 +162,7 @@
   }
   async function adminStudentDetail(ctx,id){
     const root=$('rank-profile-admin-detail');if(!root)return;
-    root.innerHTML='<div class="empty">Ma’lumot yuklanmoqda...</div>';
+    root.replaceChildren();
     try{
       const data=await ctx.api('/admin/students/'+id+'/performance',{admin:true});
       const p=data.student,m=data.summary;
