@@ -10,6 +10,16 @@ import android.net.Uri;
 import android.webkit.WebChromeClient;
 import android.webkit.ValueCallback;
 import android.content.ClipData;
+import android.database.Cursor;
+import android.graphics.Rect;
+import android.provider.OpenableColumns;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.Text;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import java.util.ArrayList;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -44,7 +54,7 @@ import java.util.Set;
  * origin. Only explicit static assets can be served by this WebViewClient.
  *
  * The independent Render API is contacted when internet is available.
- * No native Javascript bridge, file permissions or native download mechanism.
+ * No native Javascript bridge or broad storage permissions. Explicitly selected\n * photos are OCR-scanned on-device and returned for admin review only.
  */
 public class MainActivity extends Activity {
     private static final String APP_HOST = "appassets.androidplatform.net";
@@ -60,6 +70,7 @@ public class MainActivity extends Activity {
     ));
     private static final int FILE_CHOOSER_CODE = 5042;
     private ValueCallback<Uri[]> pendingFileUris;
+    private TextRecognizer imageTextRecognizer;
     private WebView webView;
     private FrameLayout splashOverlay;
     private long splashOpenedAt;
@@ -290,6 +301,100 @@ public class MainActivity extends Activity {
             files.add(intent.getData());
         }
         callback.onReceiveValue(files.isEmpty()?null:files.toArray(new Uri[0]));
+        // The WebView cannot OCR image bytes by itself. Recognize selected
+        // photos locally and send only editable suggestions to the UI.
+        for(Uri uri:files) if(isResultImage(uri))recognizeResultImage(uri);
+    }
+
+
+    private String selectedFileName(Uri uri) {
+        try(Cursor c=getContentResolver().query(uri,
+                new String[]{OpenableColumns.DISPLAY_NAME},null,null,null)) {
+            if(c!=null && c.moveToFirst())return c.getString(0);
+        }catch(Exception ignored){ }
+        return uri.getLastPathSegment()==null?"natija-rasm.jpg":uri.getLastPathSegment();
+    }
+
+    private boolean isResultImage(Uri uri) {
+        try {
+            String mime=getContentResolver().getType(uri);
+            if(mime!=null && mime.startsWith("image/"))return true;
+            String name=selectedFileName(uri).toLowerCase(java.util.Locale.ROOT);
+            return name.endsWith(".png")||name.endsWith(".jpg")||
+                name.endsWith(".jpeg")||name.endsWith(".webp");
+        } catch(Exception error){return false;}
+    }
+
+    private void sendImageOCRResult(JSONObject payload) {
+        if(webView==null||isFinishing()||isDestroyed())return;
+        // JSONObject.toString safely quotes OCR words; no native JS interface,
+        // WebView file access or embedded external OCR endpoint required.
+        final String js="window.NurImageOCRDeliver&&window.NurImageOCRDeliver("+
+            payload.toString()+");";
+        webView.post(()->{
+            if(webView!=null&&!isFinishing()&&!isDestroyed())
+                webView.evaluateJavascript(js,null);
+        });
+    }
+
+    private void recognizeResultImage(Uri uri) {
+        final String fileName=selectedFileName(uri);
+        try {
+            if(imageTextRecognizer==null){
+                imageTextRecognizer=TextRecognition.getClient(
+                    TextRecognizerOptions.DEFAULT_OPTIONS);
+            }
+            final InputImage image=InputImage.fromFilePath(this,uri);
+            final int width=Math.max(1,image.getWidth());
+            final int height=Math.max(1,image.getHeight());
+            imageTextRecognizer.process(image)
+              .addOnSuccessListener(result->{
+                JSONObject payload=new JSONObject();
+                JSONArray words=new JSONArray();
+                try{
+                    payload.put("file",fileName);
+                    for(Text.TextBlock block:result.getTextBlocks()) {
+                        for(Text.Line line:block.getLines()){
+                            for(Text.Element element:line.getElements()){
+                                Rect rect=element.getBoundingBox();
+                                if(rect==null||words.length()>=1600)continue;
+                                JSONObject word=new JSONObject();
+                                word.put("text",element.getText());
+                                word.put("x",(double)rect.left/width);
+                                word.put("y",(double)rect.top/height);
+                                word.put("w",(double)rect.width()/width);
+                                word.put("h",(double)rect.height()/height);
+                                words.put(word);
+                            }
+                        }
+                    }
+                    payload.put("elements",words);
+                    payload.put("engine","android-mlkit-latin");
+                }catch(Exception jsonError){
+                    Log.w("NurOqiwOCR","Cannot encode OCR words",jsonError);
+                }
+                sendImageOCRResult(payload);
+              })
+              .addOnFailureListener(error->{
+                JSONObject response=new JSONObject();
+                try {
+                    response.put("file",fileName);
+                    response.put("elements",new JSONArray());
+                    response.put("error","Rasm matnini tanib bo\\u2018lmadi. Tiniqroq rasm tanlang.");
+                }catch(Exception ignored){}
+                Log.w("NurOqiwOCR","Recognition failed",error);
+                sendImageOCRResult(response);
+              });
+        }catch(Exception error){
+            JSONObject response=new JSONObject();
+            try {
+                response.put("file",fileName);
+                response.put("elements",new JSONArray());
+                response.put("error","Rasmni ochib bo\\u2018lmadi.");
+            }catch(Exception ignored){}
+            Log.w("NurOqiwOCR","Photo could not be opened",error);
+            sendImageOCRResult(response);
+        }
     }
 
     @Override protected void onSaveInstanceState(Bundle state) {
@@ -349,6 +454,10 @@ public class MainActivity extends Activity {
 
     @Override public void onBackPressed() {handleBack();}
     @Override protected void onDestroy() {
+        if(imageTextRecognizer!=null){
+            imageTextRecognizer.close();
+            imageTextRecognizer=null;
+        }
         if (webView != null) {
             webView.stopLoading();
             webView.destroy();
