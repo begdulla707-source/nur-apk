@@ -33,3 +33,30 @@ const none=OCR.parse({elements:[]});
 assert.equal(none.rows.length,0);
 assert(none.warnings.length);
 console.log('PASS: dual-column OCR, numeric scores, missing/zero=review, safe empty parse');
+
+const full=[at('Durisi|',.265,.105,.055),at('Durisi',.625,.105,.055)];
+for(let i=0;i<26;i++){
+  const left=i<16, column=left?0:1, r=left?i:i-16;
+  const y=.17+r*.046;
+  const x=column===0?.071:.414;
+  const score=[0,5,12,24].includes(i)?0:Math.min(32,19+i%14);
+  full.push(at('|Fam'+i,x,y,.070),at('Ali'+i,x+.083,y,.048));
+  full.push(at(String(score)+'_|',column===0?.285:.636,y,.023));
+}
+full.push(at('Testke',.75,.18,.055),at('qatnasqan',.81,.18,.09),at('22',.93,.18,.02));
+full.push(at('Testke',.75,.25,.055),at('qatnaspagan',.81,.25,.09),at('4',.93,.25,.02));
+full.push(at('Sorawlar',.75,.32,.07),at('sani:',.83,.32,.05),at('32',.93,.32,.02));
+const complete=OCR.parse({elements:full});
+assert.equal(complete.rows.length,26,JSON.stringify(complete));
+assert.equal(complete.summary.present,22);
+assert.equal(complete.summary.absent,4);
+assert.equal(complete.summary.questions,32);
+assert.equal(complete.rows[0].correct,null);
+assert.equal(complete.rows[0].status,'unresolved');
+assert.equal(complete.rows[1].correct,20);
+assert.equal(complete.rows[16].name,'Fam16 Ali16');
+assert.equal(complete.summary.missingRows,undefined);
+const partial=OCR.parse({elements:full.filter(x=>x.text!=='|Fam25'&&x.text!=='Ali25')});
+assert.equal(partial.summary.missingRows,true);
+assert(partial.warnings.some(x=>x.includes('DIQQAT')));
+console.log('PASS: full 26-row sheet, decorated score cells, 22/4 attendance, 32 questions and missing-row warning');
