@@ -51,8 +51,7 @@
     pane.innerHTML='<header class="nur-notify-header"><div><b>Bildirishnomalar</b><small>Admin javoblari va yangi e’lonlar</small></div>'+
       '<button type="button" id="nur-notify-close" aria-label="Yopish">'+xicon+'</button></header>'+
       '<div class="nur-notify-body" id="nur-notify-list"></div>'+
-      '<footer class="nur-notify-footer"><button type="button" id="nur-notify-refresh">Yangilash</button>'+
-      '<span id="nur-notify-status">Internet orqali yangilanadi</span></footer>';
+      '<footer class="nur-notify-footer"><button type="button" id="nur-notify-refresh">Yangilash</button></footer>';
     document.body.append(pane);
     $('nur-notify-close').addEventListener('click',close);
     $('nur-notify-refresh').addEventListener('click',()=>refresh(true));
@@ -102,10 +101,7 @@
       empty.className='nur-notify-empty';empty.textContent=translated('Hozircha bildirishnoma yo‘q.');
       root.append(empty);
     } else for(const item of items)root.append(rowFor(item));
-    if(previousError){
-      const warning=document.createElement('p');
-      warning.className='nur-notify-warning';warning.textContent=previousError;root.append(warning);
-    }
+    
     badge();
   }
   function open(){
@@ -145,11 +141,11 @@
       previousError='';
       if(signature!==lastSignature){lastSignature=signature;items=feed;updateList()}
       if(active){markSeen()}
-      const status=$('nur-notify-status');if(status)status.textContent=translated('Yangilandi');
+      
     }catch(err){
       previousError='Yangilanishni olishda xatolik. Internet va serverni tekshiring.';
       if(active)updateList();
-      const status=$('nur-notify-status');if(status)status.textContent=translated('Serverga ulanib bo‘lmadi');
+      
     }finally{clearTimeout(timer);waiting=false}
   }
   async function checkRelease(force=false){
@@ -176,7 +172,7 @@
         const newest=builds[0];
         appUpdate={key:'u:'+newest.number,type:'update',
           title:'Yangi ilova versiyasi mavjud',
-          body:'Nur oqiw ilovasi yangilandi. Xavfsiz yuklab olish uchun rasmiy GitHub Release sahifasini oching.',
+          body:'Nur oqiw ilovasining yangi versiyasi tayyor. Yuklab olish tugmasini bosing.',
           created_at:newest.published_at||new Date().toISOString(),url:newest.asset.browser_download_url};
       }else appUpdate=null;
       // Update the rendered feed without waiting for the next network poll.
