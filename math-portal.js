@@ -450,17 +450,59 @@
    const count=root.querySelector('#nur-math-warning-count');
    if(count)count.textContent=missing?missing+' ta natija tekshirishni kutmoqda':'Barcha qatorlar tekshirildi';
  }
+ // Photo recognition runs locally in the Android file picker. Only the
+ // admin can confirm and publish any extracted names, attendance or scores.
+ window.NurImageOCRDeliver=function(payload){
+   const filename=String(payload?.file||'Rasm').slice(0,150);
+   const result=window.NurOCR?.parse(payload);
+   if(payload?.error){
+     draftWarnings.push(filename+': '+payload.error);
+     notice('Rasmni o\u2018qishda xatolik. Tekshiring.');
+   }else if(!result){
+     draftWarnings.push(filename+': OCR moduli yuklanmadi');
+   }else{
+     const rows=result.rows||[];
+     for(const warning of result.warnings||[])draftWarnings.push(filename+': '+warning);
+     if(rows.length){
+       if(!importFiles.includes(filename))importFiles.push(filename);
+       draft.push(...rows);
+       notice(filename+': '+rows.length+' ta o\u2018quvchi topildi. Tekshirib tasdiqlang.');
+     }else{
+       notice('Rasmdan o\u2018quvchilarni aniqlab bo\u2018lmadi.');
+     }
+   }
+   const root=$('admin-tab-content');
+   if(root){
+     const status=root.querySelector('#nur-file-status');
+     if(status)status.textContent=importFiles.join(', ')||filename;
+     renderDraft(root);
+   }
+ };
  async function previewFiles(root,files){
    if(uploadBusy)return;
    const selected=Array.from(files||[]);
    if(!selected.length)return;
    if(selected.length>8){notice('Bir marta 8 tagacha fayl tanlang');return}
-   uploadBusy=true;
+   const images=selected.filter(f=>/\.(png|jpe?g|webp)$/i.test(f.name));
+   const sheets=selected.filter(f=>!/\.(png|jpe?g|webp)$/i.test(f.name));
    const info=root.querySelector('#nur-file-status');
-   if(info)info.textContent=selected.length+' ta fayl yuklanmoqda...';
+   if(images.length){
+     if(navigator.userAgent.includes('NurOqiwAndroid')){
+       if(info)info.textContent=images.length+' ta rasm tanildi. Telefonda matni tekshirilmoqda...';
+     }else{
+       draftWarnings.push('Rasm OCR faqat Android APK ichida ishlaydi; brauzerda Excel/CSV tanlang.');
+       renderDraft(root);
+     }
+   }
+   if(!sheets.length){
+     const input=root.querySelector('input[data-math-files]');if(input)input.value='';
+     return;
+   }
+   uploadBusy=true;
+   if(info)info.textContent=sheets.length+' ta jadval fayli yuklanmoqda...';
    try{
      const form=new FormData();
-     for(const f of selected)form.append('files',f,f.name);
+     for(const f of sheets)form.append('files',f,f.name);
      const output=await api('/admin/math/preview',{admin:true,method:'POST',body:form});
      const incoming=[];
      for(const entry of output.files||[]){
@@ -474,7 +516,7 @@
      draft=[...draft,...incoming];
      renderDraft(root);
      if(info)info.textContent=selected.map(x=>x.name).join(', ');
-   }catch(err){notice(err.message);if(info)info.textContent='Faylni o‘qishda xatolik'}
+   }catch(err){notice(err.message);if(info)info.textContent='Faylni o\u2018qishda xatolik'}
    finally{uploadBusy=false;const input=root.querySelector('input[data-math-files]');if(input)input.value=''}
  }
  function renderDraft(root){
@@ -513,7 +555,7 @@
    if(tab==='math'){
      const panel=document.createElement('section');panel.className='nur-math-panel';
      panel.innerHTML='<h3>Test natijalarini yuklash</h3>'+
-       '<p>Bir vaqtda ko‘p .xlsx yoki .csv yuklash mumkin. Rasmlarni hozircha avtomatik o‘qiydigan xizmat ulanmagan — ularni ball deb saqlamaymiz.</p>'+
+       '<p>Excel/CSV fayllari va Android APK ichida jadval rasmlari o\u2018qiladi. Rasmda aniqlangan ism, 0 ball va DQ natijalarini admin tekshiradi; avtomatik e\u2019lon qilinmaydi.</p>'+
        '<form class="nur-math-form" data-math-form="commit">'+
        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
        '<label>Test sanasi<input type="date" name="date" required value="'+esc(pageDate)+'"></label>'+
