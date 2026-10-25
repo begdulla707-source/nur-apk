@@ -89,7 +89,7 @@ jobs:
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" /tmp/signature-check.txt
           "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
-          grep -q "versionCode='16'" /tmp/apk-badging.txt
+          grep -q "versionCode='17'" /tmp/apk-badging.txt
           grep -q "application-icon" /tmp/apk-badging.txt
           grep -q "application-label:'Nur oqiw'" /tmp/apk-badging.txt
           unzip -l "$APK" | tee /tmp/apk-filelist.txt
@@ -121,9 +121,9 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-16
+          tag_name: build-17
           name: Nur oqiw
           prerelease: true
           make_latest: false
           files: Nur_oqiw.apk
-          body: "Nur oqiw Android preview: brand-logo native emerald startup progress screen; one-step Android Back with exit confirmation; anonymous sender ticket-protected admin replies; in-app notices, replies and new-APK notifications; refreshed API data, owner portfolio, manual Paynet requests. Existing launcher icon unchanged. Debug-signed preview, NOT Play Store. Google Play Protect warnings cannot be bypassed and the Play release still requires a stable keystore."
+          body: "Nur oqiw Android 1.0.7 preview: bundled ML Kit Latin OCR for selected JPG/PNG/WebP mathematics result-sheet images, conservative two-column name and score detection, manual admin review for OCR uncertainty and DQ/zero, Excel/CSV imports retained. Original gold launcher icon preserved. Debug-signed preview only; OCR accuracy depends on image quality and requires real-device verification."
