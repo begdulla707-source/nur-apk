@@ -39,7 +39,9 @@ jobs:
           node --check portfolio-ui.js
           node --check notifications-ui.js
           node --check navigation-ui.js
+          node --check math-ocr.js
           node --check math-portal.js
+          node tests/math-ocr.test.js
           python -m py_compile backend/app.py backend/premium.py backend/ranking_plus.py backend/contact.py backend/payments.py backend/init_db.py
           test -s android/app/src/main/res/drawable-nodpi/nur_premium_icon.webp
           test -s android/app/src/main/assets/index.html
@@ -54,12 +56,13 @@ jobs:
           mkdir -p android/app/src/main/assets
           cp index.html features.css premium-admin.css ranking-ui.css liquid-glass.css polish-v08.css payment-ui.css portfolio-ui.css notifications-ui.css math-portal.css android/app/src/main/assets/
           cp paynet_qr.png android/app/src/main/assets/
-          cp app-features.js premium-admin.js ranking-ui.js liquid-glass.js i18n.js contact-ui.js payment-ui.js portfolio-ui.js notifications-ui.js navigation-ui.js math-portal.js android/app/src/main/assets/
+          cp app-features.js premium-admin.js ranking-ui.js liquid-glass.js i18n.js contact-ui.js payment-ui.js portfolio-ui.js notifications-ui.js navigation-ui.js math-ocr.js math-portal.js android/app/src/main/assets/
           test -s android/app/src/main/assets/payment-ui.js
           test -s android/app/src/main/assets/paynet_qr.png
           test -s android/app/src/main/assets/contact-ui.js
           test -s android/app/src/main/assets/notifications-ui.js
           test -s android/app/src/main/assets/navigation-ui.js
+          test -s android/app/src/main/assets/math-ocr.js
           test -s android/app/src/main/assets/math-portal.js
           test -s android/app/src/main/assets/math-portal.css
           test -s android/app/src/main/res/drawable/nur_launch_background.xml
@@ -102,6 +105,7 @@ jobs:
           grep -q "assets/notifications-ui.js" /tmp/apk-filelist.txt
           grep -q "assets/notifications-ui.css" /tmp/apk-filelist.txt
           grep -q "assets/navigation-ui.js" /tmp/apk-filelist.txt
+          grep -q "assets/math-ocr.js" /tmp/apk-filelist.txt
           grep -q "assets/math-portal.js" /tmp/apk-filelist.txt
           grep -q "assets/math-portal.css" /tmp/apk-filelist.txt
           grep -q "assets/paynet_qr.png" /tmp/apk-filelist.txt
