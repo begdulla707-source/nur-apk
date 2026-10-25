@@ -73,6 +73,8 @@ public class MainActivity extends Activity {
     private TextRecognizer imageTextRecognizer;
     private WebView webView;
     private FrameLayout splashOverlay;
+    private ProgressBar splashProgress;
+    private int splashValue=0;
     private long splashOpenedAt;
     private long lastBackRequestAt;
     private boolean splashFinished=false;
@@ -96,7 +98,7 @@ public class MainActivity extends Activity {
         stack.setPadding(dp(18),dp(18),dp(18),dp(18));
 
         ImageView icon=new ImageView(this);
-        icon.setImageResource(R.drawable.nur_premium_icon);
+        icon.setImageResource(getSelectedLauncherIcon());
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         LinearLayout.LayoutParams iconParams=new LinearLayout.LayoutParams(dp(122),dp(122));
         iconParams.bottomMargin=dp(23);
@@ -113,10 +115,13 @@ public class MainActivity extends Activity {
         stack.addView(title,titleParams);
 
         ProgressBar line=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
-        line.setIndeterminate(true);
+        line.setIndeterminate(false);
+        line.setMax(100);
+        line.setProgress(0);
+        splashProgress=line;
         line.setIndeterminateTintList(ColorStateList.valueOf(Color.rgb(184,237,204)));
         line.setProgressBackgroundTintList(ColorStateList.valueOf(Color.rgb(66,123,90)));
-        stack.addView(line,new LinearLayout.LayoutParams(dp(178),dp(5)));
+        stack.addView(line,new LinearLayout.LayoutParams(dp(190),dp(10)));
         splash.addView(stack,new FrameLayout.LayoutParams(-1,-1));
         return splash;
     }
@@ -124,6 +129,7 @@ public class MainActivity extends Activity {
     private void dismissSplash() {
         if(splashFinished || splashOverlay==null)return;
         splashFinished=true;
+        if(splashProgress!=null)splashProgress.setProgress(100);
         final FrameLayout toHide=splashOverlay;
         // Brief real progress display, but never force a multi-second white frame.
         long elapsed=SystemClock.uptimeMillis()-splashOpenedAt;
@@ -237,7 +243,7 @@ public class MainActivity extends Activity {
                     // third-party page is loaded inside this WebView.
                     if("change".equalsIgnoreCase(uri.getHost()) &&
                        uri.getPath()!=null &&
-                       uri.getPath().matches("^/(original|emerald|night)$")) {
+                       uri.getPath().matches("^/(original|emerald|night|autumn-one|autumn-two|spring|winter)$")) {
                         try {
                             changeLauncherIcon(uri.getPath().substring(1));
                         } catch (Exception iconError) {
@@ -267,6 +273,7 @@ public class MainActivity extends Activity {
         layout.addView(webView, new FrameLayout.LayoutParams(-1, -1));
         splashOpenedAt=SystemClock.uptimeMillis();
         splashOverlay=makeSplash();
+        animateSplashProgress();
         layout.addView(splashOverlay,new FrameLayout.LayoutParams(-1,-1));
         setContentView(layout);
         // Handle the Android 13+ system gesture via the same safe in-app stack.
@@ -401,27 +408,43 @@ public class MainActivity extends Activity {
         if (webView != null) webView.saveState(state);
         super.onSaveInstanceState(state);
     }
-    private void changeLauncherIcon(String variant) {
-        final String prefix=getPackageName()+".Launcher";
-        final String chosen;
-        if("emerald".equals(variant)) chosen="Emerald";
-        else if("night".equals(variant)) chosen="Night";
-        else chosen="Original";
-        PackageManager pm=getPackageManager();
-        String[] aliases={"Original","Emerald","Night"};
-        // Enable the destination before disabling alternatives, so the app
-        // never loses all launcher entrypoints.
-        pm.setComponentEnabledSetting(new ComponentName(this,prefix+chosen),
-            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-            PackageManager.DONT_KILL_APP);
-        for(String item:aliases){
-            if(!chosen.equals(item)){
-                pm.setComponentEnabledSetting(new ComponentName(this,prefix+item),
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP);
-            }
+    private int getSelectedLauncherIcon(){
+        String mode=getPreferences(MODE_PRIVATE).getString("launcher_icon","original");
+        switch(mode){
+            case "emerald":return R.drawable.nur_icon_emerald;
+            case "night":return R.drawable.nur_icon_night;
+            case "autumn-one":return R.drawable.nur_icon_autumn_one;
+            case "autumn-two":return R.drawable.nur_icon_autumn_two;
+            case "spring":return R.drawable.nur_icon_spring;
+            case "winter":return R.drawable.nur_icon_winter;
+            default:return R.drawable.nur_premium_icon;
         }
-        Toast.makeText(this,"Ikonka yangilandi",Toast.LENGTH_SHORT).show();
+    }
+    private void animateSplashProgress(){
+        if(splashProgress==null)return;
+        splashProgress.postDelayed(new Runnable(){
+            @Override public void run(){
+                if(splashFinished||splashProgress==null)return;
+                splashValue=Math.min(94,splashValue+3);
+                splashProgress.setProgress(splashValue);
+                splashProgress.postDelayed(this,65);
+            }
+        },65);
+    }
+    private void changeLauncherIcon(String variant){
+        String[] names={"Original","Emerald","Night","AutumnOne","AutumnTwo","Spring","Winter"};
+        String[] modes={"original","emerald","night","autumn-one","autumn-two","spring","winter"};
+        int target=0;
+        for(int i=0;i<modes.length;i++)if(modes[i].equals(variant))target=i;
+        PackageManager pm=getPackageManager();
+        String prefix=getPackageName()+".Launcher";
+        pm.setComponentEnabledSetting(new ComponentName(this,prefix+names[target]),
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,PackageManager.DONT_KILL_APP);
+        for(int i=0;i<names.length;i++)if(i!=target)
+            pm.setComponentEnabledSetting(new ComponentName(this,prefix+names[i]),
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,PackageManager.DONT_KILL_APP);
+        getPreferences(MODE_PRIVATE).edit().putString("launcher_icon",modes[target]).apply();
+        Toast.makeText(this,"Ikonka saqlandi",Toast.LENGTH_SHORT).show();
     }
 
     private void confirmExit() {
