@@ -52,6 +52,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import com.google.android.gms.tasks.Tasks;
 
 /**
  * Offline-first Nur oqiw orayi Android client, separate from the Telegram bot.
@@ -76,6 +80,8 @@ public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_CODE = 5042;
     private ValueCallback<Uri[]> pendingFileUris;
     private TextRecognizer imageTextRecognizer;
+    // Decode and scan photos serially off the UI thread to prevent freezes.
+    private final ExecutorService ocrExecutor=Executors.newSingleThreadExecutor();
     private WebView webView;
     private FrameLayout splashOverlay;
     private ProgressBar splashProgress;
@@ -137,7 +143,7 @@ public class MainActivity extends Activity {
         line.setMax(100);
         line.setProgress(0);
         splashProgress=line;
-        stack.addView(line,new LinearLayout.LayoutParams(dp(206),dp(6)));
+        stack.addView(line,new LinearLayout.LayoutParams(dp(206),dp(10)));
         splash.addView(stack,new FrameLayout.LayoutParams(-1,-1));
         return splash;
     }
@@ -373,62 +379,47 @@ public class MainActivity extends Activity {
 
     private void recognizeResultImage(Uri uri) {
         final String fileName=selectedFileName(uri);
-        try {
-            if(imageTextRecognizer==null){
-                imageTextRecognizer=TextRecognition.getClient(
-                    TextRecognizerOptions.DEFAULT_OPTIONS);
-            }
-            final InputImage image=InputImage.fromFilePath(this,uri);
-            final int width=Math.max(1,image.getWidth());
-            final int height=Math.max(1,image.getHeight());
-            imageTextRecognizer.process(image)
-              .addOnSuccessListener(result->{
-                JSONObject payload=new JSONObject();
+        if(imageTextRecognizer==null)
+            imageTextRecognizer=TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+        final TextRecognizer engine=imageTextRecognizer;
+        ocrExecutor.execute(()->{
+            JSONObject payload=new JSONObject();
+            try{
+                // Android image decoding and ML Kit inference must not block
+                // the main/UI thread, especially for large camera photographs.
+                final InputImage image=InputImage.fromFilePath(this,uri);
+                final int width=Math.max(1,image.getWidth());
+                final int height=Math.max(1,image.getHeight());
+                final Text result=Tasks.await(engine.process(image),18,TimeUnit.SECONDS);
                 JSONArray words=new JSONArray();
-                try{
-                    payload.put("file",fileName);
-                    for(Text.TextBlock block:result.getTextBlocks()) {
-                        for(Text.Line line:block.getLines()){
-                            for(Text.Element element:line.getElements()){
-                                Rect rect=element.getBoundingBox();
-                                if(rect==null||words.length()>=1600)continue;
-                                JSONObject word=new JSONObject();
-                                word.put("text",element.getText());
-                                word.put("x",(double)rect.left/width);
-                                word.put("y",(double)rect.top/height);
-                                word.put("w",(double)rect.width()/width);
-                                word.put("h",(double)rect.height()/height);
-                                words.put(word);
-                            }
+                payload.put("file",fileName);
+                for(Text.TextBlock block:result.getTextBlocks()){
+                    for(Text.Line line:block.getLines()){
+                        for(Text.Element element:line.getElements()){
+                            Rect rect=element.getBoundingBox();
+                            if(rect==null||words.length()>=1600)continue;
+                            JSONObject word=new JSONObject();
+                            word.put("text",element.getText());
+                            word.put("x",(double)rect.left/width);
+                            word.put("y",(double)rect.top/height);
+                            word.put("w",(double)rect.width()/width);
+                            word.put("h",(double)rect.height()/height);
+                            words.put(word);
                         }
                     }
-                    payload.put("elements",words);
-                    payload.put("engine","android-mlkit-latin");
-                }catch(Exception jsonError){
-                    Log.w("NurOqiwOCR","Cannot encode OCR words",jsonError);
                 }
-                sendImageOCRResult(payload);
-              })
-              .addOnFailureListener(error->{
-                JSONObject response=new JSONObject();
-                try {
-                    response.put("file",fileName);
-                    response.put("elements",new JSONArray());
-                    response.put("error","Rasm matnini tanib bo\\u2018lmadi. Tiniqroq rasm tanlang.");
+                payload.put("elements",words);
+                payload.put("engine","android-mlkit-latin");
+            }catch(Exception error){
+                Log.w("NurOqiwOCR","OCR failed for selected photo",error);
+                try{
+                    payload.put("file",fileName);
+                    payload.put("elements",new JSONArray());
+                    payload.put("error","Rasm matnini aniqlab bo‘lmadi. Tiniqroq rasm tanlang.");
                 }catch(Exception ignored){}
-                Log.w("NurOqiwOCR","Recognition failed",error);
-                sendImageOCRResult(response);
-              });
-        }catch(Exception error){
-            JSONObject response=new JSONObject();
-            try {
-                response.put("file",fileName);
-                response.put("elements",new JSONArray());
-                response.put("error","Rasmni ochib bo\\u2018lmadi.");
-            }catch(Exception ignored){}
-            Log.w("NurOqiwOCR","Photo could not be opened",error);
-            sendImageOCRResult(response);
-        }
+            }
+            sendImageOCRResult(payload);
+        });
     }
 
     @Override protected void onSaveInstanceState(Bundle state) {
@@ -451,7 +442,7 @@ public class MainActivity extends Activity {
         if(splashProgress==null)return;
         splashAnimator=ObjectAnimator.ofInt(splashProgress,"progress",0,96);
         splashAnimator.setInterpolator(new LinearInterpolator());
-        splashAnimator.setDuration(7900L);
+        splashAnimator.setDuration(1400L);
         splashAnimator.start();
     }
     private void changeLauncherIcon(String variant){
