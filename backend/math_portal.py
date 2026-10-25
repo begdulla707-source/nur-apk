@@ -168,8 +168,15 @@ def register_math(app, db, admin_only, bad):
         requested=request.args.get("date")
         with db() as conn:
             if requested=="latest":
-                recent=conn.execute("SELECT max(held_on) AS day FROM math_tests").fetchone()
-                day=recent["day"] or dt.datetime.now(TZ).date()
+                # Show the most recently *published* test, not today's date or
+                # simply the largest held_on. A backdated test uploaded today
+                # is still the newest announcement until another is published.
+                recent=conn.execute("""SELECT t.held_on AS day FROM math_tests t
+                    WHERE EXISTS (SELECT 1 FROM math_results r WHERE r.test_id=t.id)
+                    ORDER BY COALESCE(
+                        (SELECT max(a.id) FROM math_import_audit a WHERE a.test_id=t.id),0
+                    ) DESC, t.created_at DESC, t.id DESC LIMIT 1""").fetchone()
+                day=recent["day"] if recent else dt.datetime.now(TZ).date()
             else:
                 day=date_value(requested or dt.datetime.now(TZ).date().isoformat())
             month=month_value(request.args.get("month") or day.strftime("%Y-%m"))
