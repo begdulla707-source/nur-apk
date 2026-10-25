@@ -165,9 +165,14 @@ def register_math(app, db, admin_only, bad):
 
     @app.get("/api/math/overview")
     def math_overview():
-        day=date_value(request.args.get("date") or dt.datetime.now(TZ).date().isoformat())
-        month=month_value(request.args.get("month") or day.strftime("%Y-%m"))
+        requested=request.args.get("date")
         with db() as conn:
+            if requested=="latest":
+                recent=conn.execute("SELECT max(held_on) AS day FROM math_tests").fetchone()
+                day=recent["day"] or dt.datetime.now(TZ).date()
+            else:
+                day=date_value(requested or dt.datetime.now(TZ).date().isoformat())
+            month=month_value(request.args.get("month") or day.strftime("%Y-%m"))
             result=snapshot(conn,day,month)
         return jsonify(result)
 
