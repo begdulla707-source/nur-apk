@@ -13,7 +13,7 @@
  const arrow='<svg class="m-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';
  let pageDate='',month='',data=null,loading=false,lastSuccess=0,pollInFlight=false,eventSource=null;
  let ctxAdmin=null,draft=[],draftWarnings=[],importFiles=[],adminMode='math',adminBound=false,uploadBusy=false;
- let minimumPhotoRows=0, initialDateResolved=false, ocrBatchHandle=null, pendingImages=0;
+ let minimumPhotoRows=0, datePinned=false, ocrBatchHandle=null, pendingImages=0;
  function today(){
    const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
    const val=k=>parts.find(x=>x.type===k)?.value||'';
@@ -121,17 +121,13 @@
    if(loading||document.hidden||!navigator.onLine)return;
    loading=true;
    try{
-     const query='?date='+encodeURIComponent(pageDate)+'&month='+encodeURIComponent(month);
-     let response=await api('/math/overview'+query);
-      // First launch: display latest published test if today's result is absent.
-      if(!initialDateResolved){
-        initialDateResolved=true;
-        if(!(response.tests||[]).length && response.dates?.length){
-          pageDate=response.dates[0].date;month=pageDate.slice(0,7);
-          response=await api('/math/overview?date='+encodeURIComponent(pageDate)+
-            '&month='+encodeURIComponent(month));
-        }
-      }
+     // Unpinned screens follow the newest published test in a single request.
+     // Explicitly selected dates remain fixed.
+     const query=datePinned
+       ?'?date='+encodeURIComponent(pageDate)+'&month='+encodeURIComponent(month)
+       :'?date=latest';
+     const response=await api('/math/overview'+query);
+     if(!datePinned){pageDate=response.day;month=response.month}
      const changed=!data||data.revision!==response.revision||
        data.day!==response.day||data.month!==response.month;
      data=response;lastSuccess=Date.now();
@@ -195,14 +191,14 @@
      '<div class="nur-stat-box"><b>'+current.reduce((n,t)=>n+t.rows.filter(r=>r.status==='dq').length,0)+
         '</b><small>DQ</small></div></div>'+
      '<div id="nur-results-tables"></div>';
-   $('nur-math-date').addEventListener('change',e=>{initialDateResolved=true;pageDate=e.target.value;month=pageDate.slice(0,7);reload(true)});
+   $('nur-math-date').addEventListener('change',e=>{datePinned=true;pageDate=e.target.value;month=pageDate.slice(0,7);reload(true)});
    const links=$('nur-date-links');
    const unique=[...new Set(dates.map(d=>d.date))].slice(0,30);
    for(const day of unique){
      const b=document.createElement('button');b.type='button';
      b.className=day===pageDate?'on':'';
      b.textContent=prettyDay(day);
-     b.addEventListener('click',()=>{initialDateResolved=true;pageDate=day;month=day.slice(0,7);reload(true)});
+     b.addEventListener('click',()=>{datePinned=true;pageDate=day;month=day.slice(0,7);reload(true)});
      links.append(b);
    }
    const table=$('nur-results-tables');
@@ -239,7 +235,7 @@
      '<span class="nur-math-live">Avtomatik reyting</span></div>'+
      '<div class="nur-math-subhead"><b>Umumiy oylik reyting</b><small>Teng ball — teng o‘rin</small></div>'+
      '<div id="nur-rank-rows" class="nur-leaderboard"></div>';
-   $('nur-rank-month').addEventListener('change',e=>{month=e.target.value;pageDate=month+'-01';reload(true)});
+   $('nur-rank-month').addEventListener('change',e=>{datePinned=true;month=e.target.value;pageDate=month+'-01';reload(true)});
    const list=$('nur-rank-rows');
    if(!ranking.length){list.innerHTML='<div class="nur-math-empty">Reyting uchun hali o‘quvchi qo‘shilmagan.</div>';return}
    for(const x of ranking){
@@ -427,7 +423,7 @@
                grade:x.grade===null?null:Number(x.grade)}))}});
          draft=[];importFiles=[];draftWarnings=[];minimumPhotoRows=0;pendingImages=0;
          notice(post.saved+' ta natija saqlandi. Reyting barcha ulangan ilovalarda yangilanadi.');
-         pageDate=value.date;month=pageDate.slice(0,7);
+         datePinned=true;pageDate=value.date;month=pageDate.slice(0,7);
          await reload(true);await renderAdmin(root,ctxAdmin,'math');
        }
      }catch(e){notice(e.message)}
@@ -619,7 +615,7 @@
        '<label>Oy <input id="nur-admin-paymonth" type="month" value="'+esc(month)+'"></label>'+
        '<div id="nur-admin-pay-list" class="nur-monthly-list" style="margin-top:14px"></div></section>';
      root.querySelector('#nur-admin-paymonth').onchange=async e=>{
-       month=e.target.value;pageDate=month+'-01';await reload(true);await renderAdmin(root,ctx,'math-payments');
+       datePinned=true;month=e.target.value;pageDate=month+'-01';await reload(true);await renderAdmin(root,ctx,'math-payments');
      };
      const list=root.querySelector('#nur-admin-pay-list');
      for(const x of data?.students||[]){
