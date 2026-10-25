@@ -18,6 +18,7 @@ const rows=[
 ];
 const result=OCR.parse({elements:rows});
 assert.equal(result.rows.length,6,JSON.stringify(result));
+console.log('OCR preview rows:',JSON.stringify(result.rows));
 const byName=Object.fromEntries(result.rows.map(r=>[r.name,r]));
 assert.equal(byName['Ametov Nurbol'].correct,19);
 assert.equal(byName['Orazbaev Ruslan'].correct,31);
