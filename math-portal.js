@@ -316,7 +316,7 @@
      '<div class="nur-math-panel"><h3>Tashqi APK ikonkasi</h3>'+
      '<p>Asl oltin logotip saqlanadi. Tanlangan ikonka keyingi ishga tushishda ham qoladi.</p>'+
      '<div class="nur-settings-options" id="nur-icon-options">'+
-     [['original','Asl oltin','linear-gradient(140deg,#f8e7a4,#b99037)'],['autumn-one','Kuz 1','linear-gradient(140deg,#f4c45c,#a45a24)'],['autumn-two','Kuz 2','linear-gradient(140deg,#d9813b,#e6c36c)'],['spring','Bahor','linear-gradient(140deg,#86cfa4,#206c49)'],['winter','Qish','linear-gradient(140deg,#b3dff3,#2675b4)'],['emerald','Zumrad','linear-gradient(140deg,#287a55,#143525)'],['night','Tungi','linear-gradient(140deg,#2e3d43,#0e1517)']].map(([k,t,c])=>
+     [['original','Asl oltin','linear-gradient(140deg,#f8e7a4,#b99037)'],['autumn-one','Kuz 1','linear-gradient(140deg,#f4c45c,#a45a24)'],['autumn-two','Kuz 2','linear-gradient(140deg,#d9813b,#e6c36c)'],['spring','Bahor','linear-gradient(140deg,#86cfa4,#206c49)'],['winter','Qish','linear-gradient(140deg,#b3dff3,#2675b4)']].map(([k,t,c])=>
       '<button type="button" data-icon="'+k+'" class="'+(icon===k?'chosen':'')+'">'+
       launcherThumb(k)+'<span>'+t+'</span></button>').join('')+
      '</div><p id="nur-icon-help">O‘zgarish telefon launcheriga bog‘liq. APKning asl premium ikonkasini doim qayta tanlash mumkin.</p></div>';
