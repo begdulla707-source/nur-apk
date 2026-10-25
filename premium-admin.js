@@ -9,7 +9,7 @@
       groups.map(g=>'<option value="'+g.id+'"'+(String(selected)===String(g.id)?' selected':'')+'>'+esc(g.title)+'</option>').join('');
   const field=(label,name,type='text',value='',extra='')=>'<label>'+esc(label)+'<input type="'+type+'" name="'+name+'" value="'+esc(value)+'" '+extra+'></label>';
   const groupBox=(ctx,name,selected='',all=true)=>'<label>Guruh<select name="'+name+'" data-premium-filter="'+name+'">'+groupOptions(ctx.state.groups,all,selected)+'</select></label>';
-  const loading=root=>{root.innerHTML='<div class="premium-loading"><span class="premium-spinner"></span><p>Ma’lumotlar yuklanmoqda...</p></div>'};
+  const loading=root=>{root.innerHTML='<div class="premium-loading"><span class="premium-spinner" aria-label="Tayyorlanmoqda"></span></div>'};
   const error=(root,e)=>{root.innerHTML='<div class="errorbox">'+esc(e.message||e)+'</div><button class="appbtn secondary" data-act="premium-refresh">Qayta urinish</button>'};
   const b=(label,act,id,more='')=>'<button class="appbtn small '+more+'" data-act="'+act+'" data-id="'+(id||'')+'">'+esc(label)+'</button>';
   const previewDate=value=>{if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?String(value):new Intl.DateTimeFormat('uz-UZ',{timeZone:'Asia/Tashkent',day:'2-digit',month:'2-digit',year:'numeric'}).format(d)};
