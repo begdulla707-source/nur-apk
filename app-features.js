@@ -60,11 +60,11 @@
         if(counter && !window.NurMath && counter.textContent!==String(data.total_students))counter.textContent=String(data.total_students);
         renderGroups();renderSubjects();renderNotices();renderFilters();
       }
-      if(['rating','results'].includes(document.querySelector('.view.show')?.id))await renderPublicResults();
+      if(!window.NurMath && ['rating','results'].includes(document.querySelector('.view.show')?.id))await renderPublicResults();
       if(document.querySelector('.view.show')?.id==='group')await renderStudentList();
     } catch(err) {
       state.online=false;requestErrorAt=Date.now();
-      if(!silent)toast(err.message);
+      if(!silent && !window.NurMath)toast('Qayta urinib ko‘ring');
     } finally {refreshing=false}
   }
   function renderGroups() {
@@ -110,7 +110,7 @@
     let target=$('student-list');
     if(!target){target=el('div','data-list');target.id='student-list';section.append(target)}
     section.querySelector('.empty')?.classList.add('hidden');
-    target.replaceChildren(el('p','loadertext','Yuklanmoqda...'));
+    target.replaceChildren();
     try{
       const data=await api('/students?group_id='+state.selectedGroup.id);
       target.replaceChildren();
@@ -121,7 +121,7 @@
         r.append(el('div','',s.full_name));
         target.append(r);
       }
-    }catch(e){target.replaceChildren(el('div','empty',e.message))}
+    }catch(e){target.replaceChildren()}
   }
   function renderNotices(){
     let target=$('notices-panel');const root=document.querySelector('#home .content');
@@ -153,7 +153,7 @@
   async function renderRanking(){
     const target=$('ratingEmpty');if(!target)return;
     window.NurRankingUI?.loadTop(state.rankingGroup);
-    target.replaceChildren(el('p','loadertext','Reyting yuklanmoqda...'));
+    target.replaceChildren();
     try{
       const data=await api('/ranking'+(state.rankingGroup?'?group_id='+state.rankingGroup:''));
       if(data.settings && !data.settings.published){target.className='empty';target.textContent='Reyting hozircha administrator tomonidan e’lon qilinmagan.';return}
@@ -171,11 +171,11 @@
         }
         target.append(row);
       }
-    }catch(e){target.className='empty';target.textContent=e.message}
+    }catch(e){target.className='empty';target.textContent=''}
   }
   async function renderResults(){
     const target=$('resultsEmpty');if(!target)return;
-    target.replaceChildren(el('p','loadertext','Natijalar yuklanmoqda...'));
+    target.replaceChildren();
     try{
       const data=await api('/results'+(state.resultGroup?'?group_id='+state.resultGroup:''));
       if(!data.results.length){target.className='empty';target.textContent='Hozircha natijalar yo‘q.';return}
@@ -218,7 +218,7 @@
       adminRoot.innerHTML='<div class="appcard"><h3>Admin token bilan kirish</h3><form class="appform" data-form="login"><label>Maxfiy admin token<input name="token" type="password" autocomplete="off" required placeholder="Admin tokenni kiriting"></label><button class="appbtn" type="submit">Xavfsiz kirish</button><div class="page-message">Token ilova kodida saqlanmaydi; kirgandan keyin vaqtinchalik sessiya ishlatiladi.</div></form></div>';
       return;
     }
-    adminRoot.innerHTML='<p class="loadertext">Boshqaruv paneli yuklanmoqda...</p>';
+    adminRoot.replaceChildren();
     try{
       const bootstrapReady=state.online && state.subjects.length>0 && Date.now()-successFetchAt<90000;
       const [overview,bootstrap]=await Promise.all([
@@ -235,7 +235,7 @@
         const b=el('button',state.adminTab===id?'on':'',title);b.dataset.tab=id;root.append(b);
       }
       await showAdminTab();
-    }catch(err){adminVerified(false);if(!auth)return renderAdmin();adminRoot.innerHTML='<div class="errorbox">'+escape(err.message)+'</div><button class="appbtn secondary" data-act="reload">Qayta urinish</button>'}
+    }catch(err){adminVerified(false);if(!auth)return renderAdmin();adminRoot.innerHTML='<button class="appbtn secondary" data-act="reload">Qayta urinish</button>'}
   }
   async function showAdminTab(){
     const root=$('admin-tab-content');if(!root)return;
@@ -269,7 +269,7 @@
   }
   async function showAdminStudents(){
     const selected=$('admin-student-group')?.value;const target=$('admin-students');if(!target||!selected)return;
-    target.innerHTML='<p class="loadertext">O‘quvchilar yuklanmoqda...</p>';
+    target.replaceChildren();
     try{
       const data=await api('/students?group_id='+selected);
       target.replaceChildren();
@@ -283,7 +283,7 @@
     const session=state.sessions.find(s=>String(s.id)===String(state.sessionId));
     const target=$('admin-mark-list');if(!target)return;
     if(!session){target.className='empty';target.textContent='Avval mashg‘ulot yarating.';return}
-    target.className='';target.innerHTML='<p class="loadertext">O‘quvchilar yuklanmoqda...</p>';
+    target.className='';target.replaceChildren();
     try{
       const [data,all]=await Promise.all([api('/students?group_id='+session.group_id),api('/results?group_id='+session.group_id)]);
       const prev=new Map(all.results.filter(x=>x.session_id===session.id).map(x=>[x.student_id,x]));
