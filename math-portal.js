@@ -451,7 +451,7 @@
    if(draftWarnings.length>4)draftWarnings.splice(0,draftWarnings.length-4);
  }
  function mergeDraftRows(rows){
-   const key=v=>String(v||'').trim().toLocaleLowerCase('uz').replace(/\\s+/g,' ');
+   const key=v=>String(v||'').trim().toLocaleLowerCase('uz').replace(/\s+/g,' ');
    const index=new Map(draft.map((r,i)=>[key(r.name),i]));
    let conflicts=0;
    for(const row of rows||[]){
@@ -553,9 +553,16 @@
  function renderDraft(root){
    const table=root.querySelector('#nur-import-rows');if(!table)return;
    const warning=root.querySelector('#nur-import-warnings');
-   if(warning)warning.innerHTML=draftWarnings.slice(-2).map(s=>
-     '<div class="nur-import-warning">'+esc(s)+'</div>').join('');
-   table.replaceChildren();
+   if(warning){
+      const pending=draft.filter(r=>r.status==='unresolved'||
+        (r.status==='present'&&r.correct===null)||!r.name.trim()).length;
+      if(!draft.length&&!draftWarnings.length)warning.textContent='';
+      else warning.innerHTML='<div class="nur-import-warning"><b>'+
+        esc(pending?pending+' ta ball yoki davomatni tasdiqlang. ':
+          draft.length+' ta natija o‘qildi. ')+
+        '</b>'+esc(draftWarnings.slice(-1).join(' '))+'</div>';
+    }
+    table.replaceChildren();
    const sorted=[...draft.map((x,i)=>({x,i}))].sort((a,b)=>
      Number(a.x.status!=='unresolved'&&a.x.name.trim()!=='')-Number(b.x.status!=='unresolved'&&b.x.name.trim()!==''));
    for(const {x,i} of sorted){
