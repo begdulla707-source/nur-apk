@@ -147,7 +147,12 @@ def register_math(app, db, admin_only, bad):
             count(r.student_id)::int AS entered
             FROM math_tests t LEFT JOIN math_results r ON r.test_id=t.id
             GROUP BY t.id ORDER BY t.held_on DESC,t.id DESC LIMIT 90""").fetchall()
-        selected=[x for x in dates if x["held_on"]==day]
+        # Do not rely on the last 90 history labels to render the selected
+        # test: a newly published backdated test may be older than that list.
+        selected=conn.execute("""SELECT t.id,t.held_on,t.title,t.question_count,
+            count(r.student_id)::int AS entered
+            FROM math_tests t LEFT JOIN math_results r ON r.test_id=t.id
+            WHERE t.held_on=%s GROUP BY t.id ORDER BY t.id DESC""",(day,)).fetchall()
         tests=[]
         for test in selected:
             marks=conn.execute("""SELECT st.id AS student_id,st.full_name,st.grade,
