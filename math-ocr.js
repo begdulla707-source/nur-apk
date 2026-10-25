@@ -15,7 +15,7 @@
   function headerScore(s){return /d[uú]r[iı]s[iı]|to[gǵg']ri|correct|ball|natija/i.test(norm(s))}
   function isName(s){
     const v=norm(s);
-    return v.length>=5 && v.length<=NAME_LIMIT &&
+    return v.length>=2 && v.length<=NAME_LIMIT &&
       /[A-Za-zÀ-žʻʼ‘’]/.test(v) && !isTitle(v) &&
       !/^\d/.test(v) && !/^(o'rtacha|sorawlar|testke|testga|okt[yi]abr|guruh|gruppa|jami|qatnas|matematika|nur oqiw)/i.test(v);
   }
