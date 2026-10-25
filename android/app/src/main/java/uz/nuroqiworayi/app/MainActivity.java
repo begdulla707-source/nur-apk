@@ -491,6 +491,7 @@ public class MainActivity extends Activity {
 
     @Override public void onBackPressed() {handleBack();}
     @Override protected void onDestroy() {
+        ocrExecutor.shutdownNow();
         if(imageTextRecognizer!=null){
             imageTextRecognizer.close();
             imageTextRecognizer=null;
