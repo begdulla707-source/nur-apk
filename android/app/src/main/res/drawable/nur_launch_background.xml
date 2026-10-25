@@ -6,6 +6,5 @@
                 android:angle="45"/>
         </shape>
     </item>
-    <item android:gravity="center" android:width="112dp" android:height="112dp"
-        android:drawable="@drawable/nur_premium_icon"/>
+    <!-- No fixed icon here: the Activity paints the user's selected one immediately. -->
 </layer-list>
