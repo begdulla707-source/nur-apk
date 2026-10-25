@@ -22,53 +22,45 @@ main{max-width:1100px;margin:0 auto;padding:12px 20px 55px}
 <main>
 <section class="hero" id="yuklab">
 <div><p class="eyebrow">NUR OQIW · ANDROID</p><h1>Ta’lim —<br>bir qadam yaqin.</h1><p class="desc">Guruhlar, reytinglar, natijalar, to‘lov so‘rovlari va administrator bilan aloqa. Nur oqiw Android ilovasining eng so‘nggi versiyasini yuklab oling.</p>
-<a class="cta" id="download" href="https://github.com/begdulla707-source/nur-apk/releases" target="_blank" rel="noopener noreferrer" download>Yuklab olish <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m-5-5 5 5 5-5M4 20h16"/></svg></a>
-<br><a class="secondary" href="https://github.com/begdulla707-source/nur-apk/releases" rel="noopener noreferrer" target="_blank">GitHub orqali chiqarilgan APK'lar ↗</a></div>
+<a class="cta" id="download" href="https://github.com/begdulla707-source/nur-apk/releases/download/build-22/Nur_oqiw.apk" rel="noopener noreferrer" download>Yuklab olish <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m-5-5 5 5 5-5M4 20h16"/></svg></a>
+</div>
 <div class="art"><div class="artbox"><img alt="Nur oqiw original ikonka" src="https://raw.githubusercontent.com/begdulla707-source/nur-apk/main/android/app/src/main/res/drawable-nodpi/nur_premium_icon.webp"></div><div class="chip">Android · Liquid Glass</div></div>
 </section>
-<section class="info"><article class="box"><h2>So‘nggi APK holati</h2><p id="update-status" class="status status-wait" aria-live="polite">Eng so‘nggi yuklash manzili tekshirilmoqda...</p><div class="latest"><span id="build-date" style="font-size:12px;color:var(--sub)">GitHub Releases orqali</span><code id="build-version">—</code></div></article>
-<article class="box"><h2>Ilova ichida</h2><p>2–7-sinflar matematikasi, 26 nafar o‘quvchi ro‘yxati, sana bo‘yicha natijalar, reyting, davomat, oylik to‘lov hamda adminning rasmdan jadval importi.</p></article></section>
-<section class="box" style="margin-top:22px;min-height:0"><h2>Faylni tekshirish</h2><p>So‘nggi APKning SHA-256 izi GitHub Release ma’lumotidan olinadi. Fayl nusxasi bilan solishtirish mumkin.</p><p id="latest-checksum" style="margin-top:8px;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px">Tekshirilmoqda...</p></section>
-<section class="steps"><h2>Telefoningizga o‘rnatish</h2><div class="row"><span class="num">1</span><span>Yuqoridagi «Yuklab olish» tugmasi orqali rasmiy GitHub Release APK faylini oling.</span></div>
-<div class="row"><span class="num">2</span><span>Android faylni o‘rnatish uchun ruxsat so‘rashi mumkin. Manbani va faylni tekshiring. Xavfsizlik ogohlantirishini avtomatik chetlab o‘tish tavsiya qilinmaydi.</span></div>
-<div class="row"><span class="num">3</span><span>Ilovani oching. Natijalar va o‘quvchilar Neon serveridan keladi. O‘rnatilgan boshqa APK imzosi mos bo‘lmasa, Android ustiga yangilashni rad etadi.</span></div>
-<section class="box" style="margin:16px 0 0;background:#fff8e9;border:1px solid #efce99"><h2>«Ilova o‘rnatilmadi» chiqsa</h2><p>Oldingi sinov APK’lari turli debug-imzolar bilan chiqarilgan. Shu sabab eski nusxaning ustiga o‘rnatish imzo mos kelmasligi tufayli ishlamasligi mumkin. Avval ilovadagi mahalliy sozlamalar kerak bo‘lsa saqlang, so‘ng eski Nur oqiw ilovasini o‘chirib, ushbu yangi APK’ni o‘rnating. O‘quvchilar va serverdagi test natijalari o‘chmaydi; faqat telefondagi mahalliy sozlamalar yo‘qolishi mumkin. Google Play Protect tekshiruvini chetlab o‘tishni tavsiya qilmaymiz.</p></section>
+<section class="info">
+<article class="box"><h2>Nur oqiw</h2><p>Matematika, reyting, natijalar, davomat va oylik to‘lovlar — hammasi bitta ilovada.</p></article>
+<article class="box"><h2>Android ilovasi</h2><p>Yuqoridagi «Yuklab olish» tugmasini bosing va faylni telefoningizga o‘rnating.</p></article>
 </section>
-<footer>Nur oqiw · Android uchun rasmiy yuklab olish sahifasi<br>Eng yangi APK manzili GitHub Releases ochiq API orqali dinamik aniqlanadi. <a href="https://github.com/begdulla707-source/nur-apk/releases" target="_blank" rel="noopener noreferrer">Yig‘ilish tarixi</a></footer>
+<footer>Nur oqiw · Rasmiy Android ilovasi</footer>
 </main>
 <script>
-(function(){'use strict';
-const REPO='begdulla707-source/nur-apk';
-const backup='https://github.com/'+REPO+'/releases';
-const dl=document.getElementById('download'),info=document.getElementById('update-status'),name=document.getElementById('build-version'),date=document.getElementById('build-date');
-const checksum=document.getElementById('latest-checksum');
-let inflight=false;
-async function check(){
- if(inflight)return;inflight=true;
- try{
-  const signal=AbortSignal.timeout?AbortSignal.timeout(9000):undefined;
-  const res=await fetch('https://api.github.com/repos/'+REPO+'/releases?per_page=30',{cache:'no-store',headers:{Accept:'application/vnd.github+json'},signal});
-  if(!res.ok)throw new Error('GitHub API '+res.status);
-  const body=await res.json();
-  if(!Array.isArray(body))throw new Error('GitHub response');
-  const all=body.filter(x=>!x.draft).map(x=>({release:x,asset:(x.assets||[]).find(a=>a.name==='Nur_oqiw.apk'&&a.size>10000)})).filter(x=>x.asset);
-  if(!all.length)throw new Error('Hali APK chiqarilmagan');
-  // Prefer highest monotonic build tag; published_at breaks ties.
-  all.sort((a,b)=>(Number((b.release.tag_name||'').match(/build-(\d+)/)?.[1]||0)-
-                    Number((a.release.tag_name||'').match(/build-(\d+)/)?.[1]||0))||
-            new Date(b.release.published_at)-new Date(a.release.published_at));
-  const newest=all[0];
-  const url=newest.asset.browser_download_url;
-  if(!/^https:\/\/github\.com\/begdulla707-source\/nur-apk\/releases\/download\//.test(url))throw new Error('Unexpected source');
-  dl.href=url;dl.removeAttribute('download');
-  name.textContent=newest.release.tag_name||'APK';
-  date.textContent=(newest.asset.size/1048576).toFixed(1)+' MB · '+
-    new Intl.DateTimeFormat('uz-UZ',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(newest.asset.updated_at||newest.release.published_at));
-  checksum.textContent=newest.asset.digest||'SHA-256 hozircha GitHub API da ko‘rsatilmagan.';
-  info.textContent='Eng yangi APK tayyor';info.className='status';
- }catch(e){checksum.textContent='GitHub sahifasida tekshiring.';dl.href=backup;dl.removeAttribute('download');info.textContent='API vaqtincha band. GitHub Releases sahifasidan yuklang.';info.className='status status-wait';name.textContent='Releases'}
- finally{inflight=false}
-}
-check();setInterval(check,3*60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});
+(function(){
+ 'use strict';
+ const link=document.getElementById('download');
+ let current=22;
+ async function updateDownload(){
+   try{
+     const controller=new AbortController();
+     const timeout=setTimeout(()=>controller.abort(),4500);
+     let result;
+     try{
+       result=await fetch('https://api.github.com/repos/begdulla707-source/nur-apk/releases?per_page=15',{
+         headers:{Accept:'application/vnd.github+json'},cache:'no-store',signal:controller.signal
+       });
+     }finally{clearTimeout(timeout)}
+     if(!result.ok)return;
+     const releases=await result.json();
+     if(!Array.isArray(releases))return;
+     for(const r of releases){
+       const num=Number(/^build-(\d+)$/.exec(r.tag_name||'')?.[1]||0);
+       const asset=(r.assets||[]).find(x=>x.name==='Nur_oqiw.apk'&&x.size>1_000_000);
+       if(!r.draft&&num>current&&asset&&
+          /^https:\/\/github\.com\/begdulla707-source\/nur-apk\/releases\/download\/build-\d+\/Nur_oqiw\.apk$/.test(asset.browser_download_url)){
+         current=num;link.href=asset.browser_download_url;
+       }
+     }
+   }catch(_) {/* Keep known direct APK link; never send users to listing. */}
+ }
+ updateDownload();
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateDownload()});
 })();
 </script></body></html>
