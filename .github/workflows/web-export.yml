@@ -11,6 +11,7 @@ on:
       - "premium-admin.js"
       - "premium-admin.css"
       - "backend/**"
+      - "tests/**"
       - "liquid-glass.css"
       - "liquid-glass.js"
       - "i18n.js"
