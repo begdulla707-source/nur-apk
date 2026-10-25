@@ -31,5 +31,37 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity-alias>
+        <activity-alias android:name=".LauncherAutumnOne" android:enabled="false"
+            android:exported="true" android:targetActivity=".MainActivity"
+            android:label="Nur oqiw" android:icon="@drawable/nur_icon_autumn_one">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".LauncherAutumnTwo" android:enabled="false"
+            android:exported="true" android:targetActivity=".MainActivity"
+            android:label="Nur oqiw" android:icon="@drawable/nur_icon_autumn_two">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".LauncherSpring" android:enabled="false"
+            android:exported="true" android:targetActivity=".MainActivity"
+            android:label="Nur oqiw" android:icon="@drawable/nur_icon_spring">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".LauncherWinter" android:enabled="false"
+            android:exported="true" android:targetActivity=".MainActivity"
+            android:label="Nur oqiw" android:icon="@drawable/nur_icon_winter">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
     </application>
 </manifest>
