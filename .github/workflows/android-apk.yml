@@ -122,7 +122,7 @@ jobs:
           grep -q "Signer #1 certificate SHA-256 digest: bcdd737073586741f0e95dcfb069a955cdbe612073e4baf21b08bdafa8354cba" /tmp/signature-check.txt
           "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
-          grep -q "versionCode='27'" /tmp/apk-badging.txt
+          grep -q "versionCode='28'" /tmp/apk-badging.txt
           grep -q "application-icon" /tmp/apk-badging.txt
           grep -q "application-label:'Nur oqiw'" /tmp/apk-badging.txt
           unzip -l "$APK" | tee /tmp/apk-filelist.txt
@@ -156,9 +156,9 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-27
+          tag_name: build-28
           name: Nur oqiw
           prerelease: true
           make_latest: false
           files: Nur_oqiw.apk
-          body: "Nur oqiw 1.0.17 build 27: original NUR launcher and icon-only rapid startup, photo OCR roster matching and concise alerts, automatically show latest published results, preserved 26 students and monthly ranking. Preview signed with persistent identity; older debug signed APKs may require one-time removal. Not Play Store."
+          body: "Nur oqiw 1.0.18 build 28: removed unwanted student directory from home, results and admin tabs. Dated test results, monthly ranking, attendance, payments and stored students preserved. Preview-signed APK; old incompatible debug signatures may require one-time reinstall. Not Play Store."
