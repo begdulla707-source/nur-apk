@@ -109,20 +109,6 @@
       '<div id="nur-appearance-settings"></div>';
    settings.querySelector('.back').addEventListener('click',()=>window.go?.('home'));
    if(bar)bar.before(settings);
-   const roster=document.createElement('section');
-   roster.id='math-roster';roster.className='view subpage';
-   roster.innerHTML='<button class="back" type="button">Bosh menyu</button><h2>O‘quvchilar</h2>'+
-     '<p class="desc">Matematika · yagona o‘quvchilar ro‘yxati</p>'+
-     '<div id="nur-public-roster" class="nur-math-initial">O‘quvchilar</div>';
-   roster.querySelector('.back').onclick=()=>window.go?.('home');
-   if(bar)bar.before(roster);
-   const listBtn=document.createElement('button');
-   listBtn.type='button';listBtn.className='nur-math-home nur-students-open';
-   listBtn.innerHTML='<span class="m-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9" cy="7" r="3"/><circle cx="18" cy="9" r="2"/><path d="M3 21v-2a6 6 0 0 1 12 0v2m1-6a5 5 0 0 1 5 5v1"/></svg></span>'+
-     '<span class="m-copy"><b>O‘quvchilar ro‘yxati</b><small id="nur-roster-caption">Yagona matematika ro‘yxati</small></span>'+arrow;
-   listBtn.onclick=()=>window.go?.('math-roster');
-   const homeList=home.querySelector('.content .list');
-   if(homeList)homeList.after(listBtn);
    const open=document.createElement('button');open.className='nur-settings-open';open.type='button';
    open.innerHTML='<span>Sozlamalar</span><span>›</span>';
    open.addEventListener('click',()=>{window.closeMenu?.();window.go?.('nur-settings')});
@@ -190,31 +176,7 @@
    if(total)total.textContent=String(data.total_students||0);
    const caption=$('nur-math-home-caption');
    if(caption)caption.textContent=(data.total_students||0)+' ta o‘quvchi · yagona matematika ro‘yxati';
-   renderResults();renderRating();renderMonthly();renderRoster();renderStudentDirectory();
- }
- function renderStudentDirectory(){
-   const root=$('nur-public-roster');const caption=$('nur-roster-caption');
-   if(!data)return;
-   const students=Array.isArray(data.students)?data.students:[];
-   if(caption)caption.textContent=students.length+' ta o‘quvchi · barcha sanalarda';
-   if(!root)return;
-   root.className='nur-public-roster';root.replaceChildren();
-   if(!students.length){
-     root.innerHTML='<p class="nur-math-empty">O‘quvchilar ro‘yxati hozircha ko‘rsatilmayapti.</p>';
-     const btn=document.createElement('button');btn.className='nur-math-retry';
-     btn.textContent='Qayta urinish';btn.onclick=()=>reload(false);root.append(btn);return;
-   }
-   const frag=document.createDocumentFragment();
-   for(const st of [...students].sort((a,b)=>String(a.full_name).localeCompare(String(b.full_name),'uz'))){
-     const item=document.createElement('button');item.type='button';item.className='nur-roster-person';
-     item.innerHTML='<span class="nur-roster-person-icon" aria-hidden="true">'+
-       esc(String(st.full_name||'?').slice(0,1).toUpperCase())+'</span>'+
-       '<span class="nur-roster-person-info"><b>'+esc(st.full_name)+'</b><small>'+
-       (st.grade?st.grade+'-sinf · ':'2–7-sinflar · ')+
-       'Oy: '+fixed(st.monthly_points||0)+' ball · Davomat: '+Number(st.attended||0)+'</small></span>'+arrow;
-     item.onclick=()=>openProfile(st);frag.append(item);
-   }
-   root.append(frag);
+   renderResults();renderRating();renderMonthly();
  }
  function renderResults(){
    const root=$('nur-math-results');if(!root||!data)return;
@@ -266,29 +228,6 @@
      }
      table.append(list);
    }
- }
- function renderRoster(){
-   const root=$('nur-math-results');if(!root||!data)return;
-   root.querySelector('#nur-math-roster')?.remove();
-   const people=data.students||[];
-   const pane=document.createElement('details');
-   pane.id='nur-math-roster';pane.className='nur-math-roster';pane.open=true;
-   const summary=document.createElement('summary');
-   summary.textContent='O‘quvchilar ro‘yxati — '+people.length+' nafar';
-   pane.append(summary);
-   if(!people.length){
-     const missing=document.createElement('p');
-     missing.className='nur-math-empty';
-     missing.textContent='Admin o‘quvchilarni qo‘shgach shu yerda ko‘rinadi.';
-     pane.append(missing);
-   }else for(const st of people){
-     const b=document.createElement('button');b.type='button';b.className='nur-math-roster-row';
-     b.innerHTML='<span>'+esc(st.full_name)+'</span><small>'+
-       (st.grade?st.grade+'-sinf · ':'')+fixed(st.monthly_points)+' ball</small>';
-     b.addEventListener('click',()=>openProfile(st));
-     pane.append(b);
-   }
-   root.append(pane);
  }
  function renderRating(){
    const root=$('nur-math-rating');if(!root||!data)return;
@@ -734,24 +673,6 @@
        list.append(box);
      }
      if(!data?.students?.length)list.innerHTML='<div class="nur-math-empty">Hali ro‘yxat yo‘q. O‘quvchilarni qo‘shing.</div>';
-   }else if(tab==='math-students'){
-     root.innerHTML='<section class="nur-math-panel"><h3>O‘quvchilar ro‘yxati</h3>'+
-       '<p>O‘quvchilarni bir marta kiriting yoki jadvaldan avtomatik import qiling.</p>'+
-       '<form class="nur-math-form" data-math-form="new-student">'+
-       '<label>Ism-familiya<input name="name" required maxlength="120" placeholder="Ism Familiya"></label>'+
-       '<label>Sinf<input name="grade" type="number" min="2" max="7" placeholder="2–7"></label>'+
-       '<button type="submit">O‘quvchi qo‘shish</button></form></section>'+
-       '<div id="nur-admin-students"></div>';
-     const list=root.querySelector('#nur-admin-students');
-     for(const x of data?.students||[]){
-       const card=document.createElement('div');card.className='nur-math-panel';
-       card.innerHTML='<div style="display:flex;gap:9px;align-items:center"><span class="name" style="flex:1;font-size:12px"><b>'+
-         esc(x.full_name)+'</b><small style="display:block;color:var(--muted)">'+
-         (x.grade?x.grade+'-sinf':'Sinf belgilanmagan')+'</small></span>'+
-         '<button type="button" class="nur-btn alt" data-math-action="edit-student" data-student="'+x.id+'">'+
-         pencil+' Tahrirlash</button></div>';
-       list.append(card);
-     }
    }
  }
  function init(){
@@ -761,7 +682,7 @@
    if(typeof priorGo==='function'){
      window.go=function(id){
        const out=priorGo.apply(this,arguments);
-       if(['rating','results','math-monthly','math-roster'].includes(id)){reload(true)}
+       if(['rating','results','math-monthly'].includes(id)){reload(true)}
        if(id==='nur-settings')renderAppearance();
        return out;
      };
