@@ -88,8 +88,20 @@ jobs:
       - name: Reuse preview APK signing identity
         uses: actions/cache@v4
         with:
-          path: ~/.android/debug.keystore
-          key: nur-oqiw-preview-debug-keystore-v1
+          path: .signing/nur-oqiw-preview.jks
+          key: nur-oqiw-preview-signing-v2
+      - name: Ensure explicit preview signing identity exists
+        run: |
+          set -euo pipefail
+          mkdir -p .signing
+          if [ ! -s .signing/nur-oqiw-preview.jks ]; then
+            keytool -genkeypair -noprompt -storetype JKS \
+              -keystore .signing/nur-oqiw-preview.jks \
+              -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 \
+              -validity 10000 -dname "CN=Nur oqiw preview,O=Nur Education,C=UZ"
+          fi
+          test -s .signing/nur-oqiw-preview.jks
       - name: Build installable debug APK
         run: gradle --no-daemon -p android assembleDebug
       - name: Verify APK validity, signing and real launcher icon
@@ -98,11 +110,12 @@ jobs:
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           BUILD_TOOLS="$ANDROID_HOME/build-tools/35.0.0"
           test -s "$APK"
+          test -s .signing/nur-oqiw-preview.jks
           "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$APK" | tee /tmp/signature-check.txt
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" /tmp/signature-check.txt
           "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
-          grep -q "versionCode='24'" /tmp/apk-badging.txt
+          grep -q "versionCode='25'" /tmp/apk-badging.txt
           grep -q "application-icon" /tmp/apk-badging.txt
           grep -q "application-label:'Nur oqiw'" /tmp/apk-badging.txt
           unzip -l "$APK" | tee /tmp/apk-filelist.txt
@@ -136,9 +149,9 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-24
+          tag_name: build-25
           name: Nur oqiw
           prerelease: true
           make_latest: false
           files: Nur_oqiw.apk
-          body: "Nur oqiw 1.0.14 (build 24). Actual native-icon previews: original, two autumn, spring and winter; selected launcher icon is remembered. Results screen always shows saved student roster; server loading errors visible. Thicker finite iOS-style startup progress retained. Debug signed with persistent preview key for future updates: old builds signed differently may require a one-time uninstall after backing up local settings. NOT a production signed Play Store APK."
+          body: "Nur oqiw 1.0.15 build 25: original plus four seasonal icons with real previews, remembered splash/launcher icon, persistent student roster, OCR and 2-7 mathematics, and one explicit cached preview signing identity. Earlier APKs used different debug signing keys and may need one-time uninstall. Not a Play Store release."
