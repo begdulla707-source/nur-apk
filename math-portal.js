@@ -109,6 +109,20 @@
       '<div id="nur-appearance-settings"></div>';
    settings.querySelector('.back').addEventListener('click',()=>window.go?.('home'));
    if(bar)bar.before(settings);
+   const roster=document.createElement('section');
+   roster.id='math-roster';roster.className='view subpage';
+   roster.innerHTML='<button class="back" type="button">Bosh menyu</button><h2>O‘quvchilar</h2>'+
+     '<p class="desc">Matematika · yagona o‘quvchilar ro‘yxati</p>'+
+     '<div id="nur-public-roster" class="nur-math-initial">Ro‘yxat yuklanmoqda...</div>';
+   roster.querySelector('.back').onclick=()=>window.go?.('home');
+   if(bar)bar.before(roster);
+   const listBtn=document.createElement('button');
+   listBtn.type='button';listBtn.className='nur-math-home nur-students-open';
+   listBtn.innerHTML='<span class="m-symbol">26</span>'+
+     '<span class="m-copy"><b>O‘quvchilar ro‘yxati</b><small id="nur-roster-caption">Yagona matematika ro‘yxati</small></span>'+arrow;
+   listBtn.onclick=()=>window.go?.('math-roster');
+   const homeList=home.querySelector('.content .list');
+   if(homeList)homeList.after(listBtn);
    const open=document.createElement('button');open.className='nur-settings-open';open.type='button';
    open.innerHTML='<span>Sozlamalar</span><span>›</span>';
    open.addEventListener('click',()=>{window.closeMenu?.();window.go?.('nur-settings')});
@@ -176,7 +190,31 @@
    if(total)total.textContent=String(data.total_students||0);
    const caption=$('nur-math-home-caption');
    if(caption)caption.textContent=(data.total_students||0)+' ta o‘quvchi · yagona matematika ro‘yxati';
-   renderResults();renderRating();renderMonthly();renderRoster();
+   renderResults();renderRating();renderMonthly();renderRoster();renderRoster();
+ }
+ function renderRoster(){
+   const root=$('nur-public-roster');const caption=$('nur-roster-caption');
+   if(!data)return;
+   const students=Array.isArray(data.students)?data.students:[];
+   if(caption)caption.textContent=students.length+' ta o‘quvchi · barcha sanalarda';
+   if(!root)return;
+   root.className='nur-public-roster';root.replaceChildren();
+   if(!students.length){
+     root.innerHTML='<p class="nur-math-empty">Ro‘yxat serverdan olinmadi.</p>';
+     const btn=document.createElement('button');btn.className='nur-math-retry';
+     btn.textContent='Qayta urinish';btn.onclick=()=>reload(false);root.append(btn);return;
+   }
+   const frag=document.createDocumentFragment();
+   for(const st of [...students].sort((a,b)=>String(a.full_name).localeCompare(String(b.full_name),'uz'))){
+     const item=document.createElement('button');item.type='button';item.className='nur-roster-person';
+     item.innerHTML='<span class="nur-roster-person-icon" aria-hidden="true">'+
+       esc(String(st.full_name||'?').slice(0,1).toUpperCase())+'</span>'+
+       '<span class="nur-roster-person-info"><b>'+esc(st.full_name)+'</b><small>'+
+       (st.grade?st.grade+'-sinf · ':'2–7-sinflar · ')+
+       'Oy: '+fixed(st.monthly_points||0)+' ball · Davomat: '+Number(st.attended||0)+'</small></span>'+arrow;
+     item.onclick=()=>openProfile(st.id);frag.append(item);
+   }
+   root.append(frag);
  }
  function renderResults(){
    const root=$('nur-math-results');if(!root||!data)return;
