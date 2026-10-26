@@ -212,7 +212,7 @@
        '<span class="nur-roster-person-info"><b>'+esc(st.full_name)+'</b><small>'+
        (st.grade?st.grade+'-sinf · ':'2–7-sinflar · ')+
        'Oy: '+fixed(st.monthly_points||0)+' ball · Davomat: '+Number(st.attended||0)+'</small></span>'+arrow;
-     item.onclick=()=>openProfile(st.id);frag.append(item);
+     item.onclick=()=>openProfile(st);frag.append(item);
    }
    root.append(frag);
  }
