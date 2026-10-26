@@ -95,86 +95,48 @@ public class MainActivity extends Activity {
         return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
-    /** Branded, nonblocking native startup screen; real launcher icon is unchanged. */
+    /** The original NUR mark is the only startup content. */
     private FrameLayout makeSplash() {
-        final FrameLayout splash=new FrameLayout(this);
+        FrameLayout splash=new FrameLayout(this);
         GradientDrawable background=new GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
             new int[]{Color.rgb(11,51,38),Color.rgb(30,105,72)});
         splash.setBackground(background);
-
-        LinearLayout stack=new LinearLayout(this);
-        stack.setOrientation(LinearLayout.VERTICAL);
-        stack.setGravity(Gravity.CENTER);
-        stack.setPadding(dp(18),dp(18),dp(18),dp(18));
-
         ImageView icon=new ImageView(this);
-        icon.setImageResource(getSelectedLauncherIcon());
+        icon.setImageResource(R.drawable.nur_premium_icon);
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        LinearLayout.LayoutParams iconParams=new LinearLayout.LayoutParams(dp(122),dp(122));
-        iconParams.bottomMargin=dp(23);
-        stack.addView(icon,iconParams);
-
-        TextView title=new TextView(this);
-        title.setText("Nur oqiw");
-        title.setTextColor(Color.rgb(239,255,244));
-        title.setTextSize(22);
-        title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams titleParams=new LinearLayout.LayoutParams(-2,-2);
-        titleParams.bottomMargin=dp(19);
-        stack.addView(title,titleParams);
-
-        ProgressBar line=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
-        // An iOS-like, visibly thick rounded track filling once from 0 to 100.
-        GradientDrawable track=new GradientDrawable();
-        track.setColor(Color.argb(95,216,251,229));
-        track.setCornerRadius(dp(7));
-        GradientDrawable fill=new GradientDrawable(
-            GradientDrawable.Orientation.LEFT_RIGHT,
-            new int[]{Color.rgb(202,254,222),Color.rgb(255,225,146)});
-        fill.setCornerRadius(dp(7));
-        ClipDrawable clipped=new ClipDrawable(fill,Gravity.LEFT,ClipDrawable.HORIZONTAL);
-        LayerDrawable drawable=new LayerDrawable(new Drawable[]{track,clipped});
-        drawable.setId(0,android.R.id.background);
-        drawable.setId(1,android.R.id.progress);
-        line.setProgressDrawable(drawable);
-        line.setIndeterminate(false);
-        line.setMax(100);
-        line.setProgress(0);
-        splashProgress=line;
-        stack.addView(line,new LinearLayout.LayoutParams(dp(206),dp(10)));
-        splash.addView(stack,new FrameLayout.LayoutParams(-1,-1));
+        FrameLayout.LayoutParams center=new FrameLayout.LayoutParams(
+            dp(146),dp(146),Gravity.CENTER);
+        splash.addView(icon,center);
         return splash;
     }
-
     private void dismissSplash() {
-        if(splashFinished || splashOverlay==null)return;
+        if(splashFinished||splashOverlay==null)return;
         splashFinished=true;
-        if(splashAnimator!=null){
-            splashAnimator.cancel();
-            splashAnimator=null;
-        }
         final FrameLayout overlay=splashOverlay;
-        final ProgressBar bar=splashProgress;
-        long elapsed=SystemClock.uptimeMillis()-splashOpenedAt;
-        overlay.postDelayed(()->{
-            if(isFinishing()||isDestroyed())return;
-            if(bar!=null){
-                ObjectAnimator last=ObjectAnimator.ofInt(bar,"progress",bar.getProgress(),100);
-                last.setDuration(320L);
-                last.start();
-            }
-            overlay.postDelayed(()->{
-                if(isFinishing()||isDestroyed())return;
-                overlay.animate().alpha(0f).setDuration(230L).withEndAction(()->{
-                    if(overlay.getParent() instanceof FrameLayout)
-                        ((FrameLayout)overlay.getParent()).removeView(overlay);
-                    if(splashOverlay==overlay)splashOverlay=null;
-                    splashProgress=null;
-                }).start();
-            },325L);
-        },Math.max(0L,650L-elapsed));
+        overlay.animate().alpha(0f).setDuration(120L).withEndAction(()->{
+            if(overlay.getParent() instanceof FrameLayout)
+                ((FrameLayout)overlay.getParent()).removeView(overlay);
+            if(splashOverlay==overlay)splashOverlay=null;
+        }).start();
+    }
+    private void restoreOriginalLauncherIcon(){
+        // Older builds offered icon switching. Re-enable only the original
+        // launcher entry on every start, including upgrades.
+        String[] aliases={"Original","Emerald","Night",
+            "AutumnOne","AutumnTwo","Spring","Winter"};
+        PackageManager manager=getPackageManager();
+        for(String alias:aliases){
+            try{
+                manager.setComponentEnabledSetting(
+                    new ComponentName(this,getPackageName()+".Launcher"+alias),
+                    alias.equals("Original")
+                        ?PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                        :PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
+            }catch(Exception e){Log.w("NurOqiwLauncher","Launcher entry unavailable",e);}
+        }
+        getPreferences(MODE_PRIVATE).edit().remove("launcher_icon").apply();
     }
 
     private WebResourceResponse deny() {
@@ -184,6 +146,7 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        restoreOriginalLauncherIcon();
         // Google Services supplies Android-package-matched Firebase options.
         // A missing/mismatched configuration is logged, never hard-coded
         // into the offline HTML or exposed to the WebView.
@@ -202,7 +165,7 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         // Marker lets the bundled settings page offer Android-only launcher icon
         // variants without injecting a Javascript bridge.
-        settings.setUserAgentString(settings.getUserAgentString()+" NurOqiwAndroid/1.0 NurIcon/"+getPreferences(MODE_PRIVATE).getString("launcher_icon","original"));
+        settings.setUserAgentString(settings.getUserAgentString()+" NurOqiwAndroid/1.0");
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);
         // Content access is needed only for explicit Android document-picker
@@ -272,22 +235,6 @@ public class MainActivity extends Activity {
                     uri.getPath() != null && uri.getPath().startsWith("/assets/")) {
                     return false;
                 }
-                if ("nuricon".equals(uri.getScheme())) {
-                    // Strictly allowlisted internal icon selection, no remote or
-                    // third-party page is loaded inside this WebView.
-                    if("change".equalsIgnoreCase(uri.getHost()) &&
-                       uri.getPath()!=null &&
-                       uri.getPath().matches("^/(original|emerald|night|autumn-one|autumn-two|spring|winter)$")) {
-                        try {
-                            changeLauncherIcon(uri.getPath().substring(1));
-                        } catch (Exception iconError) {
-                            Log.w("NurOqiwIcon","Cannot change launcher alias",iconError);
-                            Toast.makeText(MainActivity.this,
-                                "Bosh ekran ikonkasi o‘zgarmadi",Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                    return true;
-                }
                 if ("tel".equals(uri.getScheme())) {
                     try {
                         // Open the dialer; never place a call without the user's action.
@@ -307,7 +254,6 @@ public class MainActivity extends Activity {
         layout.addView(webView, new FrameLayout.LayoutParams(-1, -1));
         splashOpenedAt=SystemClock.uptimeMillis();
         splashOverlay=makeSplash();
-        animateSplashProgress();
         layout.addView(splashOverlay,new FrameLayout.LayoutParams(-1,-1));
         setContentView(layout);
         // Handle the Android 13+ system gesture via the same safe in-app stack.
@@ -316,7 +262,7 @@ public class MainActivity extends Activity {
                 android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
         }
         // Safety fallback prevents indefinite blocking if a WebView error occurs.
-        splashOverlay.postDelayed(this::dismissSplash,9000L);
+        splashOverlay.postDelayed(this::dismissSplash,1000L);
         if (savedInstanceState == null) webView.loadUrl(HOME);
         else webView.restoreState(savedInstanceState);
     }
@@ -427,41 +373,6 @@ public class MainActivity extends Activity {
         if (webView != null) webView.saveState(state);
         super.onSaveInstanceState(state);
     }
-    private int getSelectedLauncherIcon(){
-        String mode=getPreferences(MODE_PRIVATE).getString("launcher_icon","original");
-        switch(mode){
-            case "emerald":return R.drawable.nur_icon_emerald;
-            case "night":return R.drawable.nur_icon_night;
-            case "autumn-one":return R.drawable.nur_icon_autumn_one;
-            case "autumn-two":return R.drawable.nur_icon_autumn_two;
-            case "spring":return R.drawable.nur_icon_spring;
-            case "winter":return R.drawable.nur_icon_winter;
-            default:return R.drawable.nur_premium_icon;
-        }
-    }
-    private void animateSplashProgress(){
-        if(splashProgress==null)return;
-        splashAnimator=ObjectAnimator.ofInt(splashProgress,"progress",0,96);
-        splashAnimator.setInterpolator(new LinearInterpolator());
-        splashAnimator.setDuration(1400L);
-        splashAnimator.start();
-    }
-    private void changeLauncherIcon(String variant){
-        String[] names={"Original","Emerald","Night","AutumnOne","AutumnTwo","Spring","Winter"};
-        String[] modes={"original","emerald","night","autumn-one","autumn-two","spring","winter"};
-        int target=0;
-        for(int i=0;i<modes.length;i++)if(modes[i].equals(variant))target=i;
-        PackageManager pm=getPackageManager();
-        String prefix=getPackageName()+".Launcher";
-        pm.setComponentEnabledSetting(new ComponentName(this,prefix+names[target]),
-            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,PackageManager.DONT_KILL_APP);
-        for(int i=0;i<names.length;i++)if(i!=target)
-            pm.setComponentEnabledSetting(new ComponentName(this,prefix+names[i]),
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,PackageManager.DONT_KILL_APP);
-        getPreferences(MODE_PRIVATE).edit().putString("launcher_icon",modes[target]).apply();
-        Toast.makeText(this,"Ikonka saqlandi",Toast.LENGTH_SHORT).show();
-    }
-
     private void confirmExit() {
         long now=SystemClock.uptimeMillis();
         if(now-lastBackRequestAt<=1900L) {
