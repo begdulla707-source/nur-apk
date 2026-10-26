@@ -295,30 +295,48 @@
  }
  function renderAppearance(){
    const root=$('nur-appearance-settings');if(!root)return;
-   let saved='emerald';
-   try{saved=localStorage.getItem('nur-accent')||'emerald'}catch{}
+   let saved='emerald',icon='original';
+   try {
+     saved=localStorage.getItem('nur-accent')||'emerald';
+     icon=/NurIcon\/([a-z-]+)/.exec(navigator.userAgent)?.[1]||localStorage.getItem('nur-icon-mode')||'original';
+   }catch(_){}
+   const variants=[['original','Asl NUR'],['autumn-one','Kuz 1'],['autumn-two','Kuz 2'],['spring','Bahor · yashil'],['winter','Qish · ko‘k']];
+   const preview=k=>k==='original'
+     ?'<img src="nur_premium_icon.webp" loading="lazy" alt="">'
+     :(window.NurIconPreviews?.[k]||'<span>N</span>');
    root.innerHTML='<div class="nur-math-panel"><h3>Ilova mavzusi</h3>'+
-     '<p>Tungi rejim va ranglar barcha sahifalarda saqlanadi.</p>'+
+     '<p>Liquid Glass ko‘rinish, kunduzgi va tungi rejim.</p>'+
      '<div class="nur-settings-options" id="nur-theme-options">'+
      [['light','Kunduzgi'],['dark','Tungi']].map(([k,t])=>'<button type="button" data-theme="'+k+'">'+t+'</button>').join('')+
-     '</div></div>'+
-     '<div class="nur-math-panel"><h3>Ichki ranglar</h3><p>Premium Liquid Glass effektlari saqlanadi.</p>'+
+     '</div></div><div class="nur-math-panel"><h3>Ichki ranglar</h3>'+
      '<div class="nur-settings-options" id="nur-accent-options">'+
      [['emerald','Zumrad','#227351'],['blue','Ko‘k','#357bba'],['graphite','Grafit','#54636b']].map(([k,t,c])=>
       '<button type="button" data-accent="'+k+'" class="'+(saved===k?'chosen':'')+'">'+
       '<span class="swatch" style="display:block;background:'+c+'"></span>'+t+'</button>').join('')+'</div></div>'+
-     '';
+     '<div class="nur-math-panel"><h3>Tashqi ilova ikonkasi</h3>'+
+     '<p>Asl ikonka saqlanadi. Tanlangan variant keyingi ochilganda ham ishlatiladi.</p>'+
+     '<div class="nur-settings-icons" id="nur-icon-options">'+
+      variants.map(([k,t])=>'<button type="button" data-icon="'+k+'" class="'+(icon===k?'chosen':'')+'" aria-pressed="'+(icon===k?'true':'false')+'">'+
+      '<span class="nur-icon-tile">'+preview(k)+'</span><span>'+t+'</span></button>').join('')+
+     '</div><p id="nur-icon-help">Bosh ekran ikonkasi yangilanishi bir necha soniya olishi mumkin.</p></div>';
    for(const b of root.querySelectorAll('button[data-theme]')){
-     const selected=b.dataset.theme===(document.body.classList.contains('dark')?'dark':'light');
-     b.classList.toggle('chosen',selected);
-     b.addEventListener('click',()=>{
-       window.setTheme?.(b.dataset.theme==='dark');renderAppearance();
-     });
+     b.classList.toggle('chosen',b.dataset.theme===(document.body.classList.contains('dark')?'dark':'light'));
+     b.addEventListener('click',()=>{window.setTheme?.(b.dataset.theme==='dark');renderAppearance()});
    }
    for(const b of root.querySelectorAll('button[data-accent]'))b.addEventListener('click',()=>{
      document.body.dataset.nurAccent=b.dataset.accent;
-     try{localStorage.setItem('nur-accent',b.dataset.accent)}catch{}
+     try{localStorage.setItem('nur-accent',b.dataset.accent)}catch(_){}
      renderAppearance();
+   });
+   for(const b of root.querySelectorAll('button[data-icon]'))b.addEventListener('click',()=>{
+     const selected=b.dataset.icon;
+     try{localStorage.setItem('nur-icon-mode',selected)}catch(_){}
+     for(const el of root.querySelectorAll('button[data-icon]')){
+       el.classList.toggle('chosen',el.dataset.icon===selected);
+       el.setAttribute('aria-pressed',String(el.dataset.icon===selected));
+     }
+     if(navigator.userAgent.includes('NurOqiwAndroid'))location.href='nuricon://change/'+selected;
+     else $('nur-icon-help').textContent='Tashqi ikonka faqat Android APK ichida o‘zgaradi.';
    });
  }
  function bindAdmin(root,ctx){
