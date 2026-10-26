@@ -10,7 +10,7 @@
   const $=id=>document.getElementById(id);
   const bell='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9M10 21h4"/></svg>';
   const xicon='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg>';
-  const INSTALLED_BUILD=27;
+  const INSTALLED_BUILD=28;
   let items=[],lastSignature='',active=false,waiting=false,previousError='',lastChecked=0;
   let appUpdate=null,lastReleaseCheck=0;
   function readArray(key,max){
