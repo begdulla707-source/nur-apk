@@ -37,11 +37,11 @@
        cache:'no-store',signal:controller.signal
      });
      const result=await response.json().catch(()=>({}));
-     if(!response.ok)throw Error(result.error||'Server xatosi: '+response.status);
+     if(!response.ok)throw Error(result.error||'Ma’lumotni olishda xatolik');
      return result;
    }catch(e){
-     if(e.name==='AbortError')throw Error('Server javobi kechikdi. Qayta urinib ko‘ring');
-     if(e instanceof TypeError)throw Error('Internet yoki serverga ulanishda xatolik');
+     if(e.name==='AbortError')throw Error('So‘rov kechikdi. Qayta urinib ko‘ring');
+     if(e instanceof TypeError)throw Error('Ulanishni tekshiring va qayta urinib ko‘ring');
      throw e;
    }finally{clearTimeout(timeout)}
  }
@@ -113,7 +113,7 @@
    roster.id='math-roster';roster.className='view subpage';
    roster.innerHTML='<button class="back" type="button">Bosh menyu</button><h2>O‘quvchilar</h2>'+
      '<p class="desc">Matematika · yagona o‘quvchilar ro‘yxati</p>'+
-     '<div id="nur-public-roster" class="nur-math-initial">Ro‘yxat yuklanmoqda...</div>';
+     '<div id="nur-public-roster" class="nur-math-initial">O‘quvchilar</div>';
    roster.querySelector('.back').onclick=()=>window.go?.('home');
    if(bar)bar.before(roster);
    const listBtn=document.createElement('button');
@@ -157,7 +157,7 @@
         retry.setAttribute('aria-label','Qayta urinish');
         retry.addEventListener('click',()=>reload(false));
         const msg=document.createElement('div');msg.className='nur-math-error-message';
-        msg.textContent='Serverdagi natijalarni yuklab bo‘lmadi: '+err.message;
+        msg.textContent='Ma’lumotlar hozircha ko‘rsatilmayapti. Qayta urinib ko‘ring.';
         region.append(msg,retry);
       }
    }finally{loading=false}
@@ -200,7 +200,7 @@
    if(!root)return;
    root.className='nur-public-roster';root.replaceChildren();
    if(!students.length){
-     root.innerHTML='<p class="nur-math-empty">Ro‘yxat serverdan olinmadi.</p>';
+     root.innerHTML='<p class="nur-math-empty">O‘quvchilar ro‘yxati hozircha ko‘rsatilmayapti.</p>';
      const btn=document.createElement('button');btn.className='nur-math-retry';
      btn.textContent='Qayta urinish';btn.onclick=()=>reload(false);root.append(btn);return;
    }
@@ -358,31 +358,18 @@
  }
  function renderAppearance(){
    const root=$('nur-appearance-settings');if(!root)return;
-   let saved='emerald',icon='original';
-   try {
-     saved=localStorage.getItem('nur-accent')||'emerald';
-     icon=/NurIcon\/([a-z-]+)/.exec(navigator.userAgent)?.[1]||localStorage.getItem('nur-icon-mode')||'original';
-   }catch(_){}
-   const variants=[['original','Asl NUR'],['autumn-one','Kuz 1'],['autumn-two','Kuz 2'],['spring','Bahor · yashil'],['winter','Qish · ko‘k']];
-   const preview=k=>k==='original'
-     ?'<img src="nur_premium_icon.webp" loading="lazy" alt="">'
-     :(window.NurIconPreviews?.[k]||'<span>N</span>');
-   root.innerHTML='<div class="nur-math-panel"><h3>Ilova mavzusi</h3>'+
-     '<p>Liquid Glass ko‘rinish, kunduzgi va tungi rejim.</p>'+
-     '<div class="nur-settings-options" id="nur-theme-options">'+
-     [['light','Kunduzgi'],['dark','Tungi']].map(([k,t])=>'<button type="button" data-theme="'+k+'">'+t+'</button>').join('')+
-     '</div></div><div class="nur-math-panel"><h3>Ichki ranglar</h3>'+
-     '<div class="nur-settings-options" id="nur-accent-options">'+
-     [['emerald','Zumrad','#227351'],['blue','Ko‘k','#357bba'],['graphite','Grafit','#54636b']].map(([k,t,c])=>
-      '<button type="button" data-accent="'+k+'" class="'+(saved===k?'chosen':'')+'">'+
-      '<span class="swatch" style="display:block;background:'+c+'"></span>'+t+'</button>').join('')+'</div></div>'+
-     '<div class="nur-math-panel"><h3>Tashqi ilova ikonkasi</h3>'+
-     '<p>Asl ikonka saqlanadi. Tanlangan variant keyingi ochilganda ham ishlatiladi.</p>'+
-     '<div class="nur-settings-icons" id="nur-icon-options">'+
-      variants.map(([k,t])=>'<button type="button" data-icon="'+k+'" class="'+(icon===k?'chosen':'')+'" aria-pressed="'+(icon===k?'true':'false')+'">'+
-      '<span class="nur-icon-tile">'+preview(k)+'</span><span>'+t+'</span></button>').join('')+
-     '</div><p id="nur-icon-help">Bosh ekran ikonkasi yangilanishi bir necha soniya olishi mumkin.</p></div>';
-   for(const b of root.querySelectorAll('button[data-theme]')){
+   let saved='emerald';
+    try{saved=localStorage.getItem('nur-accent')||'emerald'}catch(_){}
+    root.innerHTML='<div class="nur-math-panel"><h3>Ilova mavzusi</h3>'+
+      '<p>Liquid Glass ko‘rinish, kunduzgi va tungi rejim.</p>'+
+      '<div class="nur-settings-options" id="nur-theme-options">'+
+      [['light','Kunduzgi'],['dark','Tungi']].map(([k,t])=>'<button type="button" data-theme="'+k+'">'+t+'</button>').join('')+
+      '</div></div><div class="nur-math-panel"><h3>Ichki ranglar</h3>'+
+      '<div class="nur-settings-options" id="nur-accent-options">'+
+      [['emerald','Zumrad','#227351'],['blue','Ko‘k','#357bba'],['graphite','Grafit','#54636b']].map(([k,t,c])=>
+       '<button type="button" data-accent="'+k+'" class="'+(saved===k?'chosen':'')+'">'+
+       '<span class="swatch" style="display:block;background:'+c+'"></span>'+t+'</button>').join('')+'</div></div>';
+    for(const b of root.querySelectorAll('button[data-theme]')){
      b.classList.toggle('chosen',b.dataset.theme===(document.body.classList.contains('dark')?'dark':'light'));
      b.addEventListener('click',()=>{window.setTheme?.(b.dataset.theme==='dark');renderAppearance()});
    }
@@ -391,16 +378,7 @@
      try{localStorage.setItem('nur-accent',b.dataset.accent)}catch(_){}
      renderAppearance();
    });
-   for(const b of root.querySelectorAll('button[data-icon]'))b.addEventListener('click',()=>{
-     const selected=b.dataset.icon;
-     try{localStorage.setItem('nur-icon-mode',selected)}catch(_){}
-     for(const el of root.querySelectorAll('button[data-icon]')){
-       el.classList.toggle('chosen',el.dataset.icon===selected);
-       el.setAttribute('aria-pressed',String(el.dataset.icon===selected));
-     }
-     if(navigator.userAgent.includes('NurOqiwAndroid'))location.href='nuricon://change/'+selected;
-     else $('nur-icon-help').textContent='Tashqi ikonka faqat Android APK ichida o‘zgaradi.';
-   });
+   
  }
  function bindAdmin(root,ctx){
    ctxAdmin=ctx;
