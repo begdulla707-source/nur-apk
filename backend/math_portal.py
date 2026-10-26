@@ -154,7 +154,7 @@ def register_math(app, db, admin_only, bad):
             COALESCE(t.published_on,t.held_on) AS pub_day,t.title,t.question_count,
             count(r.student_id)::int AS entered
             FROM math_tests t LEFT JOIN math_results r ON r.test_id=t.id
-            WHERE t.held_on=%s
+            WHERE COALESCE(t.published_on,t.held_on)=%s
             GROUP BY t.id ORDER BY t.id DESC""",(day,)).fetchall()
         tests=[]
         for test in selected:
@@ -169,7 +169,7 @@ def register_math(app, db, admin_only, bad):
                           "uploaded_date":test["pub_day"].isoformat(),
                           "questions":test["question_count"],"rows":[dict(x) for x in marks]})
         return {"revision":revision(conn),"day":day.isoformat(),"month":month.strftime("%Y-%m"),
-                "dates":[{"date":x["held_on"].isoformat(),
+                "dates":[{"date":x["pub_day"].isoformat(),
                           "test_date":x["held_on"].isoformat(),"title":x["title"],
                           "questions":x["question_count"],"entered":x["entered"]} for x in dates],
                 "tests":tests,"students":students,"total_students":len(students)}
@@ -182,7 +182,7 @@ def register_math(app, db, admin_only, bad):
                 # Show the most recently *published* test, not today's date or
                 # simply the largest held_on. A backdated test uploaded today
                 # is still the newest announcement until another is published.
-                recent=conn.execute("""SELECT t.held_on AS day FROM math_tests t
+                recent=conn.execute("""SELECT COALESCE(t.published_on,t.held_on) AS day FROM math_tests t
                     WHERE EXISTS (SELECT 1 FROM math_results r WHERE r.test_id=t.id)
                     ORDER BY COALESCE(
                         (SELECT max(a.id) FROM math_import_audit a WHERE a.test_id=t.id),0
