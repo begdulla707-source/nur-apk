@@ -138,3 +138,9 @@ body[data-nur-accent="graphite"] .hero{background:linear-gradient(135deg,#252f34
 .nur-icon-tile{display:grid;place-items:center;width:82px;height:82px;overflow:hidden;flex:none}
 .nur-icon-tile svg,.nur-icon-tile img{display:block;width:82px;height:82px;object-fit:contain;border-radius:17px}
 @media(max-width:345px){.nur-settings-icons{gap:8px}.nur-icon-tile,.nur-icon-tile svg,.nur-icon-tile img{width:72px;height:72px}.nur-settings-icons button{min-height:124px}}
+
+.nur-math-roster{margin-top:24px;border:1px solid var(--stroke);background:var(--card);border-radius:19px;overflow:hidden;padding:0 14px}
+.nur-math-roster summary{padding:16px 3px;cursor:pointer;color:var(--text);font-weight:800;font-size:13px}
+.nur-math-roster-row{display:flex;width:100%;padding:12px 4px;gap:12px;align-items:center;justify-content:space-between;text-align:left;border:0;border-top:1px solid var(--stroke);background:transparent;color:var(--text);font-size:12px}
+.nur-math-roster-row small{color:var(--muted);font-size:11px;white-space:nowrap}
+.nur-math-error-message{padding:12px 8px;color:var(--text);font-size:12px;line-height:1.5}
