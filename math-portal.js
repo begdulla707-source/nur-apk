@@ -118,7 +118,7 @@
    if(bar)bar.before(roster);
    const listBtn=document.createElement('button');
    listBtn.type='button';listBtn.className='nur-math-home nur-students-open';
-   listBtn.innerHTML='<span class="m-symbol">26</span>'+
+   listBtn.innerHTML='<span class="m-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9" cy="7" r="3"/><circle cx="18" cy="9" r="2"/><path d="M3 21v-2a6 6 0 0 1 12 0v2m1-6a5 5 0 0 1 5 5v1"/></svg></span>'+
      '<span class="m-copy"><b>O‘quvchilar ro‘yxati</b><small id="nur-roster-caption">Yagona matematika ro‘yxati</small></span>'+arrow;
    listBtn.onclick=()=>window.go?.('math-roster');
    const homeList=home.querySelector('.content .list');
