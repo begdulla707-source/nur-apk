@@ -77,6 +77,15 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      # Keep one signing identity between preview builds. Without this cache,
+      # each fresh Actions runner generates a new debug certificate and Android
+      # refuses to install the next APK over an existing installation.
+      # This is for preview APKs only, NOT a production signing strategy.
+      - name: Reuse preview APK signing identity
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: nur-oqiw-preview-debug-keystore-v1
       - name: Build installable debug APK
         run: gradle --no-daemon -p android assembleDebug
       - name: Verify APK validity, signing and real launcher icon
@@ -85,7 +94,7 @@ jobs:
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           BUILD_TOOLS="$ANDROID_HOME/build-tools/35.0.0"
           test -s "$APK"
-          "$BUILD_TOOLS/apksigner" verify --verbose "$APK" | tee /tmp/signature-check.txt
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$APK" | tee /tmp/signature-check.txt
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" /tmp/signature-check.txt
           "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
