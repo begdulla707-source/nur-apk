@@ -33,12 +33,12 @@
       const data=await res.json().catch(()=>({}));
       if(!res.ok) {
         if(res.status===401&&options.admin){auth='';session.clear()}
-        throw new Error(data.error||('Server xatosi: '+res.status));
+        throw new Error(data.error||'Ma’lumotni olishda xatolik');
       }
       return data;
     } catch (err) {
-      if(err.name==='AbortError') throw new Error('Server javobi kechikyapti. Qayta urinib ko‘ring');
-      if(err instanceof TypeError) throw new Error('Serverga ulanish yo‘q. Internet yoki API sozlamalarini tekshiring');
+      if(err.name==='AbortError') throw new Error('Ma’lumotni olish kechikdi. Qayta urinib ko‘ring');
+      if(err instanceof TypeError) throw new Error('Hozircha ma’lumotlarni ko‘rsatib bo‘lmadi. Qayta urinib ko‘ring');
       throw err;
     } finally {clearTimeout(timeout)}
   }
