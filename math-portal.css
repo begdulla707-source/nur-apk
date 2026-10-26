@@ -129,3 +129,12 @@ body[data-nur-accent="graphite"] .hero{background:linear-gradient(135deg,#252f34
  color:var(--text);padding:13px 14px;font-size:12px;font-weight:750;display:flex;justify-content:space-between;margin:10px 0}
 #home .math-sync-info{font-size:10px;margin-top:12px;color:var(--muted)}
 @media(max-width:350px){.nur-math-tools input[type="date"]{max-width:160px}.nur-payment-row{gap:6px}.nur-rank-row{gap:6px}}
+
+/* Actual selectable launcher images: frosted Liquid Glass tile grid. */
+.nur-settings-icons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.nur-settings-icons button{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:135px;gap:10px;padding:13px 8px;border-radius:20px;border:1px solid var(--stroke);color:var(--text);background:linear-gradient(143deg,rgba(255,255,255,.25),rgba(255,255,255,.03));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);font-size:12px;font-weight:750;box-shadow:inset 0 1px rgba(255,255,255,.35),0 7px 15px rgba(0,0,0,.04);transition:border-color .18s,transform .18s}
+.nur-settings-icons button:active{transform:scale(.975)}
+.nur-settings-icons button.chosen{border:2px solid var(--accent);box-shadow:inset 0 0 0 1px var(--accent),0 8px 22px rgba(27,108,81,.12)}
+.nur-icon-tile{display:grid;place-items:center;width:82px;height:82px;overflow:hidden;flex:none}
+.nur-icon-tile svg,.nur-icon-tile img{display:block;width:82px;height:82px;object-fit:contain;border-radius:17px}
+@media(max-width:345px){.nur-settings-icons{gap:8px}.nur-icon-tile,.nur-icon-tile svg,.nur-icon-tile img{width:72px;height:72px}.nur-settings-icons button{min-height:124px}}
