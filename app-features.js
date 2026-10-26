@@ -231,7 +231,7 @@
       const c=overview.counts||{};
       adminRoot.innerHTML='<div class="nur-math-subhead"><b>Matematika · 2–7-sinflar</b><button class="appbtn small light" data-act="logout">Chiqish</button></div><div class="admin-tabs" id="admin-tabs"></div><div id="admin-tab-content"></div>';
       const root=$('admin-tabs');
-      for(const [id,title] of [['math','Natijalar / Import'],['math-students','O‘quvchilar'],['math-payments','Oylik to‘lov'],['inbox','Xabarlar'],['notices','E’lonlar']]){
+      for(const [id,title] of [['math','Natijalar / Import'],['math-payments','Oylik to‘lov'],['inbox','Xabarlar'],['notices','E’lonlar']]){
         const b=el('button',state.adminTab===id?'on':'',title);b.dataset.tab=id;root.append(b);
       }
       await showAdminTab();
