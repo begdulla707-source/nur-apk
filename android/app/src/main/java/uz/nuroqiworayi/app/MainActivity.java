@@ -74,7 +74,7 @@ public class MainActivity extends Activity {
         "notifications-ui.css", "math-portal.css", "math-portal.css",
         "app-features.js", "premium-admin.js", "ranking-ui.js",
         "liquid-glass.js", "i18n.js", "contact-ui.js", "payment-ui.js", "portfolio-ui.js",
-        "notifications-ui.js", "navigation-ui.js", "math-ocr.js", "math-portal.js",
+        "notifications-ui.js", "navigation-ui.js", "math-ocr.js", "nur-icon-previews.js", "math-portal.js", "nur_premium_icon.webp",
         "paynet_qr.png"
     ));
     private static final int FILE_CHOOSER_CODE = 5042;
@@ -202,7 +202,7 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         // Marker lets the bundled settings page offer Android-only launcher icon
         // variants without injecting a Javascript bridge.
-        settings.setUserAgentString(settings.getUserAgentString()+" NurOqiwAndroid/1.0");
+        settings.setUserAgentString(settings.getUserAgentString()+" NurOqiwAndroid/1.0 NurIcon/"+getPreferences(MODE_PRIVATE).getString("launcher_icon","original"));
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);
         // Content access is needed only for explicit Android document-picker
@@ -257,6 +257,7 @@ public class MainActivity extends Activity {
                 if (asset.endsWith(".css")) mime = "text/css";
                 if (asset.endsWith(".js")) mime = "application/javascript";
                 if (asset.endsWith(".png")) mime = "image/png";
+                if (asset.endsWith(".webp")) mime = "image/webp";
                 try {
                     return new WebResourceResponse(mime, "UTF-8", getAssets().open(asset));
                 } catch (IOException e) {
