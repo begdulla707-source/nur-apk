@@ -107,11 +107,11 @@ def register_math(app, db, admin_only, bad):
                             month.month % 12 + 1, 1)
         rows = conn.execute("""SELECT st.id,st.full_name,st.grade,
              COALESCE(SUM(r.correct_answers) FILTER (
-                  WHERE t.held_on>=%s AND t.held_on<%s AND r.status='present'),0)::int AS monthly_points,
+                  WHERE COALESCE(t.published_on,t.held_on)>=%s AND COALESCE(t.published_on,t.held_on)<%s AND r.status='present'),0)::int AS monthly_points,
              COALESCE(SUM(r.correct_answers) FILTER (WHERE r.status='present'),0)::int AS total_points,
-             count(r.test_id) FILTER (WHERE t.held_on>=%s AND t.held_on<%s)::int AS monthly_tests,
-             count(r.test_id) FILTER (WHERE t.held_on>=%s AND t.held_on<%s AND r.status='present')::int AS attended,
-             count(r.test_id) FILTER (WHERE t.held_on>=%s AND t.held_on<%s AND r.status='dq')::int AS dq,
+             count(r.test_id) FILTER (WHERE COALESCE(t.published_on,t.held_on)>=%s AND COALESCE(t.published_on,t.held_on)<%s)::int AS monthly_tests,
+             count(r.test_id) FILTER (WHERE COALESCE(t.published_on,t.held_on)>=%s AND COALESCE(t.published_on,t.held_on)<%s AND r.status='present')::int AS attended,
+             count(r.test_id) FILTER (WHERE COALESCE(t.published_on,t.held_on)>=%s AND COALESCE(t.published_on,t.held_on)<%s AND r.status='dq')::int AS dq,
              count(r.test_id) FILTER (WHERE r.status='present')::int AS all_tests
              FROM math_students st
              LEFT JOIN math_results r ON r.student_id=st.id
@@ -143,16 +143,19 @@ def register_math(app, db, admin_only, bad):
 
     def snapshot(conn, day, month):
         students=leaderboard(conn,month)
-        dates=conn.execute("""SELECT t.id,t.held_on,t.title,t.question_count,
+        dates=conn.execute("""SELECT t.id,t.held_on,
+            COALESCE(t.published_on,t.held_on) AS pub_day,t.title,t.question_count,
             count(r.student_id)::int AS entered
             FROM math_tests t LEFT JOIN math_results r ON r.test_id=t.id
-            GROUP BY t.id ORDER BY t.held_on DESC,t.id DESC LIMIT 90""").fetchall()
+            GROUP BY t.id ORDER BY pub_day DESC,t.id DESC LIMIT 90""").fetchall()
         # Do not rely on the last 90 history labels to render the selected
         # test: a newly published backdated test may be older than that list.
-        selected=conn.execute("""SELECT t.id,t.held_on,t.title,t.question_count,
+        selected=conn.execute("""SELECT t.id,t.held_on,
+            COALESCE(t.published_on,t.held_on) AS pub_day,t.title,t.question_count,
             count(r.student_id)::int AS entered
             FROM math_tests t LEFT JOIN math_results r ON r.test_id=t.id
-            WHERE t.held_on=%s GROUP BY t.id ORDER BY t.id DESC""",(day,)).fetchall()
+            WHERE COALESCE(t.published_on,t.held_on)=%s
+            GROUP BY t.id ORDER BY t.id DESC""",(day,)).fetchall()
         tests=[]
         for test in selected:
             marks=conn.execute("""SELECT st.id AS student_id,st.full_name,st.grade,
@@ -162,9 +165,12 @@ def register_math(app, db, admin_only, bad):
               ORDER BY r.status DESC,r.correct_answers DESC NULLS LAST,st.full_name""",
               (test["id"],)).fetchall()
             tests.append({"id":test["id"],"title":test["title"],
+                          "test_date":test["held_on"].isoformat(),
+                          "uploaded_date":test["pub_day"].isoformat(),
                           "questions":test["question_count"],"rows":[dict(x) for x in marks]})
         return {"revision":revision(conn),"day":day.isoformat(),"month":month.strftime("%Y-%m"),
-                "dates":[{"date":x["held_on"].isoformat(),"title":x["title"],
+                "dates":[{"date":x["pub_day"].isoformat(),
+                          "test_date":x["held_on"].isoformat(),"title":x["title"],
                           "questions":x["question_count"],"entered":x["entered"]} for x in dates],
                 "tests":tests,"students":students,"total_students":len(students)}
 
@@ -176,7 +182,7 @@ def register_math(app, db, admin_only, bad):
                 # Show the most recently *published* test, not today's date or
                 # simply the largest held_on. A backdated test uploaded today
                 # is still the newest announcement until another is published.
-                recent=conn.execute("""SELECT t.held_on AS day FROM math_tests t
+                recent=conn.execute("""SELECT COALESCE(t.published_on,t.held_on) AS day FROM math_tests t
                     WHERE EXISTS (SELECT 1 FROM math_results r WHERE r.test_id=t.id)
                     ORDER BY COALESCE(
                         (SELECT max(a.id) FROM math_import_audit a WHERE a.test_id=t.id),0
@@ -194,10 +200,13 @@ def register_math(app, db, admin_only, bad):
             s=conn.execute("""SELECT id,full_name,grade FROM math_students
                  WHERE id=%s AND NOT archived""", (student_id,)).fetchone()
             if not s: return bad("O‘quvchi topilmadi",404)
-            history=conn.execute("""SELECT t.held_on,t.title,t.question_count,
+            history=conn.execute("""SELECT t.held_on,
+                     COALESCE(t.published_on,t.held_on) AS published_on,
+                     t.title,t.question_count,
                 r.status,r.correct_answers
                 FROM math_results r JOIN math_tests t ON t.id=r.test_id
-                WHERE r.student_id=%s ORDER BY t.held_on DESC,t.id DESC LIMIT 200""",
+                WHERE r.student_id=%s
+                 ORDER BY COALESCE(t.published_on,t.held_on) DESC,t.id DESC LIMIT 200""",
                 (student_id,)).fetchall()
             return jsonify({"student":s,"history":history})
 
@@ -294,17 +303,25 @@ def register_math(app, db, admin_only, bad):
         parsed=[parse_row(x,questions) for x in entries]
         keys=[normalize(p["name"]) for p in parsed]
         if len(set(keys))!=len(keys):return bad("Bir xil ism bir martadan ko‘p kiritilgan")
-        # Prevent a client from rewriting an existing test with a different
-        # question count. This would make historical scores inconsistent.
+        # Timestamp is assigned by the server in Asia/Tashkent, not by a
+        # possibly incorrect device clock or the historical test date.
+        # A duplicate title is numbered instead of replacing prior results.
+        published_on=dt.datetime.now(TZ).date()
         with db() as conn:
             with conn.transaction():
-                old=conn.execute("""SELECT id,question_count FROM math_tests
-                  WHERE held_on=%s AND title=%s FOR UPDATE""",(date,title)).fetchone()
-                if old and old["question_count"]!=questions:
-                    return bad("Bu sanada nomi bir xil test bor, savollar soni boshqa",409)
-                test=(old or conn.execute("""INSERT INTO math_tests(held_on,title,question_count)
-                   VALUES(%s,%s,%s) RETURNING id,question_count""",
-                   (date,title,questions)).fetchone())
+                test=None
+                for serial in range(1,102):
+                    suffix="" if serial==1 else " ("+str(serial)+")"
+                    candidate=title[:120-len(suffix)]+suffix
+                    test=conn.execute("""INSERT INTO math_tests
+                        (held_on,title,question_count,published_on)
+                        VALUES(%s,%s,%s,%s)
+                        ON CONFLICT(held_on,title) DO NOTHING
+                        RETURNING id,title,question_count""",
+                        (date,candidate,questions,published_on)).fetchone()
+                    if test is not None:break
+                if test is None:
+                    return bad("Bu sana uchun test nomlari band. Boshqa nom kiriting",409)
                 for p in parsed:
                     name=p["name"]
                     st=conn.execute("""SELECT id,grade FROM math_students
@@ -326,7 +343,9 @@ def register_math(app, db, admin_only, bad):
                       VALUES(%s,%s,%s)""",(test["id"],len(parsed),
                        "bulk" if obj.get("source")=="bulk" else "manual"))
                 bump(conn)
-        return jsonify({"ok":True,"test_id":test["id"],"saved":len(parsed)}),201
+        return jsonify({"ok":True,"test_id":test["id"],"saved":len(parsed),
+                        "title":test["title"],"test_date":date.isoformat(),
+                        "uploaded_date":published_on.isoformat()}),201
 
     @app.post("/api/admin/math/payment")
     @admin_only
