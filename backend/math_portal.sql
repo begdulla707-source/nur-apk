@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS math_tests (
  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
  UNIQUE(held_on,title)
 );
+-- Existing results retain their original historical test day. For NEW imports
+-- published_on records the immutable Asia/Tashkent upload/publish date.
+ALTER TABLE math_tests ADD COLUMN IF NOT EXISTS published_on DATE;
 CREATE TABLE IF NOT EXISTS math_results (
  test_id BIGINT NOT NULL REFERENCES math_tests(id),
  student_id BIGINT NOT NULL REFERENCES math_students(id),
