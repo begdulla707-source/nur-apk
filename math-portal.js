@@ -190,9 +190,9 @@
    if(total)total.textContent=String(data.total_students||0);
    const caption=$('nur-math-home-caption');
    if(caption)caption.textContent=(data.total_students||0)+' ta o‘quvchi · yagona matematika ro‘yxati';
-   renderResults();renderRating();renderMonthly();renderRoster();renderRoster();
+   renderResults();renderRating();renderMonthly();renderRoster();renderStudentDirectory();
  }
- function renderRoster(){
+ function renderStudentDirectory(){
    const root=$('nur-public-roster');const caption=$('nur-roster-caption');
    if(!data)return;
    const students=Array.isArray(data.students)?data.students:[];
@@ -740,7 +740,7 @@
    if(typeof priorGo==='function'){
      window.go=function(id){
        const out=priorGo.apply(this,arguments);
-       if(['rating','results','math-monthly'].includes(id)){reload(true)}
+       if(['rating','results','math-monthly','math-roster'].includes(id)){reload(true)}
        if(id==='nur-settings')renderAppearance();
        return out;
      };
