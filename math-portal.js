@@ -532,6 +532,50 @@
    }
    if(conflicts)addImportWarning(conflicts+' ta takroriy ismdagi ball farq qiladi.');
  }
+ function normalizeStudentName(value){
+   return String(value||'').toLocaleLowerCase('uz')
+     .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+     .replace(/[ʻ‘’ʼ\x27]/g,'').replace(/[^a-z0-9\s]/g,'')
+     .replace(/\s+/g,' ').trim();
+ }
+ function editDistance(a,b){
+   if(a===b)return 0;
+   if(Math.abs(a.length-b.length)>5)return 99;
+   let prev=Array.from({length:b.length+1},(_,i)=>i);
+   for(let i=1;i<=a.length;i++){
+     const cur=[i];
+     for(let j=1;j<=b.length;j++)
+       cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+     prev=cur;
+   }
+   return prev[b.length];
+ }
+ // Compare OCR suggestions to the existing verified roster. Never guess
+ // attendance and never silently insert a misspelled duplicate student.
+ function alignPhotoNames(rows){
+   const known=Array.isArray(data?.students)?data.students:[];
+   if(!known.length)return rows||[];
+   let unmatched=0,corrected=0;
+   const mapped=(rows||[]).map(row=>{
+     const original=normalizeStudentName(row.name);
+     if(!original||original.split(' ').length<2){
+       unmatched++;return {...row,status:'unresolved'};
+     }
+     const ranked=known.map(x=>({x,dist:editDistance(original,normalizeStudentName(x.full_name))}))
+       .sort((a,b)=>a.dist-b.dist);
+     const first=ranked[0],second=ranked[1];
+     const threshold=Math.max(1,Math.min(3,Math.floor(original.length*.13)));
+     if(first&&first.dist<=threshold&&(!second||second.dist-first.dist>=2)){
+       if(first.dist)corrected++;
+       return {...row,name:first.x.full_name,grade:row.grade??first.x.grade??null};
+     }
+     unmatched++;return {...row,status:'unresolved'};
+   });
+   if(unmatched||corrected)addImportWarning(
+     (corrected?corrected+' ta ism ro‘yxat bilan moslashtirildi. ':'')+
+     (unmatched?unmatched+' ta ismni tekshirish kerak.':''));
+   return mapped;
+ }
  function scheduleDraftRender(){
    if(ocrBatchHandle!==null)clearTimeout(ocrBatchHandle);
    ocrBatchHandle=setTimeout(()=>{
@@ -540,7 +584,7 @@
      renderDraft(root);
      const el=root.querySelector('#nur-file-status');
      if(el)el.textContent=(pendingImages?pendingImages+' ta rasm o‘qilmoqda · ':'')+
-       draft.length+' ta o‘quvchi topildi. Tekshirib tasdiqlang.';
+       draft.length+' ta o‘quvchi · natijalarni tekshiring';
    },240);
  }
  // On-device recognition produces editable suggestions; never auto-publishes.
@@ -560,10 +604,9 @@
      }
      if((result.rows||[]).length){
        if(!importFiles.includes(filename))importFiles.push(filename);
-       mergeDraftRows(result.rows);
+       mergeDraftRows(alignPhotoNames(result.rows));
      }else addImportWarning(filename+': o‘quvchi qatorlari topilmadi.');
-     if(summary.missingRows)addImportWarning(filename+': jami '+(summary.present+summary.absent)+
-       ' nafar, OCR '+(result.rows||[]).length+' nafarni topdi.');
+     if(summary.missingRows)addImportWarning('Rasmning ayrim qatorlarini tekshiring.');
    }catch(error){addImportWarning(filename+': rasm jadvalini ajratib bo‘lmadi.');}
    scheduleDraftRender();
  };
