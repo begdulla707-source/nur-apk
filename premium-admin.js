@@ -283,7 +283,7 @@
       '<div class="appcard">'+groupBox(ctx,'export-group',v.exportGroup)+
       note('CSV fayllarni Excel va Google Sheets dasturlarida ochish mumkin. Telefon raqamlari faqat admin eksportida mavjud.')+
       '<div class="premium-export-list">'+
-      [['students','O‘quvchilar ro‘yxati'],['results','Baholar va natijalar'],['attendance','Davomat va DQ'],['sessions','Mashg‘ulotlar'],['ranking','Reyting hisoboti']].map(([key,label])=>
+      [['results','Baholar va natijalar'],['attendance','Davomat va DQ'],['sessions','Mashg‘ulotlar'],['ranking','Reyting hisoboti']].map(([key,label])=>
         '<button class="premium-export-item" data-act="premium-export" data-id="'+key+'"><span>'+esc(label)+'</span><strong>CSV ↓</strong></button>').join('')+
       '</div></div>';
   }
