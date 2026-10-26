@@ -184,7 +184,7 @@
    const dates=data.dates||[];
    const current=data.tests||[];
    const count=current.reduce((n,t)=>n+t.rows.length,0);
-   root.innerHTML='<div class="nur-math-tools"><label><span style="font-size:11px">Sana</span> '+
+   root.innerHTML='<div class="nur-math-tools"><label><span style="font-size:11px">Natija yuklangan sana</span> '+
       '<input id="nur-math-date" type="date" value="'+esc(pageDate)+'"></label>'+ 
       '<button type="button" id="nur-results-latest" class="nur-latest-button">Oxirgi test</button>'+
       '</div>'+
@@ -212,7 +212,7 @@
    }
    for(const t of current){
      const head=document.createElement('div');head.className='nur-math-subhead';
-     head.innerHTML='<b>'+esc(t.title)+'</b><small>'+t.questions+' savol</small>';
+     head.innerHTML='<b>'+esc(t.title)+'</b><small>'+t.questions+' savol · yuklandi: '+prettyDay(t.uploaded_date||pageDate)+(t.test_date&&t.test_date!==(t.uploaded_date||pageDate)?' · test sanasi: '+prettyDay(t.test_date):'')+'</small>';
      table.append(head);
      const list=document.createElement('div');list.className='nur-score-list';
      for(const x of t.rows){
@@ -287,7 +287,7 @@
          st.attended+'/'+st.attendance_total+' · DQ: '+st.dq+'</p>'+
        '<div class="nur-math-subhead"><b>Natijalar tarixi</b></div>';
      for(const h of details.history||[]){
-       content+='<div class="nur-math-profile-row"><span>'+prettyDay(h.held_on)+' · '+esc(h.title)+
+       content+='<div class="nur-math-profile-row"><span>'+prettyDay(h.published_on||h.held_on)+(h.published_on&&h.published_on!==h.held_on?' (test: '+prettyDay(h.held_on)+')':'')+' · '+esc(h.title)+
          '</span><span>'+(h.status==='dq'?'DQ':h.correct_answers+'/'+h.question_count)+'</span></div>';
      }
      if(!details.history?.length)content+='<div class="nur-math-empty">Natijalar yo‘q.</div>';
@@ -422,8 +422,8 @@
                correct:x.status==='dq'?null:Number(x.correct),
                grade:x.grade===null?null:Number(x.grade)}))}});
          draft=[];importFiles=[];draftWarnings=[];minimumPhotoRows=0;pendingImages=0;
-         notice(post.saved+' ta natija saqlandi. Reyting barcha ulangan ilovalarda yangilanadi.');
-         datePinned=false;monthPinned=false;pageDate=value.date;month=pageDate.slice(0,7);
+         notice(post.saved+' ta natija '+prettyDay(post.uploaded_date||today())+' sanasiga saqlandi. Barcha ulangan ilovalarda yangilanadi.');
+         datePinned=false;monthPinned=false;pageDate=post.uploaded_date||today();month=pageDate.slice(0,7);
          await reload(true);await renderAdmin(root,ctxAdmin,'math');
        }
      }catch(e){notice(e.message)}
@@ -635,10 +635,10 @@
    if(tab==='math'){
      const panel=document.createElement('section');panel.className='nur-math-panel';
      panel.innerHTML='<h3>Test natijalarini yuklash</h3>'+
-       '<p>Excel/CSV fayllari va Android APK ichida jadval rasmlari o\u2018qiladi. Rasmda aniqlangan ism, 0 ball va DQ natijalarini admin tekshiradi; avtomatik e\u2019lon qilinmaydi.</p>'+
+       '<p>Natija e’lon qilingan kuni (Toshkent server vaqti) bilan saqlanadi. Test o‘tkazilgan sana alohida qayd qilinadi. Jadvalda topilgan ism, ball va DQni tasdiqlang.</p>'+
        '<form class="nur-math-form" data-math-form="commit">'+
        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-       '<label>Test sanasi<input type="date" name="date" required value="'+esc(pageDate)+'"></label>'+
+       '<label>Test o‘tkazilgan sana<input type="date" name="date" required value="'+esc(today())+'"></label>'+
        '<label>Savollar soni<input type="number" name="question_count" required min="1" max="200" value="32"></label></div>'+
        '<label>Test nomi<input name="title" required maxlength="120" value="Matematika testi"></label>'+
        '<label class="nur-math-upload" for="nur-math-files"><b>Fayllarni tanlash yoki shu yerga tashlash</b>'+
@@ -652,6 +652,26 @@
        '</form>';
      root.append(panel);
      renderDraft(root);
+   }else if(tab==='math-students'){
+     root.innerHTML='<section class="nur-math-panel"><h3>O‘quvchilar ro‘yxati</h3>'+
+       '<p>Faqat administrator uchun. Saqlangan o‘quvchilarni ko‘rish, ismni tahrirlash va yangi o‘quvchi qo‘shish.</p>'+
+       '<form class="nur-math-form" data-math-form="new-student">'+
+       '<label>Ism-familiya<input type="text" name="name" maxlength="120" required placeholder="Ism Familiya"></label>'+
+       '<label>Sinf (ixtiyoriy)<input type="number" name="grade" min="2" max="7" placeholder="2–7"></label>'+
+       '<button type="submit" class="nur-btn">O‘quvchi qo‘shish</button></form>'+
+       '<div class="nur-math-subhead"><b>Saqlangan o‘quvchilar</b><small>'+
+       (data?.students?.length||0)+' nafar</small></div><div id="nur-admin-students-list" class="nur-monthly-list"></div></section>';
+     const list=root.querySelector('#nur-admin-students-list');
+     for(const x of data?.students||[]){
+       const line=document.createElement('div');line.className='nur-math-panel';
+       line.innerHTML='<div style="display:flex;gap:8px;align-items:center;justify-content:space-between">'+
+         '<div><b>'+esc(x.full_name)+'</b><small style="display:block;color:var(--muted)">'+
+         (x.grade?x.grade+'-sinf':'2–7-sinflar')+'</small></div>'+
+         '<button type="button" class="nur-btn alt" data-math-action="edit-student" data-student="'+
+         x.id+'">Tahrirlash</button></div>';
+       list.append(line);
+     }
+     if(!data?.students?.length)list.textContent='Serverdan o‘quvchilar ro‘yxati olinmadi.';
    }else if(tab==='math-payments'){
      root.innerHTML='<section class="nur-math-panel"><h3>Oylik to‘lovlarni tasdiqlash</h3>'+
        '<p>Admin pulni mustaqil tekshirib «To‘lov qilindi» belgilaydi. Belgilanmaganlarning holati «Kutilmoqda» bo‘ladi.</p>'+
