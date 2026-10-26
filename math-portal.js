@@ -142,7 +142,9 @@
         retry.textContent='↻';retry.title='Qayta urinish';
         retry.setAttribute('aria-label','Qayta urinish');
         retry.addEventListener('click',()=>reload(false));
-        region.append(retry);
+        const msg=document.createElement('div');msg.className='nur-math-error-message';
+        msg.textContent='Serverdagi natijalarni yuklab bo‘lmadi: '+err.message;
+        region.append(msg,retry);
       }
    }finally{loading=false}
  }
@@ -174,7 +176,7 @@
    if(total)total.textContent=String(data.total_students||0);
    const caption=$('nur-math-home-caption');
    if(caption)caption.textContent=(data.total_students||0)+' ta o‘quvchi · yagona matematika ro‘yxati';
-   renderResults();renderRating();renderMonthly();
+   renderResults();renderRating();renderMonthly();renderRoster();
  }
  function renderResults(){
    const root=$('nur-math-results');if(!root||!data)return;
@@ -226,6 +228,29 @@
      }
      table.append(list);
    }
+ }
+ function renderRoster(){
+   const root=$('nur-math-results');if(!root||!data)return;
+   root.querySelector('#nur-math-roster')?.remove();
+   const people=data.students||[];
+   const pane=document.createElement('details');
+   pane.id='nur-math-roster';pane.className='nur-math-roster';pane.open=true;
+   const summary=document.createElement('summary');
+   summary.textContent='O‘quvchilar ro‘yxati — '+people.length+' nafar';
+   pane.append(summary);
+   if(!people.length){
+     const missing=document.createElement('p');
+     missing.className='nur-math-empty';
+     missing.textContent='Admin o‘quvchilarni qo‘shgach shu yerda ko‘rinadi.';
+     pane.append(missing);
+   }else for(const st of people){
+     const b=document.createElement('button');b.type='button';b.className='nur-math-roster-row';
+     b.innerHTML='<span>'+esc(st.full_name)+'</span><small>'+
+       (st.grade?st.grade+'-sinf · ':'')+fixed(st.monthly_points)+' ball</small>';
+     b.addEventListener('click',()=>openProfile(st));
+     pane.append(b);
+   }
+   root.append(pane);
  }
  function renderRating(){
    const root=$('nur-math-rating');if(!root||!data)return;
