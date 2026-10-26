@@ -129,7 +129,7 @@
         cache:'no-store',signal:controller.signal
       });
       const data=await response.json().catch(()=>({}));
-      if(!response.ok)throw new Error(data.error||'Server javob bermadi');
+      if(!response.ok)throw new Error(data.error||'Hozircha ma’lumot mavjud emas');
       const feed=[
         ...(appUpdate?[appUpdate]:[]),
         ...(data.notices||[]).map(n=>({key:'n:'+n.id,type:'notice',
@@ -143,7 +143,7 @@
       if(active){markSeen()}
       
     }catch(err){
-      previousError='Yangilanishni olishda xatolik. Internet va serverni tekshiring.';
+      previousError='Yangilanish ma’lumoti hozircha mavjud emas.';
       if(active)updateList();
       
     }finally{clearTimeout(timer);waiting=false}
