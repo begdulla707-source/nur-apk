@@ -359,7 +359,7 @@
          if(grade===null)return;
          await api('/admin/math/students/'+id,{admin:true,method:'PATCH',
            body:{name:name.trim(),grade:grade===''?null:Number(grade)}});
-         notice('O‘quvchi yangilandi');await reload(true);await renderAdmin(root,ctxAdmin,'math-students');
+         notice('O‘quvchi yangilandi');await reload(true);await renderAdmin(root,ctxAdmin,'math');
        }
      }catch(e){notice(e.message);button.disabled=false}
    });
@@ -398,7 +398,7 @@
          const payload=Object.fromEntries(new FormData(form));
          await api('/admin/math/students',{admin:true,method:'POST',body:{
            name:payload.name,grade:payload.grade===''?null:Number(payload.grade)}});
-         form.reset();notice('O‘quvchi qo‘shildi');await reload(true);await renderAdmin(root,ctxAdmin,'math-students');
+         form.reset();notice('O‘quvchi qo‘shildi');await reload(true);await renderAdmin(root,ctxAdmin,'math');
        }
        if(type==='commit'){
          const value=Object.fromEntries(new FormData(form));
@@ -627,15 +627,40 @@
    table.append(fragment);
    updateWarningCount(root);
  }
- async function renderAdmin(root,ctx,tab='math'){
+ function renderStudentEditor(root){
+    const details=document.createElement('details');
+    details.className='nur-math-panel nur-math-student-editor';
+    details.innerHTML='<summary>Saqlangan ismlarni tahrirlash</summary>'+
+      '<p>Bu boshqaruv faqat admin uchun. Test natijalari va o‘quvchilar ma’lumotlari o‘chirilmaydi.</p>'+
+      '<form class="nur-math-form" data-math-form="new-student">'+
+      '<label>Ism-familiya<input type="text" name="name" maxlength="120" required placeholder="Ism Familiya"></label>'+
+      '<label>Sinf (ixtiyoriy)<input type="number" name="grade" min="2" max="7" placeholder="2–7"></label>'+
+      '<button type="submit" class="nur-btn alt">Yangi ism qo‘shish</button></form>'+
+      '<div class="nur-math-subhead"><b>Saqlangan ismlar</b><small>'+
+      (data?.students?.length||0)+' nafar</small></div>'+
+      '<div class="nur-monthly-list"></div>';
+    const list=details.querySelector('.nur-monthly-list');
+    for(const x of data?.students||[]){
+      const row=document.createElement('div');row.className='nur-math-student-edit-row';
+      row.innerHTML='<div><b>'+esc(x.full_name)+'</b><small>'+
+        (x.grade?x.grade+'-sinf':'2–7-sinflar')+'</small></div>'+
+        '<button type="button" class="nur-btn alt" data-math-action="edit-student" data-student="'+
+        x.id+'">Tahrirlash</button>';
+      list.append(row);
+    }
+    if(!data?.students?.length)list.textContent='Hozircha saqlangan ism yo‘q.';
+    root.append(details);
+  }
+  async function renderAdmin(root,ctx,tab='math'){
    if(!root)return;
+   if(tab==='math-students')tab='math';
    bindAdmin(root,ctx);adminMode=tab;
    if(!data)await reload(true);
    root.replaceChildren();
    if(tab==='math'){
      const panel=document.createElement('section');panel.className='nur-math-panel';
      panel.innerHTML='<h3>Test natijalarini yuklash</h3>'+
-       '<p>Natija e’lon qilingan kuni (Toshkent server vaqti) bilan saqlanadi. Test o‘tkazilgan sana alohida qayd qilinadi. Jadvalda topilgan ism, ball va DQni tasdiqlang.</p>'+
+       '<p><b>Yuklangan sana avtomatik:</b> server natijani saqlagan kun (Toshkent vaqti). Test o‘tkazilgan sana alohida qoladi. Jadvalda topilgan ism, ball va DQni tasdiqlang.</p>'+
        '<form class="nur-math-form" data-math-form="commit">'+
        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
        '<label>Test o‘tkazilgan sana<input type="date" name="date" required value="'+esc(today())+'"></label>'+
@@ -652,26 +677,7 @@
        '</form>';
      root.append(panel);
      renderDraft(root);
-   }else if(tab==='math-students'){
-     root.innerHTML='<section class="nur-math-panel"><h3>O‘quvchilar ro‘yxati</h3>'+
-       '<p>Faqat administrator uchun. Saqlangan o‘quvchilarni ko‘rish, ismni tahrirlash va yangi o‘quvchi qo‘shish.</p>'+
-       '<form class="nur-math-form" data-math-form="new-student">'+
-       '<label>Ism-familiya<input type="text" name="name" maxlength="120" required placeholder="Ism Familiya"></label>'+
-       '<label>Sinf (ixtiyoriy)<input type="number" name="grade" min="2" max="7" placeholder="2–7"></label>'+
-       '<button type="submit" class="nur-btn">O‘quvchi qo‘shish</button></form>'+
-       '<div class="nur-math-subhead"><b>Saqlangan o‘quvchilar</b><small>'+
-       (data?.students?.length||0)+' nafar</small></div><div id="nur-admin-students-list" class="nur-monthly-list"></div></section>';
-     const list=root.querySelector('#nur-admin-students-list');
-     for(const x of data?.students||[]){
-       const line=document.createElement('div');line.className='nur-math-panel';
-       line.innerHTML='<div style="display:flex;gap:8px;align-items:center;justify-content:space-between">'+
-         '<div><b>'+esc(x.full_name)+'</b><small style="display:block;color:var(--muted)">'+
-         (x.grade?x.grade+'-sinf':'2–7-sinflar')+'</small></div>'+
-         '<button type="button" class="nur-btn alt" data-math-action="edit-student" data-student="'+
-         x.id+'">Tahrirlash</button></div>';
-       list.append(line);
-     }
-     if(!data?.students?.length)list.textContent='Serverdan o‘quvchilar ro‘yxati olinmadi.';
+     renderStudentEditor(root);
    }else if(tab==='math-payments'){
      root.innerHTML='<section class="nur-math-panel"><h3>Oylik to‘lovlarni tasdiqlash</h3>'+
        '<p>Admin pulni mustaqil tekshirib «To‘lov qilindi» belgilaydi. Belgilanmaganlarning holati «Kutilmoqda» bo‘ladi.</p>'+
