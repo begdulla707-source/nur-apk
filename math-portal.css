@@ -144,3 +144,16 @@ body[data-nur-accent="graphite"] .hero{background:linear-gradient(135deg,#252f34
 .nur-math-roster-row{display:flex;width:100%;padding:12px 4px;gap:12px;align-items:center;justify-content:space-between;text-align:left;border:0;border-top:1px solid var(--stroke);background:transparent;color:var(--text);font-size:12px}
 .nur-math-roster-row small{color:var(--muted);font-size:11px;white-space:nowrap}
 .nur-math-error-message{padding:12px 8px;color:var(--text);font-size:12px;line-height:1.5}
+
+/* The standalone student roster tab is removed; admin name corrections live
+   behind this compact disclosure within the import screen. */
+.nur-math-student-editor{margin-top:14px}
+.nur-math-student-editor>summary{cursor:pointer;list-style:none;font-weight:750;font-size:13px;color:var(--text);padding:3px 0;user-select:none}
+.nur-math-student-editor>summary::-webkit-details-marker{display:none}
+.nur-math-student-editor>summary:after{content:"⌄";float:right;color:var(--muted)}
+.nur-math-student-editor[open]>summary:after{content:"⌃"}
+.nur-math-student-editor>p{font-size:12px;color:var(--muted);line-height:1.6}
+.nur-math-student-edit-row{padding:10px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--stroke)}
+.nur-math-student-edit-row b{font-size:12px;color:var(--text);overflow-wrap:anywhere}
+.nur-math-student-edit-row small{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.nur-math-student-edit-row button{flex-shrink:0}
