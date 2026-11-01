@@ -5,7 +5,7 @@
  */
 (() => {
   'use strict';
-  const API='https://nur-apk-api.onrender.com/api';
+  const API='https://nur-apk-api.mcweb.uz/api';
   const TICKETS='nur-reply-tickets',SEEN='nur-notifications-seen';
   const $=id=>document.getElementById(id);
   const bell='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9M10 21h4"/></svg>';
