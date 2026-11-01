@@ -1,7 +1,7 @@
 /* Independent Nur APK contact screen and administrator private inbox. */
 (() => {
  'use strict';
- const API='https://nur-apk-api.onrender.com/api';
+ const API='https://nur-apk-api.mcweb.uz/api';
  const $=id=>document.getElementById(id);
  const clean=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  function messageDate(raw){try{return new Intl.DateTimeFormat('ru-RU',{timeZone:'Asia/Tashkent',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(raw))}catch{return String(raw)}}
