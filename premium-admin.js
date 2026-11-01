@@ -309,7 +309,7 @@
     if(!auth)throw new Error('Admin sessiyasi tugagan');
     const search=new URLSearchParams({kind});
     if(v.exportGroup)search.set('group_id',v.exportGroup);
-    const resp=await fetch('https://nur-apk-api.onrender.com/api/admin/v2/export?'+search,{headers:{Authorization:'Bearer '+auth},cache:'no-store'});
+    const resp=await fetch('https://nur-apk-api.mcweb.uz/api/admin/v2/export?'+search,{headers:{Authorization:'Bearer '+auth},cache:'no-store'});
     if(!resp.ok)throw new Error('Hisobot yuklanmadi ('+resp.status+')');
     const blob=await resp.blob();
     const filename='nur-apk-'+kind+'-'+ymd()+'.csv';
