@@ -20,7 +20,7 @@
    return val('year')+'-'+val('month')+'-'+val('day');
  }
  pageDate=today();month=pageDate.slice(0,7);
- function readAdminToken(){try{return sessionStorage.getItem('nur-apk-admin-session')||''}catch{return ''}}
+ function readAdminToken(){try{return localStorage.getItem('nur-apk-admin-session')||''}catch{return ''}}
  async function api(path,options={}){
    const headers={'Accept':'application/json'};
    if(options.admin){
