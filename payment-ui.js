@@ -4,7 +4,7 @@
  */
 (() => {
   'use strict';
-  const API='https://nur-apk-api.onrender.com/api';
+  const API='https://nur-apk-api.mcweb.uz/api';
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
   const money=n=>Number(n||0).toLocaleString('uz-UZ')+' so‘m';
