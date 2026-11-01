@@ -4,7 +4,7 @@
  */
 (() => {
  'use strict';
- const API='https://nur-apk-api.onrender.com/api';
+ const API='https://nur-apk-api.mcweb.uz/api';
  const $=id=>document.getElementById(id);
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const tick='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" stroke-width="2.4"/></svg>';
