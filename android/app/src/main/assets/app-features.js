@@ -1,7 +1,7 @@
 /* Nur Oqiw Orayi: live data, role-protected admin workflows. Theme CSS is not modified. */
 (() => {
   'use strict';
-  const API = 'https://nur-apk-api.onrender.com/api';
+  const API = 'https://nur-apk-api.mcweb.uz/api';
   const $ = id => document.getElementById(id);
   const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const state = { subjects:[], groups:[], notices:[], selectedGroup:null, subject:null,
