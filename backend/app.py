@@ -53,7 +53,7 @@ def request_json():
     return obj
 
 def session_token():
-    data = {"role": "admin", "exp": int(time.time()) + 12 * 3600, "nonce": secrets.token_hex(8)}
+    data = {"role": "admin", "exp": int(time.time()) + 180 * 24 * 3600, "nonce": secrets.token_hex(8)}
     raw = base64.urlsafe_b64encode(json.dumps(data, separators=(",", ":")).encode()).decode().rstrip("=")
     sig = hmac.new(SESSION_SECRET.encode(), raw.encode(), hashlib.sha256).hexdigest()
     return raw + "." + sig
