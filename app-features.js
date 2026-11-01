@@ -6,10 +6,16 @@
   const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const state = { subjects:[], groups:[], notices:[], selectedGroup:null, subject:null,
     rankingGroup:'', resultGroup:'', adminTab:'math', sessions:[], sessionId:null, online:false };
+  // Browser/WebView storage belongs to this app installation, not other users' devices.
+  // Only the signed, expiring server session is kept; never save the admin password.
   const session = {
-    get:()=>{try{return sessionStorage.getItem('nur-apk-admin-session')||''}catch{return ''}},
-    set:v=>{try{sessionStorage.setItem('nur-apk-admin-session',v)}catch{}},
-    clear:()=>{try{sessionStorage.removeItem('nur-apk-admin-session')}catch{}}
+    get:()=>{try{
+      const prior=localStorage.getItem('nur-apk-admin-session')||sessionStorage.getItem('nur-apk-admin-session')||'';
+      if(prior&&!localStorage.getItem('nur-apk-admin-session'))localStorage.setItem('nur-apk-admin-session',prior);
+      return prior;
+    }catch{return ''}},
+    set:v=>{try{localStorage.setItem('nur-apk-admin-session',v);sessionStorage.removeItem('nur-apk-admin-session')}catch{}},
+    clear:()=>{try{localStorage.removeItem('nur-apk-admin-session');sessionStorage.removeItem('nur-apk-admin-session')}catch{}}
   };
   let auth = session.get();
   let refreshing = false;
@@ -215,7 +221,7 @@
     adminVerified(false);
     if(!auth){
       syncAdminEntry();
-      adminRoot.innerHTML='<div class="appcard"><h3>Admin token bilan kirish</h3><form class="appform" data-form="login"><label>Maxfiy admin token<input name="token" type="password" autocomplete="off" required placeholder="Admin tokenni kiriting"></label><button class="appbtn" type="submit">Xavfsiz kirish</button><div class="page-message">Token ilova kodida saqlanmaydi; kirgandan keyin vaqtinchalik sessiya ishlatiladi.</div></form></div>';
+      adminRoot.innerHTML='<div class="appcard"><h3>Admin token bilan kirish</h3><form class="appform" data-form="login"><label>Maxfiy admin token<input name="token" type="password" autocomplete="off" required placeholder="Admin tokenni kiriting"></label><button class="appbtn" type="submit">Xavfsiz kirish</button><div class="page-message">Maxfiy token saqlanmaydi. Kirish shu qurilmada 180 kungacha saqlanadi; Chiqish orqali bekor qilinadi.</div></form></div>';
       return;
     }
     adminRoot.replaceChildren();
