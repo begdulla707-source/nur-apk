@@ -6,7 +6,12 @@ import io
 import os
 import unittest
 
+# Integration tests must never write to the production database.
 os.environ.setdefault("DATABASE_URL","postgresql://test:test@localhost:5432/nurapk_test")
+from urllib.parse import urlsplit
+assert urlsplit(os.environ["DATABASE_URL"]).path.lstrip("/").endswith("_test"), (
+    "Refusing to run integration tests against a non-test database"
+)
 os.environ["ADMIN_TOKEN_SHA256"]=hashlib.sha256(b"ci-test-admin-secret").hexdigest()
 os.environ["SESSION_SECRET"]="ci-only-session-hmac-key-with-adequate-length"
 os.environ["ALLOWED_ORIGINS"]="https://appassets.androidplatform.net,https://oqiw.vercel.app"
@@ -46,10 +51,10 @@ class MathPortalTests(unittest.TestCase):
 
         ident=by_name["Samira Test"]["id"]
         self.assertEqual(self.client.post("/api/admin/math/payment",json={
-            "student_id":ident,"month":"2026-10","paid":True,"amount_uzs":250000
+            "student_id":ident,"month":published[:7],"paid":True,"amount_uzs":250000
         }).status_code,401)
         p=self.client.post("/api/admin/math/payment",headers=self.auth,json={
-            "student_id":ident,"month":"2026-10","paid":True,"amount_uzs":250000
+            "student_id":ident,"month":published[:7],"paid":True,"amount_uzs":250000
         })
         self.assertEqual(p.status_code,200,p.json)
         latest=self.client.get("/api/math/overview?month="+published[:7]+"&date="+published).json
@@ -59,7 +64,7 @@ class MathPortalTests(unittest.TestCase):
         self.assertGreater(latest["revision"],overview["revision"])
 
         p=self.client.post("/api/admin/math/payment",headers=self.auth,json={
-            "student_id":ident,"month":"2026-10","paid":False
+            "student_id":ident,"month":published[:7],"paid":False
         })
         self.assertEqual(p.status_code,200,p.json)
         latest=self.client.get("/api/math/overview?month="+published[:7]+"&date="+published).json
