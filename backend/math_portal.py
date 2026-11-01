@@ -363,6 +363,11 @@ def register_math(app, db, admin_only, bad):
             try: amount=int(amount)
             except (ValueError,TypeError):return bad("Summa noto‘g‘ri")
             if not 1000<=amount<=100000000:return bad("Summa 1000–100 mln oralig‘ida")
+        # Price is determined on the day the administrator confirms payment.
+        # An explicit amount always overrides the automatic 20th-day rule.
+        if paid and amount is None:
+            today_local=dt.datetime.now(TZ).date()
+            amount=300000 if today_local.day<=20 else 350000
         note=str(obj.get("note") or "").strip()[:250]
         with db() as conn:
             with conn.transaction():
@@ -380,6 +385,34 @@ def register_math(app, db, admin_only, bad):
                   updated_at=now()""",(student_id,month,paid,amount,note,paid))
                 bump(conn)
         return jsonify({"ok":True,"paid":paid,"month":month.isoformat()})
+
+    @app.get("/api/admin/math/payment-summary")
+    @admin_only
+    def payment_summary():
+        selected=month_value(request.args.get("month") or this_month().strftime("%Y-%m"))
+        with db() as conn:
+            summary=conn.execute("""SELECT
+                count(*) FILTER (WHERE paid) AS paid_count,
+                COALESCE(sum(amount_uzs) FILTER (WHERE paid),0)::bigint AS total_uzs,
+                count(*) FILTER (WHERE NOT paid) AS pending_count
+                FROM math_monthly_payments WHERE month=%s""",(selected,)).fetchone()
+            all_time=conn.execute("""SELECT
+                COALESCE(sum(amount_uzs) FILTER (WHERE paid),0)::bigint AS total_uzs,
+                count(*) FILTER (WHERE paid) AS paid_count
+                FROM math_monthly_payments""").fetchone()
+            pupils=conn.execute("SELECT count(*) AS n FROM math_students WHERE NOT archived").fetchone()["n"]
+            recent=conn.execute("""SELECT p.month,p.amount_uzs,p.paid_at,st.full_name
+                FROM math_monthly_payments p
+                JOIN math_students st ON st.id=p.student_id
+                WHERE p.month=%s AND p.paid ORDER BY p.paid_at DESC LIMIT 8""",
+                (selected,)).fetchall()
+        return jsonify({"ok":True,"month":selected.strftime("%Y-%m"),
+            "paid_count":summary["paid_count"],"pending_count":pupils-summary["paid_count"],
+            "month_total_uzs":summary["total_uzs"],
+            "all_time_total_uzs":all_time["total_uzs"],
+            "all_time_paid_count":all_time["paid_count"],
+            "students_count":pupils,"recent":[dict(r) for r in recent],
+            "standard_before_or_on_20":300000,"standard_after_20":350000})
 
     def clean_header(value):
         v=normalize(value).replace("‘","")
