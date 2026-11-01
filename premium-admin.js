@@ -290,7 +290,7 @@
   function security(root,ctx){
     root.innerHTML=section('Xavfsizlik')+
       '<div class="appcard"><h3>Administrator · Жанзаков Б</h3>'+
-      note('Sessiya 12 soat amal qiladi. Token va baza parollari dastur ichida emas, faqat server muhitida saqlanadi.')+
+      note('Sessiya shu qurilmada 180 kungacha saqlanadi. Token va baza parollari dastur ichida emas, faqat server muhitida saqlanadi.')+
       '<div class="premium-row"><div><strong>Admin sessiyasi</strong><small>Serverdagi tekshiruv bilan</small></div><b>Faol</b></div>'+
       '<div class="premium-row"><div><strong>Ma’lumot vaqti</strong><small>Toshkent — Asia/Tashkent</small></div><b>UTC+5</b></div>'+
       '<div class="premium-quick">'+b('Seansdan chiqish','premium-logout','', 'danger')+
@@ -305,7 +305,7 @@
         '<div><span class="premium-catalog-no">'+pad(i+1)+'</span><span>'+esc(title)+'</span><small class="'+(ready?'ready':'planned')+'">'+(ready?'Kodlandi':'Keyingi')+'</small></div>').join('')+'</div>';
   }
   async function downloadCsv(kind,ctx){
-    const auth=sessionStorage.getItem('nur-apk-admin-session');
+    const auth=localStorage.getItem('nur-apk-admin-session');
     if(!auth)throw new Error('Admin sessiyasi tugagan');
     const search=new URLSearchParams({kind});
     if(v.exportGroup)search.set('group_id',v.exportGroup);
@@ -393,7 +393,7 @@
       }else if(action==='premium-export'){
         await downloadCsv(btn.dataset.id,ctx);return;
       }else if(action==='premium-logout'){
-        sessionStorage.removeItem('nur-apk-admin-session');window.location.assign('/');return;
+        localStorage.removeItem('nur-apk-admin-session');window.location.assign('/');return;
       }else return;
       ctx.toast('Amal bajarildi');await ctx.refresh(true);await ctx.renderAdmin();
     }catch(e){ctx.toast(e.message)}
