@@ -679,8 +679,16 @@
      renderDraft(root);
      renderStudentEditor(root);
    }else if(tab==='math-payments'){
-     root.innerHTML='<section class="nur-math-panel"><h3>Oylik to‘lovlarni tasdiqlash</h3>'+
-       '<p>Admin pulni mustaqil tekshirib «To‘lov qilindi» belgilaydi. Belgilanmaganlarning holati «Kutilmoqda» bo‘ladi.</p>'+
+     const finance=await api('/admin/math/payment-summary?month='+encodeURIComponent(month),{admin:true});
+     const amountToday=Number(today().slice(8))<=20?300000:350000;
+     root.innerHTML='<section class="nur-math-panel nur-finance-panel"><h3>To‘lovlar dashboardi</h3>'+
+       '<p>20-sana (shu kun ham)gacha 300 000 so‘m, 21-sanadan 350 000 so‘m. Maxsus summa kiritilsa, o‘sha summa hisoblanadi. Tasdiqlanmagan to‘lov tushumga qo‘shilmaydi.</p>'+
+       '<div class="nur-finance-grid">'+
+       '<div class="nur-finance-stat"><small>Tanlangan oy tushumi</small><strong>'+fixed(finance.month_total_uzs)+' so‘m</strong></div>'+
+       '<div class="nur-finance-stat"><small>Jami tasdiqlangan tushum</small><strong>'+fixed(finance.all_time_total_uzs)+' so‘m</strong></div>'+
+       '<div class="nur-finance-stat"><small>To‘langan / jami</small><strong>'+finance.paid_count+' / '+finance.students_count+'</strong></div>'+
+       '<div class="nur-finance-stat"><small>Kutilmoqda</small><strong>'+finance.pending_count+'</strong></div></div>'+
+       '<p class="nur-finance-hint">Bugungi avtomatik summa: <b>'+fixed(amountToday)+' so‘m</b>. Faqat admin «To‘lov qilindi»ni tasdiqlaganda hisoblanadi.</p>'+
        '<label>Oy <input id="nur-admin-paymonth" type="month" value="'+esc(month)+'"></label>'+
        '<div id="nur-admin-pay-list" class="nur-monthly-list" style="margin-top:14px"></div></section>';
      root.querySelector('#nur-admin-paymonth').onchange=async e=>{
@@ -693,7 +701,7 @@
           '<div class="name"><b style="font-size:12px">'+esc(x.full_name)+'</b><small style="display:block;color:var(--muted)">'+
           (x.grade?x.grade+'-sinf':'2–7-sinflar')+'</small></div>'+pill(x.paid)+'</div>'+
           '<div class="nur-math-payment-controls">'+
-          '<input name="amount" type="number" min="1000" step="1000" placeholder="Summa, so‘m" value="'+(x.amount_uzs??'')+'">'+
+          '<input name="amount" type="number" min="1000" step="1000" placeholder="Avtomatik '+fixed(amountToday)+' so‘m" value="'+(x.amount_uzs??'')+'" aria-label="Maxsus summa, so‘m">'+
           '<button type="button" class="nur-math-pay-action" data-math-action="mark-payment" data-next-paid="'+(x.paid?'no':'yes')+'">'+
           (x.paid?'Kutilmoqda qilish':'To‘lov qilindi')+'</button></div>';
        list.append(box);
