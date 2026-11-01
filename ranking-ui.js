@@ -4,7 +4,7 @@
   'use strict';
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
-  const base='https://nur-apk-api.onrender.com/api';
+  const base='https://nur-apk-api.mcweb.uz/api';
   let requestId=0,selectedPublicGroup='';
   const dateText=d=>{if(!d)return '—';const value=new Date(d);if(!Number.isFinite(value.getTime()))return String(d);
     return new Intl.DateTimeFormat('uz-UZ',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Asia/Tashkent'}).format(value)};
