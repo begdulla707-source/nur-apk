@@ -9,18 +9,32 @@ import logging
 import os
 import secrets
 import time
-from flask import Flask, jsonify, request
+from pathlib import Path
+from flask import Flask, jsonify, request, send_from_directory, abort
 from psycopg import connect
 from psycopg.rows import dict_row
 
 app = Flask(__name__)
+SITE_MODE = os.environ.get("MCWEB_SITE_MODE", "") == "1"
+SITE_ROOT = Path(__file__).resolve().parent.parent
+SITE_ASSETS = frozenset({
+    "index.html", "features.css", "premium-admin.css", "ranking-ui.css",
+    "liquid-glass.css", "polish-v08.css", "payment-ui.css",
+    "portfolio-ui.css", "notifications-ui.css", "math-portal.css",
+    "premium-admin.js", "app-features.js", "ranking-ui.js",
+    "liquid-glass.js", "i18n.js", "contact-ui.js", "payment-ui.js",
+    "portfolio-ui.js", "notifications-ui.js", "navigation-ui.js",
+    "math-ocr.js", "nur-icon-previews.js", "math-portal.js",
+    "paynet_qr.png",
+})
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
 logging.basicConfig(level=logging.INFO)
 ALLOWED_ORIGINS = set(os.environ.get("ALLOWED_ORIGINS", "https://nur-apk.vercel.app").split(","))
 ALLOWED_ORIGINS.update({
     "https://appassets.androidplatform.net",
     "https://oqiw.vercel.app",
-    "https://nur-apk.vercel.app"
+    "https://nur-apk.vercel.app",
+    "https://nur-apk.mcweb.uz"
 })
 TOKEN_HASH = os.environ.get("ADMIN_TOKEN_SHA256", "")
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
@@ -94,6 +108,8 @@ def cors_headers(response):
 
 @app.before_request
 def preflight():
+    if SITE_MODE and request.path.startswith("/api/"):
+        return jsonify({"error": "API alohida nur-apk-api.mcweb.uz serverida"}), 404
     if request.method == "OPTIONS":
         return ("", 204)
 
@@ -112,7 +128,28 @@ def handle_error(exc):
 
 @app.get("/")
 def root_ok():
+    if SITE_MODE:
+        return send_from_directory(SITE_ROOT, "index.html", mimetype="text/html")
     return jsonify({"service":"Nur Oqiw Orayi API","ok":True,"health":"/api/health"})
+
+if SITE_MODE:
+    @app.get("/download")
+    @app.get("/download/")
+    def download_landing():
+        return send_from_directory(SITE_ROOT / "download-site", "index.html", mimetype="text/html")
+
+    @app.get("/download/<path:filename>")
+    def download_asset(filename):
+        if filename != "nur-logo.png":
+            abort(404)
+        return send_from_directory(SITE_ROOT / "download-site", filename)
+
+    @app.get("/<path:filename>")
+    def public_site_asset(filename):
+        if filename not in SITE_ASSETS:
+            abort(404)
+        return send_from_directory(SITE_ROOT, filename)
+
 
 @app.get("/api/health")
 def health():
