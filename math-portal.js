@@ -610,20 +610,26 @@
    const table=root.querySelector('#nur-import-rows');if(!table)return;
    const warning=root.querySelector('#nur-import-warnings');
    if(warning){
-      const pending=draft.filter(r=>r.status==='unresolved'||
-        (r.status==='present'&&r.correct===null)||!r.name.trim()).length;
-      if(!pending&&!draftWarnings.length)warning.textContent='';
+      const zeros=draft.filter(r=>r.status==='unresolved'&&r.correct===0&&r.name.trim()).length;
+      const unknown=draft.filter(r=>!r.name.trim()||
+        (r.status==='unresolved'&&r.correct!==0)||
+        (r.status==='present'&&r.correct===null)).length;
+      if(!zeros&&!unknown&&!draftWarnings.length)warning.textContent='';
       else warning.innerHTML='<div class="nur-import-warning"><b>'+
-        esc(pending?pending+' ta qatorni tekshiring. ':'')+
+        esc((zeros?zeros+' ta 0 ball (sariq) · ':'')+
+        (unknown?unknown+' ta aniqlanmagan natija. ':''))+
         '</b>'+esc(draftWarnings.slice(-1).join(' '))+'</div>';
     }
     table.replaceChildren();
+   const priority=x=>x.status==='unresolved'&&x.correct===0?0:
+     (!x.name.trim()||x.status==='unresolved'?1:2);
    const sorted=[...draft.map((x,i)=>({x,i}))].sort((a,b)=>
-     Number(a.x.status!=='unresolved'&&a.x.name.trim()!=='')-Number(b.x.status!=='unresolved'&&b.x.name.trim()!==''));
+     priority(a.x)-priority(b.x)||a.i-b.i);
    const fragment=document.createDocumentFragment();
    for(const {x,i} of sorted){
      const cell=document.createElement('div');
-     cell.className='nur-import-row'+(x.status==='unresolved'||!x.name.trim()?' unresolved':'');
+     cell.className='nur-import-row'+(x.status==='unresolved'&&x.correct===0?' zero-review':
+       (x.status==='unresolved'||!x.name.trim()?' unresolved':''));
      cell.innerHTML='<div class="row-line"><div><label>Ism va familiya</label>'+
         '<input data-math-index="'+i+'" data-math-field="name" value="'+esc(x.name)+'" placeholder="Ism Familiya"></div>'+
         '<div><label>Sinf</label><input type="number" min="2" max="7" data-math-index="'+i+'" data-math-field="grade"'+
@@ -634,9 +640,11 @@
         '</select></div><div><label>To‘g‘ri javoblar</label><input type="number" min="0" max="200" '+
         'data-math-index="'+i+'" data-math-field="correct" value="'+(x.correct??'')+'"'+
         (x.status==='dq'?' disabled':'')+' placeholder="0"></div></div>'+
-        (x.status==='unresolved'?'<div style="display:flex;gap:7px;margin-top:9px">'+
-        '<button class="nur-btn alt" type="button" data-math-action="resolve" data-idx="'+i+'" data-status="dq">DQ</button>'+
-        '<button class="nur-btn alt" type="button" data-math-action="resolve" data-idx="'+i+'" data-status="present">0 ball</button></div>':'');
+        (x.status==='unresolved'?'<div class="nur-math-review-actions">'+
+        '<span class="nur-math-review-label">'+
+        (x.correct===0?'0 ball — tekshiring':'Ball o‘qilmadi — tekshiring')+'</span>'+
+        '<button class="nur-btn alt" type="button" data-math-action="resolve" data-idx="'+i+'" data-status="present">Qatnashdi (0 ball)</button>'+
+        '<button class="nur-btn alt" type="button" data-math-action="resolve" data-idx="'+i+'" data-status="dq">DQ — kelmagan</button></div>':'');
      fragment.append(cell);
    }
    table.append(fragment);
