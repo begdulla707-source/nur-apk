@@ -371,7 +371,7 @@
      const prop=input.dataset.mathField;
      if(prop==='correct'){
        draft[i].correct=input.value===''?null:Number(input.value);
-       if(input.value!=='')draft[i].status='present';
+       if(input.value!==''&&Number(input.value)>0)draft[i].status='present';
      }else if(prop==='grade')draft[i].grade=input.value===''?null:Number(input.value);
      else if(prop==='name')draft[i].name=input.value;
      else if(prop==='status'){
@@ -438,10 +438,14 @@
    });
  }
  function updateWarningCount(root){
-   const missing=draft.filter(x=>!x.name.trim()||x.status==='unresolved'||
-     (x.status==='present'&&(x.correct===null||x.correct===''))).length;
+   const zero=draft.filter(x=>x.status==='unresolved'&&x.correct===0&&x.name.trim()).length;
+   const unknown=draft.filter(x=>!x.name.trim()||(x.status==='unresolved'&&x.correct!==0)).length;
+   const autoPresent=draft.filter(x=>x.status==='present'&&Number(x.correct)>0).length;
    const count=root.querySelector('#nur-math-warning-count');
-   if(count)count.textContent=missing?missing+' ta natija tekshirishni kutmoqda':'Barcha qatorlar tekshirildi';
+   if(count)count.textContent=
+      (zero?zero+' ta 0 ball · ':'')+
+      (unknown?unknown+' ta noma’lum natija · ':'')+
+      autoPresent+' ta avtomatik qatnashdi';
  }
  function addImportWarning(message){
    const value=String(message||'').trim().slice(0,180);
@@ -458,7 +462,8 @@
      if(i===undefined){
        index.set(k,draft.length);
        draft.push({name:row.name,grade:row.grade??null,
-         status:row.status||'unresolved',correct:row.correct??null});
+         status:Number(row.correct)>0?'present':(row.status||'unresolved'),
+         correct:row.correct??null,nameReview:Boolean(row.nameReview)});
      }else{
        const old=draft[i];
        if(old.correct!==null && row.correct!==null &&
@@ -491,14 +496,21 @@
  }
  // Compare OCR suggestions to the existing verified roster. Never guess
  // attendance and never silently insert a misspelled duplicate student.
+ // Positive OCR scores are marked present automatically; name mismatches
+ // are highlighted as a note, not forced into per-student DQ reviews.
  function alignPhotoNames(rows){
    const known=Array.isArray(data?.students)?data.students:[];
-   if(!known.length)return rows||[];
+   const input=Array.isArray(rows)?rows:[];
+   if(!known.length)return input.map(row=>({
+     ...row,status:Number(row.correct)>0?'present':(row.status||'unresolved')
+   }));
    let unmatched=0,corrected=0;
-   const mapped=(rows||[]).map(row=>{
+   const mapped=input.map(row=>{
      const original=normalizeStudentName(row.name);
      if(!original||original.split(' ').length<2){
-       unmatched++;return {...row,status:'unresolved'};
+       unmatched++;
+       return {...row,status:Number(row.correct)>0?'present':(row.status||'unresolved'),
+         nameReview:true};
      }
      const ranked=known.map(x=>({x,dist:editDistance(original,normalizeStudentName(x.full_name))}))
        .sort((a,b)=>a.dist-b.dist);
@@ -506,13 +518,16 @@
      const threshold=Math.max(1,Math.min(3,Math.floor(original.length*.13)));
      if(first&&first.dist<=threshold&&(!second||second.dist-first.dist>=2)){
        if(first.dist)corrected++;
-       return {...row,name:first.x.full_name,grade:row.grade??first.x.grade??null};
+       return {...row,name:first.x.full_name,grade:row.grade??first.x.grade??null,
+         status:Number(row.correct)>0?'present':(row.status||'unresolved')};
      }
-     unmatched++;return {...row,status:'unresolved'};
+     unmatched++;
+     return {...row,status:Number(row.correct)>0?'present':(row.status||'unresolved'),
+       nameReview:true};
    });
    if(unmatched||corrected)addImportWarning(
      (corrected?corrected+' ta ism ro‘yxat bilan moslashtirildi. ':'')+
-     (unmatched?unmatched+' ta ismni tekshirish kerak.':''));
+     (unmatched?unmatched+' ta ism ro‘yxatda aniq topilmadi; saqlashdan oldin imlosini ko‘ring.':''));
    return mapped;
  }
  function scheduleDraftRender(){
