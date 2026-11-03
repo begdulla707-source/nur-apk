@@ -105,10 +105,12 @@
           .sort((a,b)=>a.dist-b.dist)[0];
         const correct=nearest?Number(nearest.z.t):null;
         if(correct!==null && correct>200)return;
-        const ambiguous=correct===null||correct===0;
-        results.push({name,grade:null,correct:ambiguous?null:correct,
-          status:ambiguous?'unresolved':'present',_y:y,_col:column});
-        if(ambiguous)warnings.push(name+': 0 ball yoki noma\u2019lum natija. Admin DQ/0/ballni tanlasin.');
+        // Positive correct answers indicate participation; zero requires review, not auto-DQ.
+        const review=correct===null||correct===0;
+        results.push({name,grade:null,correct,
+          status:review?'unresolved':'present',_y:y,_col:column});
+        if(correct===0)warnings.push(name+': 0 ball — qatnashdi yoki DQ ekanini tekshiring.');
+        else if(correct===null)warnings.push(name+': ball o‘qilmadi — natijani aniqlang.');
         if(name.split(/\s+/).length<2)warnings.push(name+': ism yoki familiya to\u2018liq o\u2018qilmagan bo\u2018lishi mumkin.');
       }
       for(const part of names){
@@ -141,7 +143,7 @@
     }
     if(summary.questions)warnings.push('Rasmdagi savollar soni: '+summary.questions+' — tasdiqlang.');
     if(!rows.length)warnings.push('O\u2018quvchi qatorlari aniqlanmadi. Rasmni to\u2018g\u2018rilab yoki Excel orqali kiriting.');
-    else warnings.unshift(rows.length+' ta o\u2018quvchi topildi. BARCHA ismlar va ballarni tasdiqlang.');
+    else warnings.unshift(rows.length+' ta o‘quvchi topildi. Musbat ballar avtomatik qatnashgan; faqat 0 ball va noaniq natijalarni ko‘ring.');
     return {rows,warnings,summary,requires_confirmation:true,engine:'android-mlkit'};
   }
   return {parse};
