@@ -169,3 +169,38 @@ body[data-nur-accent="graphite"] .hero{background:linear-gradient(135deg,#252f34
 .nur-finance-hint{background:rgba(229,241,244,.68);padding:11px 13px;border-radius:13px;color:#345f66!important;font-size:12px;line-height:1.5}
 .nur-finance-panel input[name=amount]{background:rgba(255,255,255,.92)!important;color:#203e4c!important;border-radius:12px}
 @media(max-width:365px){.nur-finance-grid{grid-template-columns:1fr}}
+
+/* Imported mathematics scores: 0 requires one clear review, positive scores do not. */
+.nur-import-row.zero-review{
+ border:1px solid #d7a43f!important;
+ border-left:5px solid #e2a22d!important;
+ background:linear-gradient(135deg,rgba(255,226,149,.20),rgba(255,244,199,.09))!important;
+ box-shadow:inset 0 1px rgba(255,230,154,.14),0 3px 12px rgba(131,85,13,.10)!important;
+}
+.nur-import-row.zero-review .row-line label{color:var(--text)!important}
+.nur-math-review-actions{
+ display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:10px;
+ padding-top:9px;border-top:1px solid rgba(195,146,53,.25)
+}
+.nur-math-review-label{width:100%;font-size:11px;font-weight:800;color:#b68124}
+.nur-math-review-actions .nur-btn{flex:1 1 128px;min-height:40px;font-size:11px}
+.nur-finance-panel .finance-total{background:linear-gradient(140deg,rgba(234,245,255,.95),rgba(249,252,255,.94));border-color:#a9c7e5}
+.nur-finance-panel .finance-paid{background:linear-gradient(140deg,rgba(222,249,230,.97),rgba(249,255,251,.94));border-color:#add8b9}
+.nur-finance-panel .finance-pending{background:linear-gradient(140deg,rgba(255,241,213,.98),rgba(255,253,246,.95));border-color:#e4c890}
+.nur-finance-panel .finance-total strong{color:#164b80!important}
+.nur-finance-panel .finance-paid strong{color:#236449!important}
+.nur-finance-panel .finance-pending strong{color:#8d5c1c!important}
+.nur-finance-group-title{margin:21px 0 10px;font-size:13px;font-weight:850;line-height:1.5;color:var(--text)}
+.nur-finance-group-title.is-pending{border-left:4px solid #d99c32;padding-left:10px}
+.nur-finance-group-title.is-paid{border-left:4px solid #3da77b;padding-left:10px}
+.nur-finance-student{padding:13px!important;margin-bottom:8px!important}
+.nur-finance-student.is-pending{border-left:3px solid #daa344!important}
+.nur-finance-student.is-paid{border-left:3px solid #55b68c!important}
+.nur-finance-student-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.nur-finance-student-head .name{min-width:0;overflow-wrap:anywhere}
+.nur-finance-student-head .name b{font-size:13px;font-weight:800;color:var(--text)}
+.nur-finance-student-head .name small{display:block;font-size:11px;color:var(--muted)}
+.nur-finance-amount-line{display:flex;justify-content:space-between;align-items:center;gap:10px;
+ margin-top:11px;font-size:12px;color:var(--muted)}
+.nur-finance-amount-line strong{font-size:15px;font-weight:850;color:var(--text);white-space:nowrap}
+@media(max-width:390px){.nur-finance-amount-line strong{font-size:13px}.nur-math-review-actions .nur-btn{flex:1 1 100%}}
