@@ -390,29 +390,66 @@ def register_math(app, db, admin_only, bad):
     @admin_only
     def payment_summary():
         selected=month_value(request.args.get("month") or this_month().strftime("%Y-%m"))
+        today_local=dt.datetime.now(TZ).date()
+        # For past months the payment deadline is over; future months still
+        # start at the standard before-the-20th rate.
+        standard_uzs=(350000 if selected<this_month() or
+                      (selected==this_month() and today_local.day>20) else 300000)
         with db() as conn:
-            summary=conn.execute("""SELECT
-                count(*) FILTER (WHERE paid) AS paid_count,
-                COALESCE(sum(amount_uzs) FILTER (WHERE paid),0)::bigint AS total_uzs,
-                count(*) FILTER (WHERE NOT paid) AS pending_count
-                FROM math_monthly_payments WHERE month=%s""",(selected,)).fetchone()
+            rows=conn.execute("""SELECT s.id,s.full_name,s.grade,
+                  COALESCE(p.paid,FALSE) AS paid,p.amount_uzs,p.paid_at
+                FROM math_students s
+                LEFT JOIN math_monthly_payments p ON
+                  p.student_id=s.id AND p.month=%s
+                WHERE NOT s.archived
+                ORDER BY s.full_name,s.id""",(selected,)).fetchall()
             all_time=conn.execute("""SELECT
                 COALESCE(sum(amount_uzs) FILTER (WHERE paid),0)::bigint AS total_uzs,
                 count(*) FILTER (WHERE paid) AS paid_count
                 FROM math_monthly_payments""").fetchone()
-            pupils=conn.execute("SELECT count(*) AS n FROM math_students WHERE NOT archived").fetchone()["n"]
-            recent=conn.execute("""SELECT p.month,p.amount_uzs,p.paid_at,st.full_name
-                FROM math_monthly_payments p
-                JOIN math_students st ON st.id=p.student_id
-                WHERE p.month=%s AND p.paid ORDER BY p.paid_at DESC LIMIT 8""",
-                (selected,)).fetchall()
-        return jsonify({"ok":True,"month":selected.strftime("%Y-%m"),
-            "paid_count":summary["paid_count"],"pending_count":pupils-summary["paid_count"],
-            "month_total_uzs":summary["total_uzs"],
-            "all_time_total_uzs":all_time["total_uzs"],
-            "all_time_paid_count":all_time["paid_count"],
-            "students_count":pupils,"recent":[dict(r) for r in recent],
-            "standard_before_or_on_20":300000,"standard_after_20":350000})
+        pupils=[]
+        for row in rows:
+            paid=bool(row["paid"])
+            # A custom amount or previously confirmed amount overrides the
+            # automatic monthly rate. Never count unpaid money as received.
+            custom=int(row["amount_uzs"]) if row["amount_uzs"] is not None else None
+            expected=custom if custom is not None else standard_uzs
+            paid_amount=expected if paid else 0
+            pupils.append({
+                "student_id":int(row["id"]),
+                "full_name":row["full_name"],
+                "grade":row["grade"],
+                "paid":paid,
+                "expected_amount_uzs":expected,
+                "paid_amount_uzs":paid_amount,
+                "remaining_amount_uzs":0 if paid else expected,
+                "custom_amount_uzs":custom,
+                "paid_at":row["paid_at"].isoformat() if row["paid_at"] else None,
+            })
+        paid_count=sum(1 for x in pupils if x["paid"])
+        paid_total=sum(x["paid_amount_uzs"] for x in pupils)
+        pending_total=sum(x["remaining_amount_uzs"] for x in pupils)
+        due_total=paid_total+pending_total
+        pupils.sort(key=lambda x:(x["paid"],x["full_name"].casefold(),x["student_id"]))
+        recent=sorted((x for x in pupils if x["paid"] and x["paid_at"]),
+                      key=lambda x:x["paid_at"],reverse=True)[:8]
+        return jsonify({
+            "ok":True,
+            "month":selected.strftime("%Y-%m"),
+            "paid_count":paid_count,
+            "pending_count":len(pupils)-paid_count,
+            "month_total_uzs":paid_total,
+            "month_expected_total_uzs":due_total,
+            "month_remaining_total_uzs":pending_total,
+            "all_time_total_uzs":int(all_time["total_uzs"]),
+            "all_time_paid_count":int(all_time["paid_count"]),
+            "students_count":len(pupils),
+            "students":pupils,
+            "recent":recent,
+            "standard_before_or_on_20":300000,
+            "standard_after_20":350000,
+            "current_standard_uzs":standard_uzs,
+        })
 
     def clean_header(value):
         v=normalize(value).replace("‘","")
