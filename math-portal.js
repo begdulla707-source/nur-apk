@@ -229,6 +229,108 @@
      table.append(list);
    }
  }
+ // Desktop-only spreadsheet: all actual test dates and correct answers.
+ // This does not run on mobile, and it does not read/payment-modify private data.
+ let desktopMatrixRequest=0;
+ function desktopAllowed(){
+   return typeof matchMedia==='function' &&
+      matchMedia('(min-width: 900px) and (pointer: fine)').matches;
+ }
+ async function renderDesktopMatrix(host,selectedMonth){
+   if(!desktopAllowed())return;
+   const call=++desktopMatrixRequest;
+   host.innerHTML='<div class="nur-matrix-loading">Oylik jadval yuklanmoqda...</div>';
+   try{
+     const response=await api('/math/matrix?month='+encodeURIComponent(selectedMonth));
+     if(call!==desktopMatrixRequest||!host.isConnected)return;
+     const tests=Array.isArray(response.tests)?response.tests:[];
+     const students=Array.isArray(response.students)?response.students:[];
+     const max=Number(response.max_points||0);
+     host.innerHTML=
+       '<div class="nur-matrix-header">'+
+       '<div><span class="nur-matrix-eyebrow">MATEMATIKA · 2–7-SINFLAR</span>'+
+       '<h3>Oylik reyting jadvali</h3>'+
+       '<p>Excel uslubida: test sanalari, to‘g‘ri javoblar, jami ball va o‘rin. '+
+       'Bo‘sh katak — natija yo‘q; DQ — qatnashmagan.</p></div>'+
+       '<div class="nur-matrix-actions">'+
+       '<input class="nur-matrix-search" type="search" aria-label="Ism orqali qidirish" placeholder="O‘quvchini qidirish">'+
+       '<button class="nur-matrix-export" type="button">CSV yuklab olish</button></div></div>'+
+       '<div class="nur-matrix-scroll" role="region" tabindex="0" aria-label="Oylik testlar jadvali">'+
+       '<table class="nur-matrix-table"><thead></thead><tbody></tbody></table></div>'+
+       '<div class="nur-matrix-legend"><span>Jami maksimal ball: <b>'+max+'</b></span>'+
+       '<span>'+students.length+' o‘quvchi</span><span>'+tests.length+' test</span>'+
+       '<span class="nur-matrix-yellow">Sariq — natija kiritilmagan</span></div>';
+     const head=host.querySelector('thead');
+     head.innerHTML='<tr><th rowspan="2" class="nur-matrix-sticky num">№</th>'+
+       '<th rowspan="2" class="nur-matrix-sticky name">O‘quvchi</th>'+
+       tests.map(t=>'<th class="nur-matrix-testhead" title="'+esc(t.title)+'">'+
+         esc(prettyDay(t.date).slice(0,5))+'</th>').join('')+
+       '<th rowspan="2">Jami</th><th rowspan="2">%</th>'+
+       '<th rowspan="2">O‘rin</th></tr>'+
+       '<tr>'+tests.map(t=>'<th class="nur-matrix-limit" title="'+esc(t.title)+'">'+
+         Number(t.questions)+'</th>').join('')+'</tr>';
+     const body=host.querySelector('tbody');
+     const buildRows=filter=>{
+       const q=String(filter||'').trim().toLocaleLowerCase('uz');
+       const subset=q?students.filter(st=>String(st.name).toLocaleLowerCase('uz').includes(q)):students;
+       if(!subset.length){body.innerHTML='<tr><td colspan="'+(tests.length+5)+
+          '" class="nur-matrix-empty">Bunday o‘quvchi topilmadi.</td></tr>';return}
+       body.innerHTML=subset.map((student,i)=>{
+         const cells=tests.map((t,index)=>{
+           const cell=student.cells?.[index]||{status:'missing',correct:null};
+           if(cell.status==='dq')return '<td class="nur-matrix-dq">DQ</td>';
+           if(cell.status==='present'&&Number.isFinite(Number(cell.correct))){
+             return '<td class="nur-matrix-score">'+Number(cell.correct)+'</td>';
+           }
+           if(cell.status==='unknown')return '<td class="nur-matrix-unknown" title="Tekshirish kerak">?</td>';
+           return '<td class="nur-matrix-missing" title="Natija kiritilmagan"></td>';
+         }).join('');
+         const percent=student.percent===null||student.percent===undefined?'—':
+             Number(student.percent).toFixed(1).replace('.',',');
+         const good=Number(student.percent)>=85?' high':Number(student.percent)>=65?' medium':' low';
+         return '<tr>'+
+           '<td class="nur-matrix-sticky num">'+(i+1)+'</td>'+
+           '<td class="nur-matrix-sticky name"><button type="button" data-matrix-profile="'+
+             Number(student.student_id)+'" title="O‘quvchining natijalarini ochish">'+
+             esc(student.name)+'</button></td>'+
+           cells+
+           '<td class="nur-matrix-total">'+Number(student.total||0)+'</td>'+
+           '<td class="nur-matrix-percent'+good+'">'+percent+'</td>'+
+           '<td class="nur-matrix-rank">'+(student.rank??'—')+'</td></tr>';
+       }).join('');
+       for(const btn of body.querySelectorAll('button[data-matrix-profile]')){
+         btn.addEventListener('click',()=>{
+           const st=data?.students?.find(x=>Number(x.id)===Number(btn.dataset.matrixProfile));
+           if(st)openProfile(st);
+         });
+       }
+     };
+     buildRows('');
+     host.querySelector('input.nur-matrix-search').addEventListener('input',event=>buildRows(event.target.value));
+     host.querySelector('button.nur-matrix-export').addEventListener('click',()=>{
+       const cell=v=>{
+         let txt=String(v??'');
+         if(/^[=+@-]/.test(txt))txt="'"+txt;
+         return '"'+txt.replace(/"/g,'""')+'"';
+       };
+       const columns=['№','O‘quvchi',...tests.map(t=>t.date+' '+t.title), 'Jami','Foiz','O‘rin'];
+       const records=students.map((student,i)=>[
+         i+1,student.name,...tests.map((t,index)=>{
+           const c=student.cells?.[index];
+           return c?.status==='present'?c.correct:c?.status==='dq'?'DQ':'';
+         }),student.total,student.percent??'',student.rank??'']);
+       const csv='\uFEFF'+[columns,...records].map(row=>row.map(cell).join(',')).join('\r\n');
+       const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+       const a=document.createElement('a');
+       a.href=url;a.download='Nur-oqiw-reyting-'+selectedMonth+'.csv';
+       document.body.append(a);a.click();a.remove();
+       setTimeout(()=>URL.revokeObjectURL(url),1000);
+     });
+   }catch(error){
+     if(call!==desktopMatrixRequest||!host.isConnected)return;
+     host.textContent='Keng jadvalni yuklab bo‘lmadi: '+error.message;
+   }
+ }
  function renderRating(){
    const root=$('nur-math-rating');if(!root||!data)return;
    root.className='';
@@ -251,6 +353,12 @@
        '<span class="points">'+fixed(x.monthly_points)+'<small>oylik ball</small></span>';
      button.addEventListener('click',()=>openProfile(x));
      list.append(button);
+   }
+   if(desktopAllowed()){
+     const matrix=document.createElement('section');
+     matrix.id='nur-desktop-matrix';
+     root.append(matrix);
+     void renderDesktopMatrix(matrix,month);
    }
  }
  function renderMonthly(){
