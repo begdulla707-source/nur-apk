@@ -137,7 +137,8 @@ def register_math(app, db, admin_only, bad):
             s["attendance_total"]=s["monthly_tests"]
             p=payment_map.get(s["id"])
             s["paid"]=bool(p and p["paid"])
-            s["amount_uzs"]=p["amount_uzs"] if p else None
+            # Never expose an old amount as paid when payment is still unconfirmed.
+            s["amount_uzs"]=p["amount_uzs"] if p and p["paid"] else None
             out.append(s)
         return out
 
