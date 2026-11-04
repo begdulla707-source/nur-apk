@@ -206,8 +206,16 @@ def register_math(app, db, admin_only, bad):
             chosen=month_value(request.args.get("month") or this_month().strftime("%Y-%m"))
         except ValueError:
             return bad("Oy YYYY-MM formatida bo‘lishi kerak")
-        end=dt.date(chosen.year+(chosen.month==12),chosen.month%12+1,1)
         with db() as conn:
+            if request.args.get("latest")=="1":
+                newest=conn.execute("""SELECT max(held_on) AS day
+                    FROM math_tests WHERE EXISTS (
+                      SELECT 1 FROM math_results r WHERE r.test_id=math_tests.id
+                    )""").fetchone()
+                if newest and newest["day"]:
+                    date=newest["day"]
+                    chosen=dt.date(date.year,date.month,1)
+            end=dt.date(chosen.year+(chosen.month==12),chosen.month%12+1,1)
             exams=conn.execute("""SELECT id,held_on,title,question_count
               FROM math_tests
               WHERE held_on>=%s AND held_on<%s
