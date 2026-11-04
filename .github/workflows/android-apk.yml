@@ -5,6 +5,8 @@ on:
     branches: [main]
     # PC site and API edits must NOT rebuild or replace the phone APK.
     # Only an explicit Android source/version change or manual dispatch builds it.
+    # Desktop-only web/frontend changes must never rebuild the Android APK.
+    # Use workflow_dispatch for an intentionally approved APK release.
     paths:
       - "android/**"
 concurrency:
