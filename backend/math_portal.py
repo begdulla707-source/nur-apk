@@ -363,11 +363,10 @@ def register_math(app, db, admin_only, bad):
             try: amount=int(amount)
             except (ValueError,TypeError):return bad("Summa noto‘g‘ri")
             if not 1000<=amount<=100000000:return bad("Summa 1000–100 mln oralig‘ida")
-        # Price is determined on the day the administrator confirms payment.
-        # An explicit amount always overrides the automatic 20th-day rule.
+        # A payment is recorded ONLY for the amount the administrator enters.
+        # An empty input must not silently charge the automatic monthly rate.
         if paid and amount is None:
-            today_local=dt.datetime.now(TZ).date()
-            amount=300000 if today_local.day<=20 else 350000
+            return bad("To‘lovni tasdiqlash uchun summani kiriting")
         note=str(obj.get("note") or "").strip()[:250]
         with db() as conn:
             with conn.transaction():
