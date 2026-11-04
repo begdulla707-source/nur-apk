@@ -234,16 +234,28 @@
  // This does not run on mobile, and it does not read/payment-modify private data.
  let desktopMatrixRequest=0;
  function desktopAllowed(){
+   // Installed Windows PWAs can report touch as their primary pointer.
+   // The native Android APK must retain its own unchanged mobile interface.
    return typeof matchMedia==='function' &&
-      matchMedia('(min-width: 900px) and (pointer: fine)').matches;
+     matchMedia('(min-width: 900px)').matches &&
+     !/NurOqiwAndroid/i.test(navigator.userAgent||'');
  }
- async function renderDesktopMatrix(host,selectedMonth){
+ async function renderDesktopMatrix(host,selectedMonth,explicit=false){
    if(!desktopAllowed())return;
    const call=++desktopMatrixRequest;
    host.innerHTML='<div class="nur-matrix-loading">Oylik jadval yuklanmoqda...</div>';
    try{
-     const response=await api('/math/matrix?month='+encodeURIComponent(selectedMonth));
+     let response=await api('/math/matrix?month='+encodeURIComponent(selectedMonth));
+     if(!explicit && !response.tests?.length){
+       // Current month has no tests: show the most recent month containing
+       // published results instead of an empty spreadsheet on desktop.
+       try{
+         const recent=await api('/math/matrix?latest=1');
+         if(recent.tests?.length)response=recent;
+       }catch(_){/* keep original month if latest lookup fails */}
+     }
      if(call!==desktopMatrixRequest||!host.isConnected)return;
+     const shownMonth=response.month||selectedMonth;
      const tests=Array.isArray(response.tests)?response.tests:[];
      const students=Array.isArray(response.students)?response.students:[];
      const max=Number(response.max_points||0);
@@ -254,13 +266,19 @@
        '<p>Excel uslubida: test sanalari, to‘g‘ri javoblar, jami ball va o‘rin. '+
        'Bo‘sh katak — natija yo‘q; DQ — qatnashmagan.</p></div>'+
        '<div class="nur-matrix-actions">'+
+       '<label class="nur-matrix-month-label">Oy <input class="nur-matrix-month" type="month" value="'+esc(shownMonth)+'" aria-label="Jadval oyi"></label>'+
        '<input class="nur-matrix-search" type="search" aria-label="Ism orqali qidirish" placeholder="O‘quvchini qidirish">'+
        '<button class="nur-matrix-export" type="button">CSV yuklab olish</button></div></div>'+
+       (tests.length?'':'<div class="nur-matrix-empty">Bu oyda test natijalari yo‘q. Boshqa oyni tanlang yoki admin panel orqali asl Excel faylini import qiling.</div>')+
        '<div class="nur-matrix-scroll" role="region" tabindex="0" aria-label="Oylik testlar jadvali">'+
        '<table class="nur-matrix-table"><thead></thead><tbody></tbody></table></div>'+
        '<div class="nur-matrix-legend"><span>Jami maksimal ball: <b>'+max+'</b></span>'+
        '<span>'+students.length+' o‘quvchi</span><span>'+tests.length+' test</span>'+
        '<span class="nur-matrix-yellow">Sariq — natija kiritilmagan</span></div>';
+     host.querySelector('input.nur-matrix-month')?.addEventListener('change',event=>{
+       if(/^\d{4}-\d{2}$/.test(event.target.value))
+         void renderDesktopMatrix(host,event.target.value,true);
+     });
      const head=host.querySelector('thead');
      head.innerHTML='<tr><th rowspan="2" class="nur-matrix-sticky num">№</th>'+
        '<th rowspan="2" class="nur-matrix-sticky name">O‘quvchi</th>'+
@@ -323,7 +341,7 @@
        const csv='\uFEFF'+[columns,...records].map(row=>row.map(cell).join(',')).join('\r\n');
        const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
        const a=document.createElement('a');
-       a.href=url;a.download='Nur-oqiw-reyting-'+selectedMonth+'.csv';
+       a.href=url;a.download='Nur-oqiw-reyting-'+shownMonth+'.csv';
        document.body.append(a);a.click();a.remove();
        setTimeout(()=>URL.revokeObjectURL(url),1000);
      });
