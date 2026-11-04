@@ -62,3 +62,31 @@ const partial=OCR.parse({elements:full.filter(x=>x.text!=='|Fam25'&&x.text!=='Al
 assert.equal(partial.summary.missingRows,true);
 assert(partial.warnings.some(x=>x.includes('DIQQAT')));
 console.log('PASS: full 26-row sheet, decorated score cells, 22/4 attendance, 32 questions and missing-row warning');
+
+
+// Wide A-group sheet: columns are dates, yellow/missing cells must NOT
+// silently become zero or DQ. Only a selected day's scores enter the draft.
+const wide=[at('MATEMATIKA',.22,.01,.19),at('Oktyabr',.25,.028,.07)];
+const days=[1,4,6,8,10,13,15];
+days.forEach((day,i)=>wide.push(at(String(day),.315+i*.071,.062,.018,.020)));
+const people=[
+  ['Ametov','Nurbol',[25,16,null,39,27,36,9]],
+  ['Ayapbergenova','Raziya',[28,null,40,38,40,40,13]],
+  ['Orazbaev','Ruslan',[39,null,39,40,31,35,0]]
+];
+people.forEach(([family,given,scores],i)=>{
+  const y=.155+i*.060;
+  wide.push(at(String(i+1),.035,y,.018),at(family,.095,y,.09),at(given,.192,y,.077));
+  scores.forEach((score,j)=>{if(score!==null)wide.push(at(String(score),.315+j*.071,y,.025))});
+});
+const spreadsheet=OCR.parse({elements:wide});
+assert(spreadsheet.matrix,'Wide spreadsheet must be detected');
+assert.deepEqual(spreadsheet.matrix.dates,days);
+assert.equal(spreadsheet.rows.length,3,JSON.stringify(spreadsheet));
+assert.equal(spreadsheet.matrix.students[0].values[2],null);
+assert.equal(spreadsheet.rows[0].correct,9);
+assert.equal(spreadsheet.rows[1].correct,13);
+assert.equal(spreadsheet.rows[2].correct,0);
+assert.equal(spreadsheet.rows[2].status,'unresolved');
+assert(spreadsheet.warnings.some(w=>w.includes('Ko‘p sanali')));
+console.log('PASS: multi-date table OCR, date columns, yellow blanks retained, zero requires review');
