@@ -14,6 +14,7 @@
  let pageDate='',month='',data=null,loading=false,lastSuccess=0,pollInFlight=false,eventSource=null;
  let ctxAdmin=null,draft=[],draftWarnings=[],importFiles=[],adminMode='math',adminBound=false,uploadBusy=false;
  let minimumPhotoRows=0, datePinned=false, monthPinned=false, ocrBatchHandle=null, pendingImages=0;
+ let wideImport=null;
  function today(){
    const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
    const val=k=>parts.find(x=>x.type===k)?.value||'';
@@ -526,6 +527,10 @@
          if(!named.length)throw Error('Kamida bitta o‘quvchi kiriting');
          if(minimumPhotoRows && named.length<minimumPhotoRows)
            throw Error('Rasm jadvalida '+minimumPhotoRows+' nafar o‘quvchi bor, lekin '+named.length+' ta ism kiritilgan. Yetishmaganlarni qo‘shing.');
+         if(wideImport&&Number(value.date?.slice(-2))!==
+            Number(wideImport.dates[wideImport.selected])){
+           throw Error('Ko‘p sanali rasmdagi tanlangan test kunini “Test o‘tkazilgan sana” maydoniga moslang.');
+         }
          if(new Set(named.map(x=>x.name.trim().toLowerCase())).size!==named.length)
            throw Error('Bir xil ism takrorlangan; qatorlarni tahrirlang');
          if(named.some(x=>x.status==='present'&&Number(x.correct)>questions))
@@ -536,7 +541,7 @@
              entries:named.map(x=>({name:x.name.trim(),status:x.status,
                correct:x.status==='dq'?null:Number(x.correct),
                grade:x.grade===null?null:Number(x.grade)}))}});
-         draft=[];importFiles=[];draftWarnings=[];minimumPhotoRows=0;pendingImages=0;
+         draft=[];importFiles=[];draftWarnings=[];minimumPhotoRows=0;pendingImages=0;wideImport=null;
          notice(post.saved+' ta natija '+prettyDay(post.uploaded_date||today())+' sanasiga saqlandi. Barcha ulangan ilovalarda yangilanadi.');
          datePinned=false;monthPinned=false;pageDate=post.uploaded_date||today();month=pageDate.slice(0,7);
          await reload(true);await renderAdmin(root,ctxAdmin,'math');
@@ -731,6 +736,14 @@
    else try{
      const result=window.NurOCR.parse(payload);
      const summary=result.summary||{};
+     if(result.matrix?.dates?.length){
+       wideImport={...result.matrix,selected:result.matrix.dates.length-1};
+       for(const warning of (result.warnings||[]).slice(0,3))
+         addImportWarning(warning);
+       // A screenshot may contain fewer readable names than numbered lines.
+       if(Number.isInteger(summary.expectedRows))
+         minimumPhotoRows=Math.max(minimumPhotoRows,summary.expectedRows);
+     }
      if(Number.isInteger(summary.present)&&Number.isInteger(summary.absent))
        minimumPhotoRows=Math.max(minimumPhotoRows,summary.present+summary.absent);
      if(Number.isInteger(summary.questions)&&summary.questions>=1&&summary.questions<=200){
@@ -804,6 +817,36 @@
         esc((zeros?zeros+' ta 0 ball (sariq) · ':'')+
         (unknown?unknown+' ta aniqlanmagan natija. ':''))+
         '</b>'+esc(draftWarnings.slice(-1).join(' '))+'</div>';
+    }
+    if(warning&&wideImport){
+      const wrap=document.createElement('div');
+      wrap.className='nur-wide-ocr-choice';
+      const title=document.createElement('strong');
+      title.textContent='Ko‘p sanali rasmdan test ustunini tanlang';
+      const selector=document.createElement('select');
+      selector.setAttribute('aria-label','Rasmdagi test sanasini tanlash');
+      wideImport.dates.forEach((day,i)=>{
+        const opt=document.createElement('option');
+        opt.value=String(i);
+        opt.textContent=day+'-sana · '+(i+1)+'-ustun';
+        selector.append(opt);
+      });
+      selector.value=String(wideImport.selected);
+      const hint=document.createElement('small');
+      hint.textContent='Tanlangan ustundagi ballar pastda ko‘rsatiladi. Yil/oyni, savollar sonini va barcha qatorlarni tekshiring. Suratdan boshqa sanalar avtomatik e’lon qilinmaydi.';
+      selector.addEventListener('change',()=>{
+        const current=Number(selector.value);
+        if(!Number.isInteger(current)||current<0||current>=wideImport.dates.length)return;
+        wideImport.selected=current;
+        draft=alignPhotoNames(wideImport.students.map(row=>{
+          const correct=row.values[current];
+          return {name:row.name,grade:null,correct,
+            status:correct===null||correct===0?'unresolved':'present'};
+        }));
+        renderDraft(root);
+      });
+      wrap.append(title,selector,hint);
+      warning.append(wrap);
     }
     table.replaceChildren();
    const priority=x=>x.status==='unresolved'&&x.correct===0?0:
