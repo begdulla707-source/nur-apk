@@ -227,15 +227,42 @@
     adminRoot.replaceChildren();
     try{
       const bootstrapReady=state.online && state.subjects.length>0 && Date.now()-successFetchAt<90000;
-      const [overview,bootstrap]=await Promise.all([
+      const [overview,bootstrap,finance]=await Promise.all([
         api('/admin/overview',{admin:true}),
-        bootstrapReady?Promise.resolve({groups:state.groups,subjects:state.subjects}):api('/bootstrap')
+        bootstrapReady?Promise.resolve({groups:state.groups,subjects:state.subjects}):api('/bootstrap'),
+        api('/admin/math/payment-summary?month='+tashkentDate().slice(0,7),{admin:true})
+          .catch(()=>null)
       ]);
       adminVerified(true);
       state.sessions=overview.sessions||[];
       state.groups=bootstrap.groups||[];state.subjects=bootstrap.subjects||[];
       const c=overview.counts||{};
-      adminRoot.innerHTML='<div class="nur-math-subhead"><b>Matematika · 2–7-sinflar</b><button class="appbtn small light" data-act="logout">Chiqish</button></div><div class="admin-tabs" id="admin-tabs"></div><div id="admin-tab-content"></div>';
+      // The three financial tiles are sourced from verified payments only.
+      // Never display a hardcoded/demo "balance" or charge a user automatically.
+      const plan=finance?.ok?Number(finance.month_expected_total_uzs||0):null;
+      const received=finance?.ok?Number(finance.month_total_uzs||0):null;
+      const outstanding=finance?.ok?Number(finance.month_remaining_total_uzs||0):null;
+      const money=value=>value===null?'—':
+        new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(value)+' so‘m';
+      adminRoot.innerHTML=
+        '<div class="nur-admin-glass-hero">'+
+          '<div class="nur-admin-eyebrow">NUR O‘QIW ORAYI · BOSHQARUV</div>'+
+          '<div class="nur-admin-hero-line"><div><strong>Administrator paneli</strong>'+
+          '<small>Matematika · 2–7-sinflar</small></div>'+
+          '<span class="nur-admin-hero-seal" aria-hidden="true">'+
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+
+          '<path d="M12 3 3.8 7v5.7c0 4.5 3.2 7.4 8.2 8.7 5-1.3 8.2-4.2 8.2-8.7V7L12 3Z"/>'+
+          '<path d="m8.8 12 2.2 2.2 4.5-4.5"/></svg></span></div>'+
+          '<div class="nur-admin-glass-metrics">'+
+            '<div class="nur-admin-glass-metric"><small>Jami yig‘ilishi kerak</small><strong>'+money(plan)+'</strong></div>'+
+            '<div class="nur-admin-glass-metric"><small>Tasdiqlangan tushum</small><strong>'+money(received)+'</strong></div>'+
+            '<div class="nur-admin-glass-metric"><small>Qolgan summa</small><strong>'+money(outstanding)+'</strong></div>'+
+          '</div>'+
+          '<div class="nur-admin-hero-note">Har bir faol o‘quvchi uchun reja: 300 000 so‘m. Balansga faqat tasdiqlangan to‘lovlar kiradi.</div>'+
+        '</div>'+
+        '<div class="nur-admin-toolbar"><b>Matematika · 2–7-sinflar</b>'+
+        '<button class="appbtn small light" data-act="logout">Chiqish</button></div>'+
+        '<div class="admin-tabs" id="admin-tabs"></div><div id="admin-tab-content"></div>';
       if(state.adminTab==='math-students')state.adminTab='math';
       const root=$('admin-tabs');
       for(const [id,title] of [['math','Natijalar / Import'],['math-payments','Oylik to‘lov'],['inbox','Xabarlar'],['notices','E’lonlar']]){
