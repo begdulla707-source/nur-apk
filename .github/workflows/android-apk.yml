@@ -122,7 +122,7 @@ jobs:
           grep -q "Signer #1 certificate SHA-256 digest: bcdd737073586741f0e95dcfb069a955cdbe612073e4baf21b08bdafa8354cba" /tmp/signature-check.txt
           "$BUILD_TOOLS/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='uz.nuroqiworayi.app'" /tmp/apk-badging.txt
-          grep -q "versionCode='33'" /tmp/apk-badging.txt
+          grep -q "versionCode='34'" /tmp/apk-badging.txt
           grep -q "application-icon" /tmp/apk-badging.txt
           grep -q "application-label:'Nur oqiw'" /tmp/apk-badging.txt
           unzip -l "$APK" | tee /tmp/apk-filelist.txt
@@ -156,9 +156,9 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-33
+          tag_name: build-34
           name: Nur oqiw
           prerelease: true
           make_latest: false
           files: Nur_oqiw.apk
-          body: "Nur oqiw 1.0.23 build 33: Fix admin context navigation from rating/results back to admin; public home and Android hardware Back remain available. Preview-signed APK; previous builds with incompatible signatures may require reinstall. Not Play Store."
+          body: "Nur oqiw 1.0.24 build 34: Payment amounts always start empty and can only be confirmed after an administrator manually enters the amount. The existing emerald theme and other functions are unchanged. Preview-signed APK; previous builds with incompatible signatures may require reinstall. Not Play Store."
