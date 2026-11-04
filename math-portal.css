@@ -322,7 +322,7 @@ body.dark #admin .nur-finance-stat{
 
 /* Dedicated desktop-PWA layout. Only wide, mouse/trackpad screens are
  * affected; Android phones retain the exact mobile layout and dimensions. */
-@media (min-width:900px) and (pointer:fine){
+@media (min-width:900px){
  html{min-height:100%;background:var(--bg)}
  body{padding:0!important;min-height:100dvh;background:
   radial-gradient(ellipse at 25% 5%,color-mix(in srgb,var(--accent) 8%,transparent),transparent 60%),var(--bg)!important}
@@ -390,7 +390,7 @@ body.dark #admin .nur-finance-stat{
 }
 /* Monthly Excel-like view is deliberately hidden on phones. */
 #nur-desktop-matrix{display:none}
-@media (min-width:900px) and (pointer:fine){
+@media (min-width:900px){
  #nur-desktop-matrix{display:block;margin-top:15px;padding:22px;border-radius:25px;
   background:var(--card);border:1px solid var(--stroke);
   box-shadow:0 10px 25px #163c2410;min-width:0;max-width:100%}
@@ -444,7 +444,7 @@ body.dark #admin .nur-finance-stat{
  .nur-matrix-yellow{border-left:8px solid #ffe59a;padding-left:7px}
  .nur-matrix-loading,.nur-matrix-empty{padding:23px;color:var(--muted);font-size:12px}
 }
-@media(max-width:899px),(pointer:coarse){
+@media(max-width:899px){
  /* Explicitly keep the native mobile dimensions unchanged. */
  #nur-desktop-matrix{display:none!important}
 }
@@ -462,3 +462,102 @@ body.dark #admin .nur-finance-stat{
  color:var(--text);background:var(--card);border:1px solid var(--stroke)}
 .nur-wide-ocr-choice small{display:block;color:var(--muted);
  font-size:11px;line-height:1.6}
+
+
+/* Windows installed PWA / desktop-only polish. Kept out of phone-sized APKs. */
+@media (min-width:900px){
+ html{overflow-x:hidden}
+ body{padding:0!important;min-width:900px;background:var(--bg)}
+ body>.phone{
+  width:calc(100vw - 36px)!important;
+  max-width:1520px!important;
+  margin:18px auto!important;
+  padding-left:266px!important;
+  min-height:calc(100dvh - 36px)!important;
+  border-radius:24px!important;
+ }
+ body>.phone .view{min-width:0;max-width:100%;overflow-x:hidden}
+ body>.phone .content{max-width:none!important}
+ body>.phone .subpage{padding:29px 34px 122px!important}
+ body>.phone #home .content{padding:27px 34px 120px!important}
+ body>.phone .tabbar{
+  left:calc(50% + 132px)!important;
+  bottom:18px!important;
+  width:calc(min(100vw - 36px,1520px) - 285px)!important;
+  max-width:none!important;
+ }
+ body>.drawer,body>.drawer.open{
+  top:30px!important;bottom:30px!important;
+  left:max(calc((100vw - 1520px)/2 + 18px),18px)!important;
+  width:240px!important;max-width:240px!important;
+  overflow-y:auto!important;
+  transform:none!important;
+ }
+ body>.phone #admin .nur-admin-glass-hero{
+  display:none!important; /* finances belong in Oylik to‘lov, not dashboard header */
+ }
+ body>.phone #admin .nur-admin-toolbar{
+  padding:14px 0 18px;
+  border-bottom:1px solid var(--stroke);
+  margin-bottom:17px;
+ }
+ body>.phone #admin .nur-admin-toolbar b{
+  font-size:18px;letter-spacing:-.025em;
+ }
+ body>.phone #admin #admin-tab-content{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  padding-bottom:12px;
+ }
+ body>.phone #admin .admin-tabs{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:10px!important;
+ }
+ body>.phone #admin .admin-tabs button{font-size:13px!important;min-height:45px}
+ body>.phone #admin .nur-math-panel,
+ body>.phone #admin .appcard{max-width:none!important}
+ body>.phone #admin .nur-finance-panel .nur-finance-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ }
+ body>.phone #admin .nur-finance-panel .nur-finance-stat:first-child{
+  grid-column:1 / -1!important;
+ }
+ body>.phone #nur-desktop-matrix{
+  display:block!important;min-width:0;width:100%;max-width:100%;
+  margin-top:17px;
+ }
+ body>.phone .nur-matrix-header{align-items:center}
+ body>.phone .nur-matrix-header .nur-matrix-actions{
+  display:flex;gap:10px;align-items:end;
+ }
+ body>.phone .nur-matrix-month-label{
+  display:flex;flex-direction:column;gap:4px;
+  color:var(--muted);font-weight:750;font-size:11px;
+ }
+ body>.phone .nur-matrix-month{
+  height:41px;padding:7px 10px;border:1px solid var(--stroke);
+  border-radius:12px;background:var(--bg);color:var(--text);
+ }
+ body>.phone .nur-matrix-table{font-size:12px}
+ body>.phone .nur-matrix-scroll{overflow:auto;max-height:min(70vh,840px)}
+ body>.phone .nur-matrix-table thead th{position:sticky;top:0;z-index:3}
+ body>.phone .nur-matrix-table thead tr:nth-child(2) th{top:41px;z-index:3}
+ body>.phone .nur-matrix-table thead .nur-matrix-sticky{z-index:7}
+ body>.phone .nur-matrix-table .nur-matrix-sticky.name{z-index:4}
+ body>.phone .nur-matrix-table tbody tr:hover .nur-matrix-sticky{
+  background:var(--tint)!important;
+ }
+ body>.phone .nur-matrix-table .nur-matrix-score{font-weight:780}
+}
+@media(min-width:900px) and (max-width:1110px){
+ body>.phone{padding-left:222px!important}
+ body>.drawer,body>.drawer.open{width:203px!important;max-width:203px!important}
+ body>.phone .tabbar{
+   left:calc(50% + 111px)!important;
+   width:calc(100vw - 260px)!important;
+ }
+ body>.phone .subpage{padding-left:22px!important;padding-right:22px!important}
+ body>.phone #home .content{padding-left:22px!important;padding-right:22px!important}
+}
