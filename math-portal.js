@@ -792,7 +792,15 @@
      const incoming=[];
      for(const entry of output.files||[]){
        if(!importFiles.includes(entry.file))importFiles.push(entry.file);
-       for(const w of (entry.warnings||[]).slice(0,2))addImportWarning(entry.file+': '+w);
+       for(const w of (entry.warnings||[]).slice(0,3))addImportWarning(entry.file+': '+w);
+       if(entry.matrix?.dates?.length){
+         wideImport={...entry.matrix,selected:entry.matrix.dates.length-1};
+         if(Number.isInteger(wideImport.expectedRows))
+           minimumPhotoRows=Math.max(minimumPhotoRows,wideImport.expectedRows);
+         const suggested=wideImport.question_counts?.[wideImport.selected];
+         const input=root.querySelector('input[name="question_count"]');
+         if(input&&input.value==='32'&&suggested)input.value=String(suggested);
+       }
        for(const row of entry.rows||[])incoming.push({
          name:row.name||'',grade:row.grade??null,status:row.status,
          correct:row.correct??null
@@ -838,6 +846,9 @@
         const current=Number(selector.value);
         if(!Number.isInteger(current)||current<0||current>=wideImport.dates.length)return;
         wideImport.selected=current;
+        const suggested=wideImport.question_counts?.[current];
+        const questions=root.querySelector('input[name="question_count"]');
+        if(questions&&suggested)questions.value=String(suggested);
         draft=alignPhotoNames(wideImport.students.map(row=>{
           const correct=row.values[current];
           return {name:row.name,grade:null,correct,
