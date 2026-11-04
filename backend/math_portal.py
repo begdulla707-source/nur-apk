@@ -378,7 +378,7 @@ def register_math(app, db, admin_only, bad):
                   VALUES(%s,%s,%s,%s,%s,CASE WHEN %s THEN now() ELSE NULL END)
                   ON CONFLICT(student_id,month) DO UPDATE SET
                   paid=EXCLUDED.paid,
-                  amount_uzs=COALESCE(EXCLUDED.amount_uzs,math_monthly_payments.amount_uzs),
+                  amount_uzs=CASE WHEN EXCLUDED.paid THEN EXCLUDED.amount_uzs ELSE NULL END,
                   admin_note=EXCLUDED.admin_note,
                   paid_at=CASE WHEN EXCLUDED.paid THEN COALESCE(math_monthly_payments.paid_at,now()) ELSE NULL END,
                   updated_at=now()""",(student_id,month,paid,amount,note,paid))
@@ -388,12 +388,13 @@ def register_math(app, db, admin_only, bad):
     @app.get("/api/admin/math/payment-summary")
     @admin_only
     def payment_summary():
+        """Balance is confirmed cash; the 300k per-student target is a separate plan.
+
+        Never resurrect a prior unconfirmed amount or invent 350k after the 20th.
+        An admin-provided amount only becomes received money when paid=True.
+        """
         selected=month_value(request.args.get("month") or this_month().strftime("%Y-%m"))
-        today_local=dt.datetime.now(TZ).date()
-        # For past months the payment deadline is over; future months still
-        # start at the standard before-the-20th rate.
-        standard_uzs=(350000 if selected<this_month() or
-                      (selected==this_month() and today_local.day>20) else 300000)
+        standard_uzs=300000
         with db() as conn:
             rows=conn.execute("""SELECT s.id,s.full_name,s.grade,
                   COALESCE(p.paid,FALSE) AS paid,p.amount_uzs,p.paid_at
@@ -409,26 +410,28 @@ def register_math(app, db, admin_only, bad):
         pupils=[]
         for row in rows:
             paid=bool(row["paid"])
-            # A custom amount or previously confirmed amount overrides the
-            # automatic monthly rate. Never count unpaid money as received.
-            custom=int(row["amount_uzs"]) if row["amount_uzs"] is not None else None
-            expected=custom if custom is not None else standard_uzs
-            paid_amount=expected if paid else 0
+            raw_amount=int(row["amount_uzs"]) if row["amount_uzs"] is not None else None
+            confirmed_amount=raw_amount if paid and raw_amount is not None else 0
+            # A partial approved payment is recorded truthfully; its difference
+            # from the 300k plan stays visible without falsely changing the tariff.
+            due_remaining=max(0,standard_uzs-confirmed_amount)
             pupils.append({
                 "student_id":int(row["id"]),
                 "full_name":row["full_name"],
                 "grade":row["grade"],
                 "paid":paid,
-                "expected_amount_uzs":expected,
-                "paid_amount_uzs":paid_amount,
-                "remaining_amount_uzs":0 if paid else expected,
-                "custom_amount_uzs":custom,
-                "paid_at":row["paid_at"].isoformat() if row["paid_at"] else None,
+                "expected_amount_uzs":standard_uzs,
+                "paid_amount_uzs":confirmed_amount,
+                "remaining_amount_uzs":due_remaining,
+                "custom_amount_uzs":raw_amount if paid else None,
+                "paid_at":row["paid_at"].isoformat() if paid and row["paid_at"] else None,
             })
         paid_count=sum(1 for x in pupils if x["paid"])
         paid_total=sum(x["paid_amount_uzs"] for x in pupils)
-        pending_total=sum(x["remaining_amount_uzs"] for x in pupils)
-        due_total=paid_total+pending_total
+        remaining_total=sum(x["remaining_amount_uzs"] for x in pupils)
+        planned_total=standard_uzs*len(pupils)
+        # Highest monetary values always come from real database records.
+        all_time_total=int(all_time["total_uzs"] or 0)
         pupils.sort(key=lambda x:(x["paid"],x["full_name"].casefold(),x["student_id"]))
         recent=sorted((x for x in pupils if x["paid"] and x["paid_at"]),
                       key=lambda x:x["paid_at"],reverse=True)[:8]
@@ -438,15 +441,15 @@ def register_math(app, db, admin_only, bad):
             "paid_count":paid_count,
             "pending_count":len(pupils)-paid_count,
             "month_total_uzs":paid_total,
-            "month_expected_total_uzs":due_total,
-            "month_remaining_total_uzs":pending_total,
-            "all_time_total_uzs":int(all_time["total_uzs"]),
+            "month_expected_total_uzs":planned_total,
+            "month_remaining_total_uzs":remaining_total,
+            "all_time_total_uzs":all_time_total,
             "all_time_paid_count":int(all_time["paid_count"]),
             "students_count":len(pupils),
             "students":pupils,
             "recent":recent,
-            "standard_before_or_on_20":300000,
-            "standard_after_20":350000,
+            "standard_before_or_on_20":standard_uzs,
+            "standard_after_20":standard_uzs,
             "current_standard_uzs":standard_uzs,
         })
 
