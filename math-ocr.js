@@ -68,6 +68,25 @@
     if(columns.length<6)return null;
     const firstX=columns[0].x;
     const minY=Math.max(.10,row.y+.035);
+    // In A-group spreadsheets the row immediately below dates states the
+    // maximum questions per column (40, 32, 24, 15, etc). Extract it from
+    // position, NOT from the summary total/percentage at far right.
+    const questionCounts=columns.map((col,i)=>{
+      const prev=columns[i-1]?.x??col.x-.044;
+      const next=columns[i+1]?.x??col.x+.044;
+      const tolerance=Math.min(.026,Math.min(col.x-prev,next-col.x)*.43);
+      const matches=tokens.filter(z=>/^\d{1,3}$/.test(z.t)&&
+        z.y+z.h/2>row.y+.012&&z.y+z.h/2<minY+.025 &&
+        Math.abs(z.x+z.w/2-col.x)<tolerance)
+        .sort((a,b)=>Math.abs((a.y+a.h/2)-(row.y+.030))-
+                     Math.abs((b.y+b.h/2)-(row.y+.030)));
+      const num=matches.length?Number(matches[0].t):null;
+      return Number.isInteger(num)&&num>=1&&num<=200?num:null;
+    });
+    const verifiedQuestionCounts=questionCounts.filter(Number.isInteger).length;
+    const hasQuestionCounts=verifiedQuestionCounts>=Math.ceil(columns.length*.65);
+    const limits=hasQuestionCounts?questionCounts:columns.map(()=>null);
+    let rejectedCells=0;
     const nameTokens=tokens.filter(z=>z.y+z.h/2>minY&&z.x+z.w/2>.07&&
       z.x<firstX-.022&&isName(z.t))
       .sort((a,b)=>(a.y+a.h/2)-(b.y+b.h/2)||a.x-b.x);
@@ -93,8 +112,13 @@
           Math.abs(z.x+z.w/2-col.x)<distLimit &&
           Math.abs(z.y+z.h/2-line.cy)<Math.max(.012,tolerance*1.1))
           .sort((a,b)=>Math.abs(a.y+a.h/2-line.cy)-Math.abs(b.y+b.h/2-line.cy));
-        const value=matches.length?Number(matches[0].t):null;
-        return Number.isInteger(value)&&value>=0&&value<=200?value:null;
+        const matched=matches[0],value=matched?Number(matched.t):null;
+        const confidence=matched?.confidence;
+        const lowConfidence=Number.isFinite(confidence)&&confidence>0&&confidence<55;
+        const outsideRange=!Number.isInteger(value)||value<0||
+          value>(limits[i]??200);
+        if(matched&&(lowConfidence||outsideRange))rejectedCells++;
+        return matched&&!lowConfidence&&!outsideRange?value:null;
       });
       students.push({name,values});
     }
@@ -104,7 +128,8 @@
       const key=st.name.toLocaleLowerCase('uz');
       if(!unique.has(key))unique.set(key,st);
     }
-    const matrix={dates:columns.map(x=>x.day),students:[...unique.values()]};
+    const matrix={dates:columns.map(x=>x.day),question_counts:limits,
+      students:[...unique.values()]};
     const indexNumbers=tokens.filter(z=>z.y+z.h/2>minY&&z.x<.075&&
       /^\d{1,3}$/.test(z.t)).map(z=>Number(z.t));
     const expectedRows=indexNumbers.length>=3?Math.max(...indexNumbers):null;
@@ -120,6 +145,10 @@
       'OCR barcha raqamlarni kafolatli o‘qimaydi. Sariq/bo‘sh kataklar natija yo‘q, DQ emas.',
       'Bitta sana ustunini tanlab, uning savollar soni va har bir ballini tekshirgach e’lon qiling.'
     ];
+    if(!hasQuestionCounts)warnings.push(
+      'Savollar soni ustuni aniq o‘qilmadi; test savollari sonini qo‘lda kiriting.');
+    if(rejectedCells)warnings.push(
+      rejectedCells+' ta noaniq yoki savollar sonidan katta qiymat saqlanmadi — asl rasm/Excel bilan tekshiring.');
     if(expectedRows&&rows.length<expectedRows)warnings.push(
       'DIQQAT: jadvalda '+expectedRows+' qator bor, OCR esa '+rows.length+
       ' ta ism topdi. Yetishmaganlarni qo‘lda kiriting yoki Excel/CSV yuklang.');
@@ -132,7 +161,8 @@
     const warnings=[];
     if(raw.length>1800)return {rows:[],warnings:['Rasmda juda ko\u2018p matn topildi. Jadvalni yaqinroq suratga oling.']};
     const tokens=raw.map(z=>({
-      t:norm(z.text),x:Number(z.x),y:Number(z.y),w:Number(z.w),h:Number(z.h)
+      t:norm(z.text),x:Number(z.x),y:Number(z.y),w:Number(z.w),h:Number(z.h),
+      confidence:z.confidence==null?null:Number(z.confidence)
     })).filter(z=>z.t&&[z.x,z.y,z.w,z.h].every(Number.isFinite)&&
       z.x>=0&&z.y>=0&&z.x<=1&&z.y<=1&&z.w>0&&z.h>0&&z.w<=1&&z.h<=1);
     if(tokens.length<5)return {rows:[],warnings:['Rasmdan o\u2018qiladigan matn topilmadi; tiniqroq rasm tanlang.']};
