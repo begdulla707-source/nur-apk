@@ -681,6 +681,38 @@
  }
  // Desktop PWA: optional local, on-demand WebAssembly OCR. Images remain in
  // the browser; scores are only suggestions and always require admin review.
+ // Tesseract.js v5 can return positioned words via TSV even when
+ // data.words isn't exposed; without positions a table must NEVER be guessed.
+ function desktopOcrWords(data,width,height){
+   if(Array.isArray(data?.words)&&data.words.length)
+     return data.words.filter(w=>w?.bbox&&String(w.text||'').trim()).map(w=>({
+       text:String(w.text).trim(),
+       x:w.bbox.x0/width,y:w.bbox.y0/height,
+       w:(w.bbox.x1-w.bbox.x0)/width,
+       h:(w.bbox.y1-w.bbox.y0)/height,
+       confidence:Number(w.confidence||0)
+     }));
+   if(typeof data?.tsv!=='string')return [];
+   const lines=data.tsv.split(/\r?\n/);
+   const headings=lines.shift()?.split('\t')||[];
+   const index=key=>headings.indexOf(key);
+   const required=['level','left','top','width','height','conf','text'];
+   if(required.some(key=>index(key)<0))return [];
+   const out=[];
+   for(const line of lines){
+     if(!line)continue;
+     const parts=line.split('\t');
+     if(parts[index('level')]!=='5')continue;
+     const text=parts.slice(index('text')).join('\t').trim();
+     const left=Number(parts[index('left')]),top=Number(parts[index('top')]);
+     const w=Number(parts[index('width')]),h=Number(parts[index('height')]);
+     const conf=Number(parts[index('conf')]);
+     if(!text||!Number.isFinite(left)||!Number.isFinite(top)||w<=0||h<=0)continue;
+     out.push({text,x:left/width,y:top/height,w:w/width,h:h/height,
+       confidence:Number.isFinite(conf)&&conf>=0?conf:null});
+   }
+   return out;
+ }
  let desktopOcrLoading=null;
  async function ensureDesktopOcr(){
    if(window.Tesseract?.createWorker)return window.Tesseract;
@@ -713,7 +745,7 @@
        try{
          if(file.size>10_000_000)throw Error('Rasm 10 MB dan katta');
          bitmap=await createImageBitmap(file);
-         const scale=Math.min(2.6,Math.max(1,1850/bitmap.width));
+         const scale=Math.min(2.6,Math.max(1,2350/bitmap.width));
          const w=Math.round(bitmap.width*scale),h=Math.round(bitmap.height*scale);
          if(w*h>10_000_000)throw Error('Rasm o‘lchami juda katta');
          const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
@@ -721,16 +753,9 @@
          if(!context)throw Error('Rasmni ochib bo‘lmadi');
          context.filter='grayscale(1) contrast(1.13)';
          context.drawImage(bitmap,0,0,w,h);
-         const recognition=await worker.recognize(canvas);
-         const words=recognition.data?.words||[];
-         const elements=words.filter(word=>word?.bbox&&String(word.text||'').trim()).map(word=>({
-           text:String(word.text).trim(),
-           x:word.bbox.x0/w,y:word.bbox.y0/h,
-           w:(word.bbox.x1-word.bbox.x0)/w,
-           h:(word.bbox.y1-word.bbox.y0)/h,
-           confidence:Number(word.confidence||0)
-         }));
-         if(!elements.length)throw Error('Matn aniqlanmadi — Excel/CSV yoki tiniqroq rasm tanlang');
+         const recognition=await worker.recognize(canvas,{}, {tsv:true});
+         const elements=desktopOcrWords(recognition.data,w,h);
+         if(!elements.length)throw Error('Matn kataklari aniqlanmadi. Asl Excel/CSV faylini yuklang yoki tasvirni tiniqroq oling.');
          window.NurImageOCRDeliver?.({file:file.name,elements,engine:'tesseract-pc'});
        }catch(err){
          window.NurImageOCRDeliver?.({file:file.name,error:err.message});
