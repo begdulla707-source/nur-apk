@@ -340,11 +340,18 @@
          renderDraft(root);return;
        }
        if(action==='mark-payment'){
-         button.disabled=true;
          const card=button.closest('[data-pay-student]');
          const id=Number(card?.dataset.payStudent);
-         const amount=card?.querySelector('input[name=amount]')?.value||'';
+         const input=card?.querySelector('input[name=amount]');
+         const amount=input?.value.trim()||'';
          const paid=button.dataset.nextPaid==='yes';
+         if(paid && (amount==='' || !Number.isInteger(Number(amount)) ||
+            Number(amount)<1000 || Number(amount)>100000000)){
+           notice('To‘lov summasini o‘zingiz kiriting (kamida 1 000 so‘m).');
+           input?.focus();
+           return;
+         }
+         button.disabled=true;
          await api('/admin/math/payment',{admin:true,method:'POST',body:{
            student_id:id,month,paid,amount_uzs:amount===''?null:Number(amount)}});
          notice(paid?'To‘lov qilindi deb belgilandi':'Kutilmoqda deb belgilandi');
@@ -707,7 +714,7 @@
      const pupils=Array.isArray(finance.students)?finance.students:[];
      const paidCount=Number(finance.paid_count||0),pendingCount=Number(finance.pending_count||0);
      root.innerHTML='<section class="nur-math-panel nur-finance-panel"><h3>Oylik to‘lovlar · jami hisob</h3>'+
-       '<p>20-sana (shu kun ham)gacha 300 000 so‘m, 21-sanadan 350 000 so‘m. Har bir o‘quvchining maxsus summasi bo‘lsa, o‘sha hisobga olinadi. Faqat admin tasdiqlagan to‘lov tushumga qo‘shiladi.</p>'+
+       '<p>To‘lov maydoni bo‘sh ochiladi: admin summani o‘zi kiritib tasdiqlaydi. Jami kutilayotgan mablag‘ reja tarifi bo‘yicha hisoblanadi, lekin hech qaysi to‘lov avtomatik tasdiqlanmaydi.</p>'+
        '<div class="nur-finance-grid">'+
        '<div class="nur-finance-stat finance-total"><small>Barcha o‘quvchilardan olinadigan jami</small><strong>'+fixed(finance.month_expected_total_uzs)+' so‘m</strong></div>'+
        '<div class="nur-finance-stat finance-paid"><small>To‘langan jami summa</small><strong>'+fixed(finance.month_total_uzs)+' so‘m</strong></div>'+
@@ -747,8 +754,8 @@
            '</span><strong>'+fixed(paid?x.paid_amount_uzs:expected)+' so‘m</strong></div>'+
            '<div class="nur-math-payment-controls">'+
            '<input name="amount" type="number" min="1000" max="100000000" step="1000" '+
-           'placeholder="Avtomatik '+fixed(rate)+' so‘m" value="'+(x.custom_amount_uzs??'')+
-           '" aria-label="Maxsus summa, so‘m">'+
+           'placeholder="Summani kiriting" value="" autocomplete="off" '+
+           'aria-label="To‘lov summasini qo‘lda kiriting, so‘m">'+
            '<button type="button" class="nur-math-pay-action" data-math-action="mark-payment" data-next-paid="'+
            (paid?'no':'yes')+'">'+(paid?'Kutilmoqda qilish':'To‘lov qilindi')+'</button></div>';
          list.append(box);
