@@ -710,19 +710,19 @@
      renderStudentEditor(root);
    }else if(tab==='math-payments'){
      const finance=await api('/admin/math/payment-summary?month='+encodeURIComponent(month),{admin:true});
-     const rate=Number(finance.current_standard_uzs|| (Number(today().slice(8))<=20?300000:350000));
+     const rate=Number(finance.current_standard_uzs||300000);
      const pupils=Array.isArray(finance.students)?finance.students:[];
      const paidCount=Number(finance.paid_count||0),pendingCount=Number(finance.pending_count||0);
      root.innerHTML='<section class="nur-math-panel nur-finance-panel"><h3>Oylik to‘lovlar · jami hisob</h3>'+
        '<p>To‘lov maydoni bo‘sh ochiladi: admin summani o‘zi kiritib tasdiqlaydi. Jami kutilayotgan mablag‘ reja tarifi bo‘yicha hisoblanadi, lekin hech qaysi to‘lov avtomatik tasdiqlanmaydi.</p>'+
        '<div class="nur-finance-grid">'+
-       '<div class="nur-finance-stat finance-total"><small>Barcha o‘quvchilardan olinadigan jami</small><strong>'+fixed(finance.month_expected_total_uzs)+' so‘m</strong></div>'+
-       '<div class="nur-finance-stat finance-paid"><small>To‘langan jami summa</small><strong>'+fixed(finance.month_total_uzs)+' so‘m</strong></div>'+
-       '<div class="nur-finance-stat finance-pending"><small>To‘lanishi qolgan jami</small><strong>'+fixed(finance.month_remaining_total_uzs)+' so‘m</strong></div>'+
+       '<div class="nur-finance-stat finance-total"><small>Jami yig‘ilishi kerak (300 ming × o‘quvchi)</small><strong>'+fixed(finance.month_expected_total_uzs)+' so‘m</strong></div>'+
+       '<div class="nur-finance-stat finance-paid"><small>Balans · tasdiqlangan tushum</small><strong>'+fixed(finance.month_total_uzs)+' so‘m</strong></div>'+
+       '<div class="nur-finance-stat finance-pending"><small>Hali yig‘ilishi kerak</small><strong>'+fixed(finance.month_remaining_total_uzs)+' so‘m</strong></div>'+
        '<div class="nur-finance-stat"><small>To‘langan / jami o‘quvchilar</small><strong>'+paidCount+' / '+finance.students_count+'</strong></div>'+
        '<div class="nur-finance-stat"><small>To‘lovni kutayotganlar</small><strong>'+pendingCount+' ta</strong></div>'+
        '<div class="nur-finance-stat"><small>Hamma oylar bo‘yicha tushgan</small><strong>'+fixed(finance.all_time_total_uzs)+' so‘m</strong></div></div>'+
-       '<p class="nur-finance-hint">Hozirgi hisob stavkasi: <b>'+fixed(rate)+' so‘m</b>. To‘lanmagan summa tushum emas, kutilayotgan mablag‘ sifatida ko‘rsatiladi.</p>'+
+       '<p class="nur-finance-hint">Hisob: har bir faol o‘quvchi uchun <b>'+fixed(rate)+' so‘m</b>. Bu reja, avtomatik to‘lov emas. Balansga faqat admin summa kiritib tasdiqlagan pul qo‘shiladi.</p>'+
        '<label>Hisobot oyi <input id="nur-admin-paymonth" type="month" value="'+esc(month)+'"></label>'+
        '<div id="nur-admin-pay-list" class="nur-monthly-list" style="margin-top:14px"></div></section>';
      root.querySelector('#nur-admin-paymonth').onchange=async e=>{
@@ -745,7 +745,7 @@
          const box=document.createElement('div');
          box.className='nur-math-panel nur-finance-student'+(paid?' is-paid':' is-pending');
          box.dataset.payStudent=String(x.student_id);
-         const expected=Number(x.expected_amount_uzs||rate);
+         const expected=Number(x.expected_amount_uzs??rate);
          box.innerHTML='<div class="nur-finance-student-head">'+
            '<div class="name"><b>'+esc(x.full_name)+'</b><small>'+
            (x.grade?x.grade+'-sinf':'2–7-sinflar')+'</small></div>'+
@@ -754,7 +754,7 @@
            '</span><strong>'+fixed(paid?x.paid_amount_uzs:expected)+' so‘m</strong></div>'+
            '<div class="nur-math-payment-controls">'+
            '<input name="amount" type="number" min="1000" max="100000000" step="1000" '+
-           'placeholder="Summani kiriting" value="" autocomplete="off" '+
+           'placeholder="Summani kiriting" value="" autocomplete="off" inputmode="numeric" '+
            'aria-label="To‘lov summasini qo‘lda kiriting, so‘m">'+
            '<button type="button" class="nur-math-pay-action" data-math-action="mark-payment" data-next-paid="'+
            (paid?'no':'yes')+'">'+(paid?'Kutilmoqda qilish':'To‘lov qilindi')+'</button></div>';
