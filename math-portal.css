@@ -204,3 +204,117 @@ body[data-nur-accent="graphite"] .hero{background:linear-gradient(135deg,#252f34
  margin-top:11px;font-size:12px;color:var(--muted)}
 .nur-finance-amount-line strong{font-size:15px;font-weight:850;color:var(--text);white-space:nowrap}
 @media(max-width:390px){.nur-finance-amount-line strong{font-size:13px}.nur-math-review-actions .nur-btn{flex:1 1 100%}}
+
+
+/* Nur admin finance glass — uses existing light/dark theme variables.
+   Expensive blurring is intentionally limited to the top cards. */
+#admin .nur-finance-panel{
+ background:linear-gradient(150deg,
+   color-mix(in srgb,var(--card) 88%,var(--tint)),
+   color-mix(in srgb,var(--card) 94%,var(--bg)))!important;
+ border:1px solid var(--stroke)!important;
+ box-shadow:0 13px 34px #133e2611,inset 0 1px 0 #ffffff64!important;
+ color:var(--text)!important;
+ border-radius:25px!important;
+}
+#admin .nur-finance-panel>h3{
+ color:var(--text)!important;font-size:20px!important;
+ letter-spacing:-.035em;line-height:1.27;margin-bottom:10px!important
+}
+#admin .nur-finance-panel>p{
+ color:var(--muted)!important;font-size:12px;line-height:1.6;
+}
+#admin .nur-finance-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:9px!important;margin:18px 0!important;
+}
+#admin .nur-finance-stat{
+ display:flex;flex-direction:column;justify-content:center;min-height:102px;
+ background:color-mix(in srgb,var(--card) 84%,var(--tint))!important;
+ border:1px solid var(--stroke)!important;border-radius:19px!important;
+ padding:14px 12px!important;
+ box-shadow:inset 0 1px 0 #ffffff50,0 7px 22px #1339220c!important;
+}
+#admin .nur-finance-stat:first-child{
+ grid-column:1 / -1;min-height:106px;
+ background:linear-gradient(130deg,var(--tint),
+   color-mix(in srgb,var(--card) 80%,var(--tint)))!important;
+}
+#admin .nur-finance-stat small{
+ display:block;color:var(--muted)!important;font-weight:730!important;
+ font-size:11px!important;line-height:1.4!important;
+}
+#admin .nur-finance-stat strong{
+ color:var(--text)!important;font-size:clamp(17px,4vw,23px)!important;
+ font-weight:850!important;line-height:1.25!important;
+ overflow-wrap:anywhere;letter-spacing:-.025em;
+}
+#admin .nur-finance-stat:first-child strong{color:var(--accent)!important;font-size:clamp(22px,6vw,28px)!important}
+#admin .nur-finance-hint{
+ color:var(--muted)!important;font-size:12px;line-height:1.6;
+ border-radius:14px;background:var(--tint)!important;
+ padding:12px 14px;margin-bottom:15px;
+}
+#admin .nur-finance-hint b{color:var(--text)}
+#admin .nur-finance-panel>label{
+ display:block;color:var(--text);font-weight:750;font-size:12px;
+}
+#admin #nur-admin-paymonth{
+ width:100%;margin-top:8px;min-height:46px;
+ border-radius:14px!important;border:1px solid var(--stroke)!important;
+ background:var(--card)!important;color:var(--text)!important;
+}
+#admin .nur-finance-group-title{
+ margin:20px 0 12px;font-size:13px;font-weight:800;
+ color:var(--text)!important;line-height:1.5;
+}
+#admin .nur-finance-student{
+ background:color-mix(in srgb,var(--card) 90%,var(--tint))!important;
+ border:1px solid var(--stroke)!important;
+ border-radius:18px!important;box-shadow:none!important;
+ padding:15px!important;
+}
+#admin .nur-finance-student.is-pending{border-left:4px solid #c89235!important}
+#admin .nur-finance-student.is-paid{border-left:4px solid #2a9874!important}
+#admin .nur-finance-student-head .name b{
+ font-size:14px;color:var(--text)!important;
+}
+#admin .nur-finance-student-head .name small{
+ color:var(--muted)!important;font-size:11px;
+}
+#admin .nur-finance-amount-line{
+ padding:9px 0;font-size:12px;color:var(--muted)!important;
+ border-bottom:1px solid var(--stroke);margin:6px 0 13px;
+}
+#admin .nur-finance-amount-line strong{color:var(--text)!important}
+#admin .nur-math-payment-controls{
+ display:flex;gap:8px;align-items:stretch;
+}
+#admin .nur-finance-panel input[name="amount"]{
+ width:100%;min-width:0;flex:1 1 53%;min-height:46px;
+ color:var(--text)!important;background:var(--card)!important;
+ font-size:14px;border:1px solid var(--stroke)!important;border-radius:14px!important;
+ padding:10px 12px;
+}
+#admin .nur-finance-panel input[name="amount"]::placeholder{
+ color:var(--muted)!important;opacity:.88;
+}
+#admin .nur-math-pay-action{
+ flex:1 1 43%;min-height:46px;min-width:0;
+ padding:10px 8px;border-radius:14px!important;
+ border:1px solid color-mix(in srgb,var(--accent) 45%,var(--stroke))!important;
+ background:#176f52!important;color:#fff!important;
+ font-size:12px!important;font-weight:780!important;line-height:1.3;
+}
+#admin .nur-finance-student.is-paid .nur-math-pay-action{
+ color:var(--text)!important;background:var(--tint)!important;
+ border-color:var(--stroke)!important;
+}
+body.dark #admin .nur-finance-panel,
+body.dark #admin .nur-finance-stat{
+ box-shadow:0 12px 24px #0002,inset 0 1px 0 #ffffff0f!important
+}
+@media(max-width:355px){
+ #admin .nur-math-payment-controls{flex-direction:column}
+ #admin .nur-finance-stat{min-height:95px}
+}
