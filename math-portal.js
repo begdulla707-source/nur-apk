@@ -656,6 +656,72 @@
        draft.length+' ta o‘quvchi · natijalarni tekshiring';
    },240);
  }
+ // Desktop PWA: optional local, on-demand WebAssembly OCR. Images remain in
+ // the browser; scores are only suggestions and always require admin review.
+ let desktopOcrLoading=null;
+ async function ensureDesktopOcr(){
+   if(window.Tesseract?.createWorker)return window.Tesseract;
+   if(!desktopOcrLoading){
+     desktopOcrLoading=new Promise((resolve,reject)=>{
+       const script=document.createElement('script');
+       script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+       script.async=true;script.crossOrigin='anonymous';
+       script.onload=()=>window.Tesseract?.createWorker?resolve(window.Tesseract):
+         reject(Error('OCR moduli ishga tushmadi'));
+       script.onerror=()=>reject(Error('PC OCR moduli yuklanmadi. Internetni tekshiring yoki Excel/CSV kiriting.'));
+       document.head.append(script);
+     }).catch(err=>{desktopOcrLoading=null;throw err});
+   }
+   return desktopOcrLoading;
+ }
+ async function readDesktopImages(images){
+   const status=$('nur-file-status');
+   let worker=null;
+   try{
+     const tesseract=await ensureDesktopOcr();
+     worker=await tesseract.createWorker('eng',1,{logger:message=>{
+       if(status&&message?.status==='recognizing text'){
+         const pct=Math.round(Number(message.progress||0)*100);
+         status.textContent='PC OCR: rasmni o‘qish '+pct+'%';
+       }
+     }});
+     for(const file of images){
+       let bitmap=null;
+       try{
+         if(file.size>10_000_000)throw Error('Rasm 10 MB dan katta');
+         bitmap=await createImageBitmap(file);
+         const scale=Math.min(2.6,Math.max(1,1850/bitmap.width));
+         const w=Math.round(bitmap.width*scale),h=Math.round(bitmap.height*scale);
+         if(w*h>10_000_000)throw Error('Rasm o‘lchami juda katta');
+         const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+         const context=canvas.getContext('2d',{willReadFrequently:true});
+         if(!context)throw Error('Rasmni ochib bo‘lmadi');
+         context.filter='grayscale(1) contrast(1.13)';
+         context.drawImage(bitmap,0,0,w,h);
+         const recognition=await worker.recognize(canvas);
+         const words=recognition.data?.words||[];
+         const elements=words.filter(word=>word?.bbox&&String(word.text||'').trim()).map(word=>({
+           text:String(word.text).trim(),
+           x:word.bbox.x0/w,y:word.bbox.y0/h,
+           w:(word.bbox.x1-word.bbox.x0)/w,
+           h:(word.bbox.y1-word.bbox.y0)/h,
+           confidence:Number(word.confidence||0)
+         }));
+         if(!elements.length)throw Error('Matn aniqlanmadi — Excel/CSV yoki tiniqroq rasm tanlang');
+         window.NurImageOCRDeliver?.({file:file.name,elements,engine:'tesseract-pc'});
+       }catch(err){
+         window.NurImageOCRDeliver?.({file:file.name,error:err.message});
+         addImportWarning(file.name+': '+err.message);
+       }finally{bitmap?.close?.()}
+     }
+   }catch(err){
+     for(const file of images)
+       window.NurImageOCRDeliver?.({file:file.name,error:err.message});
+   }finally{
+     try{await worker?.terminate()}catch(_){}
+     scheduleDraftRender();
+   }
+ }
  // On-device recognition produces editable suggestions; never auto-publishes.
  window.NurImageOCRDeliver=function(payload){
    pendingImages=Math.max(0,pendingImages-1);
@@ -691,8 +757,12 @@
      if(navigator.userAgent.includes('NurOqiwAndroid')){
        pendingImages+=images.length;
        if(info)info.textContent=images.length+' ta rasm tanildi. Telefonda matni tekshirilmoqda...';
+     }else if(desktopAllowed()){
+       pendingImages+=images.length;
+       if(info)info.textContent='PC OCR ishga tushyapti — tasvir lokal o‘qiladi, saqlash uchun tekshiring...';
+       void readDesktopImages(images);
      }else{
-       addImportWarning('Rasm OCR faqat Android APK ichida ishlaydi.');
+       addImportWarning('Bu qurilmada rasm OCR qo‘llanmaydi. Excel/CSV kiriting yoki Android APK dan foydalaning.');
        renderDraft(root);
      }
    }
