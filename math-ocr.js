@@ -47,6 +47,79 @@
     }
     return totals;
   }
+  // The A-group photograph has a wide date grid rather than the old
+  // 2-panel "F.A / Durisi" layout. Treat EVERY cell as a separate observation.
+  // Never interpret an empty/yellow cell as 0 or DQ.
+  function parseWideTable(tokens,rowTol){
+    const dates=tokens.filter(z=>/^([1-9]|[12][0-9]|3[01])$/.test(z.t)&&
+      z.y<.125&&z.x>.27&&z.x<.86);
+    const dateLines=[];
+    for(const token of dates.sort((a,b)=>a.y-b.y||a.x-b.x)){
+      const cy=token.y+token.h/2;
+      let line=dateLines.find(g=>Math.abs(g.y-cy)<.014);
+      if(!line){line={y:cy,values:[]};dateLines.push(line)}
+      line.values.push(token);
+    }
+    const row=dateLines.filter(g=>g.values.length>=6)
+      .sort((a,b)=>a.y-b.y||b.values.length-a.values.length)[0];
+    if(!row)return null;
+    let columns=row.values.map(z=>({day:Number(z.t),x:z.x+z.w/2})).sort((a,b)=>a.x-b.x);
+    columns=columns.filter((col,i)=>i===0||Math.abs(col.x-columns[i-1].x)>.012).slice(0,31);
+    if(columns.length<6)return null;
+    const firstX=columns[0].x;
+    const minY=Math.max(.10,row.y+.035);
+    const nameTokens=tokens.filter(z=>z.y+z.h/2>minY&&z.x+z.w/2>.07&&
+      z.x<firstX-.022&&isName(z.t))
+      .sort((a,b)=>(a.y+a.h/2)-(b.y+b.h/2)||a.x-b.x);
+    const lines=[];
+    const tolerance=Math.min(.019,Math.max(.011,rowTol*.93));
+    for(const word of nameTokens){
+      const cy=word.y+word.h/2;
+      let line=lines.find(g=>Math.abs(g.cy-cy)<tolerance);
+      if(!line){line={cy,words:[]};lines.push(line)}
+      line.words.push(word);
+    }
+    const scoreWords=tokens.filter(z=>z.y+z.h/2>minY&&
+      /^\d{1,3}$/.test(z.t)&&z.x+z.w/2>firstX-.023&&z.x<.89);
+    const students=[];
+    for(const line of lines){
+      const name=norm(line.words.sort((a,b)=>a.x-b.x).map(w=>w.t).join(' '));
+      if(!isName(name)||name.length<5)continue;
+      const values=columns.map((col,i)=>{
+        const neighbor=columns[i+1]?.x??col.x+.044;
+        const previous=columns[i-1]?.x??col.x-.044;
+        const distLimit=Math.min(.026,Math.min(neighbor-col.x,col.x-previous)*.44);
+        const matches=scoreWords.filter(z=>
+          Math.abs(z.x+z.w/2-col.x)<distLimit &&
+          Math.abs(z.y+z.h/2-line.cy)<Math.max(.012,tolerance*1.1))
+          .sort((a,b)=>Math.abs(a.y+a.h/2-line.cy)-Math.abs(b.y+b.h/2-line.cy));
+        const value=matches.length?Number(matches[0].t):null;
+        return Number.isInteger(value)&&value>=0&&value<=200?value:null;
+      });
+      students.push({name,values});
+    }
+    if(students.length<2)return null;
+    const unique=new Map();
+    for(const st of students){
+      const key=st.name.toLocaleLowerCase('uz');
+      if(!unique.has(key))unique.set(key,st);
+    }
+    const matrix={dates:columns.map(x=>x.day),students:[...unique.values()]};
+    const last=columns.length-1;
+    const rows=matrix.students.map(st=>{
+      const correct=st.values[last];
+      return {name:st.name,grade:null,correct,
+        status:correct===null||correct===0?'unresolved':'present'};
+    });
+    const warnings=[
+      'Ko‘p sanali jadval tanildi ('+columns.length+' ta ustun, '+rows.length+
+        ' ta o‘quvchi). Har bir sana alohida testdir; yil/oyni tekshiring.',
+      'OCR barcha raqamlarni kafolatli o‘qimaydi. Sariq/bo‘sh kataklar natija yo‘q, DQ emas.',
+      'Bitta sana ustunini tanlab, uning savollar soni va har bir ballini tekshirgach e’lon qiling.'
+    ];
+    return {rows,matrix,warnings,summary:{wide:true},
+      requires_confirmation:true,engine:'table-grid-ocr'};
+  }
   function parse(input){
     const raw=Array.isArray(input)?input:input&&Array.isArray(input.elements)?input.elements:[];
     const warnings=[];
@@ -58,6 +131,8 @@
     if(tokens.length<5)return {rows:[],warnings:['Rasmdan o\u2018qiladigan matn topilmadi; tiniqroq rasm tanlang.']};
     const heights=tokens.map(z=>z.h).filter(h=>h<0.10);
     const rowTol=Math.max(.014,Math.min(.028,median(heights)*.65));
+    const wide=parseWideTable(tokens,rowTol);
+    if(wide)return wide;
     const heads=tokens.filter(z=>headerScore(z.t)).sort((a,b)=>a.x-b.x);
     // In the supplied NUR table each half is No | F.A | Durisi | 100%.
     // Where two Durisi columns can be detected, derive the score column
