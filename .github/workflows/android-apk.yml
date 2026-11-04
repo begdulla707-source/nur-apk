@@ -3,16 +3,10 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    # PC site and API edits must NOT rebuild or replace the phone APK.
+    # Only an explicit Android source/version change or manual dispatch builds it.
     paths:
       - "android/**"
-      - "index.html"
-      - "*.css"
-      - "*.js"
-      - "backend/**"
-      - "tests/**"
-      - "paynet_qr.png"
-      - "android/app/google-services.json"
-      - ".github/workflows/android-apk.yml"
 concurrency:
   group: nur-oqiw-android-release-main
   cancel-in-progress: true
