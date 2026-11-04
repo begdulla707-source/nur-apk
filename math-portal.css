@@ -318,3 +318,133 @@ body.dark #admin .nur-finance-stat{
  #admin .nur-math-payment-controls{flex-direction:column}
  #admin .nur-finance-stat{min-height:95px}
 }
+
+
+/* Dedicated desktop-PWA layout. Only wide, mouse/trackpad screens are
+ * affected; Android phones retain the exact mobile layout and dimensions. */
+@media (min-width:900px) and (pointer:fine){
+ html{min-height:100%;background:var(--bg)}
+ body{padding:0!important;min-height:100dvh;background:
+  radial-gradient(ellipse at 25% 5%,color-mix(in srgb,var(--accent) 8%,transparent),transparent 60%),var(--bg)!important}
+ .phone{
+  display:block;width:calc(100vw - 44px)!important;
+  max-width:1320px!important;min-width:0;
+  min-height:calc(100dvh - 56px)!important;
+  margin:28px auto!important;
+  padding-left:274px!important;
+  overflow:hidden;
+  border:1px solid var(--stroke);border-radius:28px!important;
+  background:color-mix(in srgb,var(--bg) 91%,var(--card))!important;
+  box-shadow:0 20px 65px #153c2814!important;
+ }
+ .phone .view{width:100%;min-width:0;min-height:calc(100dvh - 110px)}
+ .phone .subpage{padding:30px 35px 130px!important}
+ .phone .subpage>h2{font-size:34px;line-height:1.2;letter-spacing:-.04em}
+ .phone #home{padding-bottom:108px}
+ .phone #home .hero{min-height:205px!important;border-radius:0 0 26px 26px!important;
+  padding:30px 38px!important}
+ .phone #home .hero h1{font-size:clamp(27px,3.5vw,39px)!important;max-width:620px!important}
+ .phone #home .hero p{max-width:560px!important;font-size:13px!important}
+ .phone #home .content{padding:28px 36px 140px!important}
+ .phone #home .content>.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+ .phone #home .content>.stats>.stat{padding:24px;border-radius:21px}
+ .phone #home .content>.list{grid-template-columns:repeat(1,minmax(0,1fr))}
+ .phone #home .content .nur-math-home,
+ .phone #home .content .payment-home-card{min-height:90px!important;padding:20px!important}
+ .phone #admin .appcard,.phone #admin .nur-math-panel{max-width:none!important}
+ .phone #admin #admin-tab-content{max-width:100%;min-width:0}
+ .phone .tabbar{
+  left:calc(50% + 137px)!important;bottom:29px!important;top:auto!important;
+  width:calc(min(100vw - 44px,1320px) - 302px)!important;
+  max-width:none!important;padding:9px 18px!important;z-index:8;
+  border:1px solid var(--stroke)!important;border-radius:24px!important;
+  background:var(--bottom)!important;
+ }
+ .phone .tabbar button{font-size:12px!important}
+ .drawer,.drawer.open{
+  position:fixed!important;
+  left:max(calc((100vw - 1320px)/2 + 15px),25px)!important;
+  top:40px!important;bottom:40px!important;right:auto!important;
+  width:246px!important;max-width:246px!important;
+  border:1px solid var(--stroke)!important;border-radius:24px!important;
+  background:color-mix(in srgb,var(--card) 91%,var(--bg))!important;
+  padding:24px 14px!important;box-shadow:0 15px 39px #153c2810!important;
+  overflow-y:auto;overflow-x:hidden;z-index:9;
+  transform:translate3d(0,0,0)!important;opacity:1!important;
+ }
+ .drawer>*{opacity:1!important;transform:none!important}
+ .drawer .drawer-head h3{font-size:17px}
+ .drawer .drawer-info{font-size:11px}
+ .drawer .setting{padding:15px 0}
+ .drawer .language-panel{padding:10px}
+ .drawer .langs button{padding:8px!important;min-width:0}
+ .phone #home .menubtn,.drawer .x{display:none!important}
+ .overlay,.overlay.open{display:none!important;pointer-events:none!important}
+ .phone #rating .nur-leaderboard{display:none}
+ .phone #rating .nur-math-subhead{margin-bottom:18px}
+ .phone .nur-math-tools input{font-size:13px!important}
+ .phone #nur-math-results .nur-score-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .phone #nur-math-monthly .nur-monthly-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .phone #admin .nur-admin-glass-hero{margin-top:22px}
+ body.dark .phone{box-shadow:0 20px 70px #0004!important}
+}
+/* Monthly Excel-like view is deliberately hidden on phones. */
+#nur-desktop-matrix{display:none}
+@media (min-width:900px) and (pointer:fine){
+ #nur-desktop-matrix{display:block;margin-top:15px;padding:22px;border-radius:25px;
+  background:var(--card);border:1px solid var(--stroke);
+  box-shadow:0 10px 25px #163c2410;min-width:0;max-width:100%}
+ .nur-matrix-header{display:flex;justify-content:space-between;align-items:end;gap:18px;
+  flex-wrap:wrap;margin-bottom:16px}
+ .nur-matrix-eyebrow{font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--accent)}
+ .nur-matrix-header h3{font-size:22px;letter-spacing:-.04em;color:var(--text);margin:7px 0 3px}
+ .nur-matrix-header p{font-size:12px;color:var(--muted);margin:6px 0;line-height:1.5}
+ .nur-matrix-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+ .nur-matrix-search{height:41px;border:1px solid var(--stroke);border-radius:12px;
+  background:var(--bg);color:var(--text);padding:0 12px;min-width:190px}
+ .nur-matrix-export{background:#176f52;color:white;border:0;border-radius:12px;
+  font-size:12px;font-weight:750;min-height:42px;padding:11px 16px}
+ .nur-matrix-scroll{overflow-x:auto;overscroll-behavior-x:contain;
+  border:1px solid var(--stroke);border-radius:14px;max-width:100%;
+  background:var(--card);scrollbar-width:thin}
+ .nur-matrix-scroll:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+ .nur-matrix-table{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content;
+  color:var(--text);font-size:12px;line-height:1.4;font-variant-numeric:tabular-nums}
+ .nur-matrix-table th,.nur-matrix-table td{padding:10px 11px;text-align:center;
+  border-right:1px solid var(--stroke);border-bottom:1px solid var(--stroke);
+  min-width:53px;height:40px;white-space:nowrap}
+ .nur-matrix-table thead th{background:var(--tint);color:var(--text);
+  font-size:11px;font-weight:840}
+ .nur-matrix-table tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 88%,var(--tint))}
+ .nur-matrix-table tbody tr:hover td{background:color-mix(in srgb,var(--tint) 65%,var(--card))}
+ .nur-matrix-table .nur-matrix-sticky{position:sticky;z-index:3;
+  background:var(--card);box-shadow:1px 0 0 var(--stroke)}
+ .nur-matrix-table thead .nur-matrix-sticky{z-index:5;background:var(--tint)}
+ .nur-matrix-table .nur-matrix-sticky.num{left:0;min-width:52px;width:52px}
+ .nur-matrix-table .nur-matrix-sticky.name{left:52px;min-width:205px;max-width:280px;text-align:left}
+ .nur-matrix-table .name button{padding:0;background:none;border:0;color:var(--text);
+  font:inherit;font-size:12px;font-weight:770;text-align:left;white-space:normal}
+ .nur-matrix-table .name button:hover{color:var(--accent);text-decoration:underline}
+ .nur-matrix-testhead{min-width:56px}
+ .nur-matrix-limit{font-size:10px!important;color:var(--muted)!important}
+ .nur-matrix-score{font-weight:740}
+ .nur-matrix-missing{background:#fff0ad!important}
+ body.dark .nur-matrix-missing{background:#6d541d!important;color:#fff}
+ .nur-matrix-dq{color:#b74150;font-weight:850;background:#fce6e7!important}
+ body.dark .nur-matrix-dq{background:#71313a!important;color:#ffe0e2}
+ .nur-matrix-unknown{color:#bc6511;background:#ffebc5!important;font-weight:900}
+ .nur-matrix-total{font-weight:880;color:var(--text)}
+ .nur-matrix-percent{font-weight:850}
+ .nur-matrix-percent.high{background:#c9f2d0!important;color:#12582b!important}
+ .nur-matrix-percent.medium{background:#fff0a9!important;color:#715211!important}
+ .nur-matrix-percent.low{background:#f9d5cf!important;color:#91372a!important}
+ .nur-matrix-rank{font-weight:900;color:var(--accent)}
+ .nur-matrix-legend{display:flex;gap:12px;flex-wrap:wrap;padding-top:13px;
+  font-size:11px;color:var(--muted)}
+ .nur-matrix-yellow{border-left:8px solid #ffe59a;padding-left:7px}
+ .nur-matrix-loading,.nur-matrix-empty{padding:23px;color:var(--muted);font-size:12px}
+}
+@media(max-width:899px),(pointer:coarse){
+ /* Explicitly keep the native mobile dimensions unchanged. */
+ #nur-desktop-matrix{display:none!important}
+}
