@@ -105,6 +105,9 @@
       if(!unique.has(key))unique.set(key,st);
     }
     const matrix={dates:columns.map(x=>x.day),students:[...unique.values()]};
+    const indexNumbers=tokens.filter(z=>z.y+z.h/2>minY&&z.x<.075&&
+      /^\d{1,3}$/.test(z.t)).map(z=>Number(z.t));
+    const expectedRows=indexNumbers.length>=3?Math.max(...indexNumbers):null;
     const last=columns.length-1;
     const rows=matrix.students.map(st=>{
       const correct=st.values[last];
@@ -117,7 +120,11 @@
       'OCR barcha raqamlarni kafolatli o‘qimaydi. Sariq/bo‘sh kataklar natija yo‘q, DQ emas.',
       'Bitta sana ustunini tanlab, uning savollar soni va har bir ballini tekshirgach e’lon qiling.'
     ];
-    return {rows,matrix,warnings,summary:{wide:true},
+    if(expectedRows&&rows.length<expectedRows)warnings.push(
+      'DIQQAT: jadvalda '+expectedRows+' qator bor, OCR esa '+rows.length+
+      ' ta ism topdi. Yetishmaganlarni qo‘lda kiriting yoki Excel/CSV yuklang.');
+    return {rows,matrix,warnings,summary:{wide:true,expectedRows,
+      missingRows:Boolean(expectedRows&&rows.length<expectedRows)},
       requires_confirmation:true,engine:'table-grid-ocr'};
   }
   function parse(input){
