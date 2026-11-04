@@ -195,6 +195,86 @@ def register_math(app, db, admin_only, bad):
             result=snapshot(conn,day,month)
         return jsonify(result)
 
+    @app.get("/api/math/matrix")
+    def math_matrix():
+        """Read-only month-by-test spreadsheet for desktop views.
+
+        Columns represent real test dates and published scores. Blank cells
+        mean there was no result; DQ is explicit, never interpreted as zero.
+        """
+        try:
+            chosen=month_value(request.args.get("month") or this_month().strftime("%Y-%m"))
+        except ValueError:
+            return bad("Oy YYYY-MM formatida bo‘lishi kerak")
+        end=dt.date(chosen.year+(chosen.month==12),chosen.month%12+1,1)
+        with db() as conn:
+            exams=conn.execute("""SELECT id,held_on,title,question_count
+              FROM math_tests
+              WHERE held_on>=%s AND held_on<%s
+              ORDER BY held_on,id LIMIT 90""",(chosen,end)).fetchall()
+            people=conn.execute("""SELECT id,full_name,grade
+              FROM math_students WHERE NOT archived
+              ORDER BY full_name,id LIMIT 450""").fetchall()
+            results=[]
+            if exams:
+                results=conn.execute("""SELECT r.test_id,r.student_id,
+                  r.status,r.correct_answers
+                  FROM math_results r
+                  JOIN math_tests t ON t.id=r.test_id
+                  JOIN math_students st ON st.id=r.student_id
+                  WHERE t.held_on>=%s AND t.held_on<%s
+                    AND NOT st.archived
+                  ORDER BY r.test_id,r.student_id""",(chosen,end)).fetchall()
+        scores={(int(r["student_id"]),int(r["test_id"])):r for r in results}
+        tests=[{"id":int(t["id"]),"date":t["held_on"].isoformat(),
+                "title":t["title"],"questions":int(t["question_count"])}
+               for t in exams]
+        maximum=sum(x["questions"] for x in tests)
+        table=[]
+        for person in people:
+            sid=int(person["id"])
+            cells=[]
+            correct_total=0
+            attended=0
+            dq=0
+            for t in tests:
+                r=scores.get((sid,t["id"]))
+                if r is None:
+                    cells.append({"status":"missing","correct":None})
+                elif r["status"]=="dq":
+                    cells.append({"status":"dq","correct":None})
+                    dq+=1
+                elif r["status"]=="present" and r["correct_answers"] is not None:
+                    value=int(r["correct_answers"])
+                    cells.append({"status":"present","correct":value})
+                    correct_total+=value
+                    attended+=1
+                else:
+                    cells.append({"status":"unknown","correct":None})
+            table.append({
+                "student_id":sid,
+                "name":person["full_name"],"grade":person["grade"],
+                "cells":cells,"total":correct_total,
+                "percent":round(correct_total*100/maximum,1) if maximum else None,
+                "attended":attended,"dq":dq,
+                "rank":None,
+            })
+        order=sorted((x for x in table if x["attended"]>0),
+                     key=lambda x:(-x["total"],x["name"].casefold(),x["student_id"]))
+        rank=0
+        previous=None
+        for p in order:
+            if p["total"]!=previous:
+                rank+=1
+                previous=p["total"]
+            p["rank"]=rank
+        table.sort(key=lambda x:(x["rank"] is None,x["rank"] or 0,
+                                   x["name"].casefold(),x["student_id"]))
+        return jsonify({"ok":True,"month":chosen.strftime("%Y-%m"),
+             "tests":tests,"students":table,"max_points":maximum,
+             "students_count":len(table),"test_count":len(tests),
+             "score_caution":"Bo‘sh katak natija yo‘qligini bildiradi; DQ alohida belgi."})
+
     @app.get("/api/math/student/<int:student_id>")
     def math_profile(student_id):
         with db() as conn:
