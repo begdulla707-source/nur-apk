@@ -69,6 +69,8 @@ console.log('PASS: full 26-row sheet, decorated score cells, 22/4 attendance, 32
 const wide=[at('MATEMATIKA',.22,.01,.19),at('Oktyabr',.25,.028,.07)];
 const days=[1,4,6,8,10,13,15];
 days.forEach((day,i)=>wide.push(at(String(day),.315+i*.071,.062,.018,.020)));
+const questionCounts=[40,40,40,40,32,32,15];
+questionCounts.forEach((count,i)=>wide.push(at(String(count),.315+i*.071,.091,.026,.018)));
 const people=[
   ['Ametov','Nurbol',[25,16,null,39,27,36,9]],
   ['Ayapbergenova','Raziya',[28,null,40,38,40,40,13]],
@@ -82,6 +84,7 @@ people.forEach(([family,given,scores],i)=>{
 const spreadsheet=OCR.parse({elements:wide});
 assert(spreadsheet.matrix,'Wide spreadsheet must be detected');
 assert.deepEqual(spreadsheet.matrix.dates,days);
+assert.deepEqual(spreadsheet.matrix.question_counts,questionCounts);
 assert.equal(spreadsheet.rows.length,3,JSON.stringify(spreadsheet));
 assert.equal(spreadsheet.matrix.students[0].values[2],null);
 assert.equal(spreadsheet.rows[0].correct,9);
@@ -90,3 +93,17 @@ assert.equal(spreadsheet.rows[2].correct,0);
 assert.equal(spreadsheet.rows[2].status,'unresolved');
 assert(spreadsheet.warnings.some(w=>w.includes('Ko‘p sanali')));
 console.log('PASS: multi-date table OCR, date columns, yellow blanks retained, zero requires review');
+
+// A clearly invalid score > questions and low-confidence OCR must remain
+// unconfirmed; do not invent a grade or DQ status.
+const wrong=[...wide,at('19',.315+6*.071,.335,.025,.020)];
+wrong.push(at('Saparov',.095,.335,.09),at('Temur',.192,.335,.077),at('4',.035,.335,.018));
+const wrongParsed=OCR.parse({elements:wrong});
+assert(wrongParsed.matrix);
+const invalid=wrongParsed.matrix.students.find(x=>x.name==='Saparov Temur');
+assert(invalid);
+assert.equal(invalid.values[6],null);
+const lowConf=wide.map(x=>x.text==='13'&&Math.abs(x.y-.215)<.03?{...x,confidence:25}:x);
+const lowParsed=OCR.parse({elements:lowConf});
+assert.equal(lowParsed.rows[1].correct,null);
+console.log('PASS: question counts, impossible/uncertain cells and confidence checks');
