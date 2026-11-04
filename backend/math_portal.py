@@ -565,6 +565,73 @@ def register_math(app, db, admin_only, bad):
             finally:wb.close()
         raise ValueError("Fayl .xlsx yoki .csv bo‘lishi kerak")
 
+    def decode_wide_preview(raw_rows):
+        """Preview a worksheet with date columns, names and multiple tests.
+
+        This does not write to the database. Missing cells are unknown,
+        not absent, and every selected test requires explicit confirmation.
+        """
+        if not raw_rows:return None,[]
+        for row_index,raw in enumerate(raw_rows[:8]):
+            # The first two columns are row number and student name.
+            cells=list(raw)
+            candidate=[]
+            for index,value in enumerate(cells[2:],start=2):
+                try:
+                    day=float(value)
+                    if day.is_integer() and 1<=day<=31:candidate.append((index,int(day)))
+                except (TypeError,ValueError):pass
+            if len(candidate)<5:continue
+            if row_index+1>=len(raw_rows):continue
+            next_row=list(raw_rows[row_index+1])
+            if len(next_row)<=candidate[0][0]:continue
+            # Header after dates must contain plausible question counts
+            # (often 40, 32, 24, 15 as in the provided A-group sheet).
+            def count_at(index):
+                if index>=len(next_row):return None
+                try:
+                    num=float(next_row[index])
+                    return int(num) if num.is_integer() and 1<=num<=200 else None
+                except (TypeError,ValueError):return None
+            questions=[count_at(i) for i,day in candidate]
+            if sum(x is not None for x in questions)<len(candidate)*.6:continue
+            entries=[]
+            max_row_num=0
+            for rec in raw_rows[row_index+2:row_index+MAX_ROWS+2]:
+                row=list(rec)
+                if len(row)<2 or row[1] is None:continue
+                name=str(row[1]).strip()
+                if len(name)<3 or len(name)>NAME_LIMIT:continue
+                # The first column is usually 1..N, but is optional.
+                try:
+                    seq=int(row[0])
+                    if 1<=seq<=MAX_ROWS:max_row_num=max(seq,max_row_num)
+                except (TypeError,ValueError):pass
+                values=[]
+                for col,day in candidate:
+                    cell=row[col] if col<len(row) else None
+                    if cell is None or str(cell).strip()=="":
+                        values.append(None);continue
+                    try:
+                        value=float(str(cell).replace(",",".").replace("%",""))
+                        values.append(int(value) if value.is_integer() and 0<=value<=200 else None)
+                    except (TypeError,ValueError):
+                        values.append(None)
+                entries.append({"name":name,"values":values})
+            if not entries:continue
+            matrix={"dates":[day for col,day in candidate],
+                    "question_counts":questions,
+                    "students":entries,
+                    "expectedRows":max_row_num or len(entries)}
+            warnings=["Ko‘p sanali Excel jadvali tanildi ("+str(len(candidate))+
+                      " test, "+str(len(entries))+" o‘quvchi). Bitta sanani tanlab, tasdiqlang.",
+                      "Bo‘sh kataklar avtomatik 0 yoki DQ deb olinmaydi."]
+            if max_row_num>len(entries):
+                warnings.append("Jadvalda "+str(max_row_num)+" qator, lekin "+
+                    str(len(entries))+" ism o‘qildi; yetishmaganlarni tekshiring.")
+            return matrix,warnings
+        return None,[]
+
     def decode_preview(raw_rows):
         if not raw_rows:return [],["Jadval bo‘sh"]
         start=0
@@ -632,8 +699,19 @@ def register_math(app, db, admin_only, bad):
                 continue
             try:
                 records=extract_rows(data,filename)
-                rows,warnings=decode_preview(records)
-                out.append({"file":filename,"rows":rows,"warnings":warnings})
+                matrix,matrix_warnings=decode_wide_preview(records)
+                if matrix is None:
+                    rows,warnings=decode_preview(records)
+                    out.append({"file":filename,"rows":rows,"warnings":warnings})
+                else:
+                    latest=len(matrix["dates"])-1
+                    rows=[]
+                    for student in matrix["students"]:
+                        correct=student["values"][latest]
+                        rows.append({"name":student["name"],"grade":None,"correct":correct,
+                          "status":"present" if correct is not None and correct>0 else "unresolved"})
+                    out.append({"file":filename,"rows":rows,"warnings":matrix_warnings,
+                                "matrix":matrix})
             except Exception as error:
                 out.append({"file":filename,"rows":[],"warnings":[
                     "Faylni o‘qib bo‘lmadi: "+str(error)[:160]]})
