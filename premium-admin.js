@@ -280,7 +280,7 @@
       card.innerHTML='<h4>'+esc(n.title)+'</h4><p>'+esc(n.body)+'</p><small class="premium-muted">'+esc(detail)+'</small>'+
         '<div class="premium-quick">'+b('Tahrir','premium-edit-notice',n.id,'secondary')+
         b(n.pinned?'Oddiy qilish':'Yuqoriga chiqarish','premium-pin-notice',n.id,'secondary')+
-        (n.archived?b('Tiklash','premium-restore-notice',n.id,'secondary'):b('O‘chirish','premium-archive-notice',n.id,'danger'))+'</div>';
+        (n.archived?b('Tiklash','premium-restore-notice',n.id,'secondary'):b(desktopAdmin()?'O‘chirish':'Arxiv','premium-archive-notice',n.id,'danger'))+'</div>';
       root.append(card);
     }
   }
@@ -408,7 +408,7 @@
     const id=Number(btn.dataset.id);
     try{
       if(action==='premium-close'){$('premium-edit')?.remove();return}
-      if(action==='premium-archive-notice'&&!confirm('E’lon o‘chirilsinmi? U arxivga ko‘chadi va keyin tiklash mumkin.'))return;
+      if(action==='premium-archive-notice'&&desktopAdmin()&&!confirm('E’lon o‘chirilsinmi? U arxivga ko‘chadi va keyin tiklash mumkin.'))return;
       if(action==='premium-refresh'){await ctx.renderAdmin();return}
       if(action==='premium-tab'){
         const tab=btn.dataset.id;ctx.state.adminTab=tab;await ctx.showAdminTab();return;
