@@ -6,6 +6,7 @@
  'use strict';
  const API='https://nur-apk-api.mcweb.uz/api';
  const $=id=>document.getElementById(id);
+ const dateLocaleAttr=()=>window.matchMedia('(min-width:900px) and (pointer:fine)').matches?'lang="en-GB"':'';
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const tick='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" stroke-width="2.4"/></svg>';
  const clock='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
@@ -186,7 +187,7 @@
    const current=data.tests||[];
    const count=current.reduce((n,t)=>n+t.rows.length,0);
    root.innerHTML='<div class="nur-math-tools"><label><span style="font-size:11px">Natija yuklangan sana</span> '+
-      '<input id="nur-math-date" type="date" value="'+esc(pageDate)+'"></label>'+ 
+      '<input id="nur-math-date" type="date" '+dateLocaleAttr()+' value="'+esc(pageDate)+'"></label>'+ 
       '<button type="button" id="nur-results-latest" class="nur-latest-button">Oxirgi test</button>'+
       '</div>'+
      '<div id="nur-date-links" class="nur-date-links"></div>'+
@@ -266,7 +267,7 @@
        '<p>Excel uslubida: test sanalari, to‘g‘ri javoblar, jami ball va o‘rin. '+
        'Bo‘sh katak — natija yo‘q; DQ — qatnashmagan.</p></div>'+
        '<div class="nur-matrix-actions">'+
-       '<label class="nur-matrix-month-label">Oy <input class="nur-matrix-month" type="month" value="'+esc(shownMonth)+'" aria-label="Jadval oyi"></label>'+
+       '<label class="nur-matrix-month-label">Oy <input class="nur-matrix-month" type="month" '+dateLocaleAttr()+' value="'+esc(shownMonth)+'" aria-label="Jadval oyi"></label>'+
        '<input class="nur-matrix-search" type="search" aria-label="Ism orqali qidirish" placeholder="O‘quvchini qidirish">'+
        '<button class="nur-matrix-export" type="button">CSV yuklab olish</button></div></div>'+
        (tests.length?'':'<div class="nur-matrix-empty">Bu oyda test natijalari yo‘q. Boshqa oyni tanlang yoki admin panel orqali asl Excel faylini import qiling.</div>')+
@@ -356,7 +357,7 @@
    const ranking=[...data.students].sort((a,b)=>(a.rank??99999)-(b.rank??99999)||
      a.full_name.localeCompare(b.full_name));
    root.innerHTML='<div class="nur-math-tools"><label style="font-size:11px">Reyting oyi '+
-     '<input id="nur-rank-month" type="month" value="'+esc(month)+'"></label>'+
+     '<input id="nur-rank-month" type="month" '+dateLocaleAttr()+' value="'+esc(month)+'"></label>'+
      '<span class="nur-math-live">Avtomatik reyting</span></div>'+
      '<div class="nur-math-subhead"><b>Umumiy oylik reyting</b><small>Teng ball — teng o‘rin</small></div>'+
      '<div id="nur-rank-rows" class="nur-leaderboard"></div>';
@@ -384,7 +385,7 @@
    const root=$('nur-math-monthly');if(!root||!data)return;
    root.className='';
    root.innerHTML='<div class="nur-math-tools"><label style="font-size:11px">To‘lov oyi '+
-      '<input type="month" id="nur-payment-month" value="'+esc(month)+'"></label>'+
+      '<input type="month" '+dateLocaleAttr()+' id="nur-payment-month" value="'+esc(month)+'"></label>'+
       '<small style="color:var(--muted)">Admin tasdiqlaydi</small></div>'+
       '<div id="nur-payment-rows" class="nur-monthly-list"></div>';
    $('nur-payment-month').addEventListener('change',e=>{if(!e.target.value)return;monthPinned=true;month=e.target.value;reload(true)});
@@ -968,7 +969,7 @@
        '<p><b>Yuklangan sana avtomatik:</b> server natijani saqlagan kun (Toshkent vaqti). Test o‘tkazilgan sana alohida qoladi. Jadvalda topilgan ism, ball va DQni tasdiqlang.</p>'+
        '<form class="nur-math-form" data-math-form="commit">'+
        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-       '<label>Test o‘tkazilgan sana<input type="date" name="date" required value="'+esc(today())+'"></label>'+
+       '<label>Test o‘tkazilgan sana<input type="date" '+dateLocaleAttr()+' name="date" required value="'+esc(today())+'"></label>'+
        '<label>Savollar soni<input type="number" name="question_count" required min="1" max="200" value="32"></label></div>'+
        '<label>Test nomi<input name="title" required maxlength="120" value="Matematika testi"></label>'+
        '<label class="nur-math-upload" for="nur-math-files"><b>Fayllarni tanlash yoki shu yerga tashlash</b>'+
@@ -998,7 +999,7 @@
        '<div class="nur-finance-stat"><small>To‘lovni kutayotganlar</small><strong>'+pendingCount+' ta</strong></div>'+
        '<div class="nur-finance-stat"><small>Hamma oylar bo‘yicha tushgan</small><strong>'+fixed(finance.all_time_total_uzs)+' so‘m</strong></div></div>'+
        '<p class="nur-finance-hint">Hisob: har bir faol o‘quvchi uchun <b>'+fixed(rate)+' so‘m</b>. Bu reja, avtomatik to‘lov emas. Balansga faqat admin summa kiritib tasdiqlagan pul qo‘shiladi.</p>'+
-       '<label>Hisobot oyi <input id="nur-admin-paymonth" type="month" value="'+esc(month)+'"></label>'+
+       '<label>Hisobot oyi <input id="nur-admin-paymonth" type="month" '+dateLocaleAttr()+' value="'+esc(month)+'"></label>'+
        '<div id="nur-admin-pay-list" class="nur-monthly-list" style="margin-top:14px"></div></section>';
      root.querySelector('#nur-admin-paymonth').onchange=async e=>{
        monthPinned=true;month=e.target.value;await reload(true);await renderAdmin(root,ctx,'math-payments');
