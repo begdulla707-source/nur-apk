@@ -112,7 +112,7 @@
    settings.querySelector('.back').addEventListener('click',()=>window.go?.('home'));
    if(bar)bar.before(settings);
    const open=document.createElement('button');open.className='nur-settings-open';open.type='button';
-   open.innerHTML='<span>Sozlamalar</span><span>›</span>';
+   open.innerHTML='<svg class="nur-settings-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Z"/><path d="M19.4 13.6a7.7 7.7 0 0 0 0-3.2l1.5-1.2-1.5-2.6-1.8.7a7.4 7.4 0 0 0-2.7-1.6L14.6 4h-3.2l-.3 1.7a7.4 7.4 0 0 0-2.7 1.6l-1.8-.7-1.5 2.6 1.5 1.2a7.7 7.7 0 0 0 0 3.2l-1.5 1.2 1.5 2.6 1.8-.7a7.4 7.4 0 0 0 2.7 1.6l.3 1.7h3.2l.3-1.7a7.4 7.4 0 0 0 2.7-1.6l1.8.7 1.5-2.6z"/></svg><span class="nur-settings-label">Sozlamalar</span><span class="nur-settings-arrow" aria-hidden="true">›</span>';
    open.addEventListener('click',()=>{window.closeMenu?.();window.go?.('nur-settings')});
    const drawer=$('drawer'),language=drawer?.querySelector('.language-panel');
    if(language)language.after(open);else drawer?.append(open);
