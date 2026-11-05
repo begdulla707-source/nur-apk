@@ -126,7 +126,10 @@ body[data-nur-accent="graphite"] .hero{background:linear-gradient(135deg,#252f34
 .nur-compact-title small{font-size:10px;color:var(--muted);display:block;margin-top:3px}
 .nur-mini-verified{width:19px;height:19px;flex:none}
 .nur-settings-open{width:100%;border:1px solid var(--stroke);background:var(--card);border-radius:13px;
- color:var(--text);padding:13px 14px;font-size:12px;font-weight:750;display:flex;justify-content:space-between;margin:10px 0}
+ color:var(--text);padding:13px 14px;font-size:12px;font-weight:750;display:flex;align-items:center;gap:10px;justify-content:space-between;margin:10px 0}
+.nur-settings-symbol{width:19px;height:19px;flex:0 0 19px;color:var(--accent)}
+.nur-settings-label{flex:1;min-width:0;text-align:left}
+.nur-settings-arrow{font-size:18px;line-height:1;opacity:.62}
 #home .math-sync-info{font-size:10px;margin-top:12px;color:var(--muted)}
 @media(max-width:350px){.nur-math-tools input[type="date"]{max-width:160px}.nur-payment-row{gap:6px}.nur-rank-row{gap:6px}}
 
