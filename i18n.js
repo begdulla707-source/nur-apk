@@ -3,6 +3,7 @@
 (() => {
 'use strict';
 const table=[
+["Sozlamalar","Settings","Настройки","Sazlamalar"],
 ["TA’LIM MARKAZI","EDUCATION CENTER","УЧЕБНЫЙ ЦЕНТР","OQÍW ORAYÍ"],
 ["Har bir qadam —","Every step —","Каждый шаг —","Hár bir qádem —"],
 ["yangi imkoniyat.","a new opportunity.","новая возможность.","jańa imkaniyat."],
@@ -418,8 +419,10 @@ function setupPicker(){
    english.addEventListener('click',()=>setLanguage('EN'));
    bar.append(english);
  }
- // Make language choice explicit and predictable: UZ / EN / RU / QQ.
- for(const locale of ['UZ','EN','RU','QQ']){
+ // Desktop uses compact QQ / UZ / RU / EN chips; mobile keeps its existing order.
+ const localeOrder=window.matchMedia('(min-width:900px) and (pointer:fine)').matches
+   ?['QQ','UZ','RU','EN']:['UZ','EN','RU','QQ'];
+ for(const locale of localeOrder){
    const button=bar.querySelector('button[data-language="'+locale+'"]');
    if(button)bar.append(button);
  }
