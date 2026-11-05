@@ -127,8 +127,7 @@ body.dark #admin .nur-admin-glass-metric{box-shadow:inset 0 1px 0 #ffffff0b}
 
 /* PC-only admin dashboard. Phone and APK layouts stay on their existing styles. */
 @media (min-width:900px) and (pointer:fine){
-  body>.drawer .drawer-head h3{font-size:0}
-  body>.drawer .drawer-head h3::after{content:"Sozlamalar";font-size:20px}
+  body>.drawer .drawer-head h3{font-size:20px}
   #admin>.back,#admin>h2,#admin>.desc,#admin>#admin-identity{display:none!important}
   #admin-workspace.pc-admin-desktop{display:grid;grid-template-columns:218px minmax(0,1fr);gap:18px 24px;align-items:start;padding:0 4px 35px}
   #admin-workspace.pc-admin-desktop>.nur-admin-glass-hero{grid-column:1/-1;margin:0 0 2px;padding:23px 25px 18px}
