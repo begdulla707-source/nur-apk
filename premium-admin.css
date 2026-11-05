@@ -174,3 +174,55 @@ body.dark #admin .nur-admin-glass-metric{box-shadow:inset 0 1px 0 #ffffff0b}
   #admin-workspace.pc-admin-desktop .pc-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   #admin-workspace.pc-admin-desktop .pc-admin-columns{grid-template-columns:minmax(0,1fr)}
 }
+
+
+/* Desktop-only polish: concise language picker, unclipped settings, and readable date controls. */
+@media (min-width:900px) and (pointer:fine){
+  body>.drawer .setting{
+    box-sizing:border-box;
+    min-width:0;
+    max-width:100%;
+    gap:10px;
+    overflow:hidden;
+  }
+  body>.drawer .setting-label{
+    display:block;
+    flex:1 1 auto;
+    min-width:0;
+    line-height:1.35;
+    overflow-wrap:anywhere;
+  }
+  body>.drawer #theme-switch{flex:0 0 50px}
+  body>.drawer .langs{
+    display:flex;
+    flex-wrap:nowrap;
+    gap:6px;
+    width:100%;
+  }
+  body>.drawer .langs button{
+    display:grid;
+    flex:1 1 0;
+    min-width:0;
+    min-height:42px;
+    place-items:center;
+    padding:9px 6px;
+    order:0;
+  }
+  body>.drawer .langs button[data-language="QQ"]{order:1}
+  body>.drawer .langs button[data-language="UZ"]{order:2}
+  body>.drawer .langs button[data-language="RU"]{order:3}
+  body>.drawer .langs button[data-language="EN"]{order:4}
+  body>.drawer .langs button small{display:none}
+  body>.drawer .langs button strong{font-size:12px;line-height:1}
+  #admin-workspace.pc-admin-desktop .pc-admin-stats{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  #admin-workspace.pc-admin-desktop #admin-tab-content input[type="date"],
+  #admin-workspace.pc-admin-desktop #admin-tab-content input[type="datetime-local"]{
+    box-sizing:border-box;
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    font-variant-numeric:tabular-nums;
+  }
+}
