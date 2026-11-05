@@ -7,12 +7,32 @@
   const $=id=>document.getElementById(id);
   const groupOptions=(groups,all=false,selected='')=> (all?'<option value="">Barcha guruhlar</option>':'')+
       groups.map(g=>'<option value="'+g.id+'"'+(String(selected)===String(g.id)?' selected':'')+'>'+esc(g.title)+'</option>').join('');
-  const field=(label,name,type='text',value='',extra='')=>'<label>'+esc(label)+'<input type="'+type+'" name="'+name+'" value="'+esc(value)+'" '+extra+'></label>';
+  const field=(label,name,type='text',value='',extra='')=>'<label>'+esc(label)+'<input type="'+type+'" name="'+name+'" value="'+esc(value)+'" '+((type==='date'||type==='datetime-local')&&desktopAdmin()?'lang="en-GB" ':'')+extra+'></label>';
   const groupBox=(ctx,name,selected='',all=true)=>'<label>Guruh<select name="'+name+'" data-premium-filter="'+name+'">'+groupOptions(ctx.state.groups,all,selected)+'</select></label>';
   const loading=root=>{root.innerHTML='<div class="premium-loading"><span class="premium-spinner" aria-label="Tayyorlanmoqda"></span></div>'};
   const error=(root,e)=>{root.innerHTML='<div class="errorbox">'+esc(e.message||e)+'</div><button class="appbtn secondary" data-act="premium-refresh">Qayta urinish</button>'};
   const b=(label,act,id,more='')=>'<button class="appbtn small '+more+'" data-act="'+act+'" data-id="'+(id||'')+'">'+esc(label)+'</button>';
-  const previewDate=value=>{if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?String(value):new Intl.DateTimeFormat('uz-UZ',{timeZone:'Asia/Tashkent',day:'2-digit',month:'2-digit',year:'numeric'}).format(d)};
+  const previewDate=value=>{if(!value)return '—';const d=new Date(value);if(Number.isNaN(d.getTime()))return String(value);const f=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tashkent',day:'2-digit',month:'2-digit',year:'numeric'}).formatToParts(d);const p=t=>f.find(x=>x.type===t)?.value;return p('day')+'/'+p('month')+'/'+p('year')};
+  const desktopAdmin=()=>window.matchMedia('(min-width:900px) and (pointer:fine)').matches;
+  const auditTimestamp=value=>{if(!value)return 'Yaqinda';const d=new Date(value);if(Number.isNaN(d.getTime()))return 'Yaqinda';const f=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tashkent',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d);const p=t=>f.find(x=>x.type===t)?.value;return p('day')+'/'+p('month')+'/'+p('year')+' · '+p('hour')+':'+p('minute')};
+  const auditLabel=item=>{
+    const method=String(item?.event_type||'').toUpperCase();
+    const desc=String(item?.description||'').trim();
+    const route=desc.toLowerCase();
+    if(route.includes('/admin/math/payment'))return 'Oylik to‘lov holati kiritildi';
+    if(route.includes('/admin/math/commit'))return 'Matematika natijalari saqlandi';
+    if(route.includes('/admin/math/preview'))return 'Jadval importi tekshirildi';
+    if(route.includes('/admin/notices')||route.includes('/admin/v2/notices'))return method==='DELETE'?'E’lon o‘chirildi':method==='POST'?'Yangi e’lon joylandi':'E’lon ma’lumoti yangilandi';
+    if(route.includes('/admin/inbox'))return 'O‘quvchi xabari yangilandi';
+    if(route.includes('/admin/payments/settings'))return 'To‘lov sozlamalari yangilandi';
+    if(route.includes('/admin/marks'))return 'Natijalar saqlandi';
+    if(route.includes('/admin/sessions'))return method==='DELETE'?'Natija kuni olib tashlandi':'Natija kuni yangilandi';
+    if(route.includes('/admin/groups'))return 'Guruh ma’lumoti yangilandi';
+    if(route.includes('/admin/students'))return 'O‘quvchi ma’lumoti yangilandi';
+    if(/^svg/i.test(desc))return desc.replace(/^svg/i,'').trim()||'Bosh menyu';
+    if(route.startsWith('/api/admin/')||route.startsWith('api/admin/'))return method==='POST'?'Administrator ma’lumoti saqlandi':method==='DELETE'?'Administrator ma’lumoti o‘chirildi':method==='PATCH'?'Administrator ma’lumoti yangilandi':'Administrator amali';
+    return desc||'Administrator amali';
+  };
   const ymd=()=>{const a=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const x=t=>a.find(v=>v.type===t)?.value;return x('year')+'-'+x('month')+'-'+x('day')};
   const asTime=value=>{if(!value)return '';try{const d=new Date(value);const f=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d);const p=t=>f.find(x=>x.type===t)?.value;return p('year')+'-'+p('month')+'-'+p('day')+'T'+p('hour')+':'+p('minute')}catch{return ''}};
   const pct=n=>n===null||n===undefined?'—':Number(n).toFixed(Number(n)%1===0?0:1)+'%';
@@ -78,7 +98,7 @@
     root.innerHTML+=section('Guruhlar bo‘yicha o‘zlashtirish');
     for(const g of r.groups||[])root.innerHTML+=row(g.title,g.subject+' · '+g.students+' o‘quvchi',pct(g.average));
     root.innerHTML+=section('So‘nggi admin amallari');
-    for(const x of r.recent||[])root.innerHTML+=row(x.event_type,x.description,previewDate(x.created_at));
+    for(const x of r.recent||[])root.innerHTML+=desktopAdmin()?row(auditLabel(x),'',auditTimestamp(x.created_at)):row(x.event_type,x.description,previewDate(x.created_at));
   }
   async function students(root,ctx){
     const opts=groupOptions(ctx.state.groups,true,v.group);
@@ -173,14 +193,39 @@
   }
   async function loadAttendance(ctx){
     const root=$('premium-attendance-body');if(!root)return;loading(root);
-    const query=v.attendanceGroup?'?group_id='+v.attendanceGroup:'';
+    if(desktopAdmin()){
+      try{
+        const month=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit'}).format(new Date());
+        const data=await ctx.api('/math/overview?date=latest&month='+encodeURIComponent(month));
+        const students=Array.isArray(data.students)?data.students:[];
+        const present=students.reduce((sum,x)=>sum+Number(x.attended||0),0);
+        const total=students.reduce((sum,x)=>sum+Number(x.attendance_total||0),0);
+        const rate=total?Math.round(present*100/total)+'%':'—';
+        root.innerHTML='<div class="premium-metrics">'+metric('Davomat · oy boshidan',rate,'Oyning 1-kunidan joriy kungacha')+
+          metric('Qatnashgan',present)+metric('Qaydlar',total)+'</div>'+
+          section('O‘quvchilar bo‘yicha davomat','Joriy oy');
+        if(!students.length)root.innerHTML+='<div class="empty">Hozircha faol o‘quvchilar yo‘q.</div>';
+        else for(const s of students){
+          const attended=Number(s.attended||0),attendanceTotal=Number(s.attendance_total||0);
+          const studentRate=attendanceTotal?Math.round(attended*100/attendanceTotal)+'%':'—';
+          root.innerHTML+=row(s.full_name,(s.grade?s.grade+'-sinf · ':'')+attended+' / '+attendanceTotal+' qayd',studentRate);
+        }
+      }catch(e){error(root,e)}
+      return;
+    }
+    const params=new URLSearchParams();
+    if(v.attendanceGroup)params.set('group_id',v.attendanceGroup);
+    if(desktopAdmin()){params.set('from',ymd().slice(0,7)+'-01');params.set('to',ymd())}
+    const query=params.toString()?'?'+params.toString():'';
     try{
       const [data,alerts]=await Promise.all([
         ctx.api('/admin/v2/analytics'+query,{admin:true}),
         ctx.api('/admin/v2/alerts',{admin:true})
       ]);
-      root.innerHTML='<div class="premium-metrics">'+metric('Tekshiruvlar',data.summary?.sessions||0)+
-        metric('Qatnashgan',data.summary?.grades||0)+metric('DQ',data.summary?.absences||0)+'</div>'+
+      const present=Number(data.summary?.grades||0),absent=Number(data.summary?.absences||0);
+      const attendanceRate=(present+absent)?Math.round(present*100/(present+absent))+'%':'—';
+      root.innerHTML='<div class="premium-metrics">'+(desktopAdmin()?metric('Davomat · oy boshidan',attendanceRate):metric('Tekshiruvlar',data.summary?.sessions||0))+
+        metric('Qatnashgan',present)+metric('DQ',absent)+'</div>'+
         section('Kiritilmagan natijalar');
       const rows=alerts.ungraded_sessions.filter(x=>!v.attendanceGroup||ctx.state.sessions.some(s=>s.id===x.id&&String(s.group_id)===v.attendanceGroup));
       if(!rows.length)root.innerHTML+='<div class="empty">Kiritilmagan natija topilmadi.</div>';
@@ -235,7 +280,7 @@
       card.innerHTML='<h4>'+esc(n.title)+'</h4><p>'+esc(n.body)+'</p><small class="premium-muted">'+esc(detail)+'</small>'+
         '<div class="premium-quick">'+b('Tahrir','premium-edit-notice',n.id,'secondary')+
         b(n.pinned?'Oddiy qilish':'Yuqoriga chiqarish','premium-pin-notice',n.id,'secondary')+
-        (n.archived?b('Tiklash','premium-restore-notice',n.id,'secondary'):b('Arxiv','premium-archive-notice',n.id,'danger'))+'</div>';
+        (n.archived?b('Tiklash','premium-restore-notice',n.id,'secondary'):b('O‘chirish','premium-archive-notice',n.id,'danger'))+'</div>';
       root.append(card);
     }
   }
@@ -258,7 +303,7 @@
     const r=await ctx.api('/admin/v2/audit?limit=100',{admin:true});
     root.innerHTML=section('Harakatlar tarixi',r.events.length+' yozuv')+note('Bu jurnal admin panelidagi muvaffaqiyatli o‘zgartirishlarni qayd qiladi, maxfiy tokenlar yozilmaydi.');
     if(!r.events.length)root.innerHTML+='<div class="empty">Hali admin amali qayd qilinmagan.</div>';
-    for(const item of r.events)root.innerHTML+=row(item.event_type,item.description,previewDate(item.created_at));
+    for(const item of r.events)root.innerHTML+=desktopAdmin()?row(auditLabel(item),'',auditTimestamp(item.created_at)):row(item.event_type,item.description,previewDate(item.created_at));
   }
   async function archive(root,ctx){
     const types=[['students','O‘quvchilar'],['groups','Guruhlar'],['sessions','Mashg‘ulotlar'],['notices','E’lonlar']];
@@ -363,6 +408,7 @@
     const id=Number(btn.dataset.id);
     try{
       if(action==='premium-close'){$('premium-edit')?.remove();return}
+      if(action==='premium-archive-notice'&&!confirm('E’lon o‘chirilsinmi? U arxivga ko‘chadi va keyin tiklash mumkin.'))return;
       if(action==='premium-refresh'){await ctx.renderAdmin();return}
       if(action==='premium-tab'){
         const tab=btn.dataset.id;ctx.state.adminTab=tab;await ctx.showAdminTab();return;
@@ -407,5 +453,5 @@
     if(name==='archive-type'){v.archiveType=input.value;await loadArchive(ctx)}
     if(name==='export-group'){v.exportGroup=input.value}
   }
-  window.NurPremium={renderTab,onSubmit,onClick,onChange,catalog};
+  window.NurPremium={renderTab,onSubmit,onClick,onChange,catalog,auditLabel,auditTimestamp};
 })();
