@@ -250,18 +250,66 @@
         '</div>'+
         '<div class="nur-admin-toolbar"><b>Matematika · 2–7-sinflar</b>'+
         '<button class="appbtn small light" data-act="logout">Chiqish</button></div>'+
-        '<div class="admin-tabs" id="admin-tabs"></div><div id="admin-tab-content"></div>';
+        '<div class="admin-tabs" id="admin-tabs"></div><div id="pc-admin-dashboard" hidden></div><div id="admin-tab-content"></div>';
+      const desktopAdmin=window.matchMedia('(min-width:900px) and (pointer:fine)').matches;
+      adminRoot.classList.toggle('pc-admin-desktop',desktopAdmin);
+      if(desktopAdmin&&!adminRoot.dataset.pcAdminEntered){state.adminTab='pc-dashboard';adminRoot.dataset.pcAdminEntered='1'}
+      if(!desktopAdmin&&state.adminTab==='pc-dashboard')state.adminTab='math';
       if(state.adminTab==='math-students')state.adminTab='math';
       const root=$('admin-tabs');
-      for(const [id,title] of [['math','Natijalar / Import'],['math-payments','Oylik to‘lov'],['inbox','Xabarlar'],['notices','E’lonlar']]){
+      const navItems=desktopAdmin
+        ?[['pc-dashboard','Dashboard'],['math','Natijalar / Import'],['students','O‘quvchilar'],['attendance','Davomat'],['sessions','Mashg‘ulotlar'],['analytics','Tahlil'],['math-payments','Oylik to‘lov'],['audit','O‘zgarishlar tarixi'],['inbox','Xabarlar'],['notices','E’lonlar']]
+        :[['math','Natijalar / Import'],['math-payments','Oylik to‘lov'],['inbox','Xabarlar'],['notices','E’lonlar']];
+      for(const [id,title] of navItems){
         const b=el('button',state.adminTab===id?'on':'',title);b.dataset.tab=id;root.append(b);
       }
       await showAdminTab();
     }catch(err){adminVerified(false);if(!auth)return renderAdmin();adminRoot.innerHTML='<button class="appbtn secondary" data-act="reload">Qayta urinish</button>'}
   }
+  async function renderPcAdminDashboard(root){
+    root.innerHTML='<div class="pc-admin-loading">Dashboard ma’lumotlari yuklanmoqda…</div>';
+    const month=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit'}).format(new Date());
+    const [overviewResult,paymentResult,auditResult]=await Promise.allSettled([
+      api('/math/overview?date=latest'),
+      api('/admin/math/payment-summary?month='+encodeURIComponent(month),{admin:true}),
+      api('/admin/v2/audit?limit=6',{admin:true})
+    ]);
+    const overview=overviewResult.status==='fulfilled'?overviewResult.value:{};
+    const payment=paymentResult.status==='fulfilled'?paymentResult.value:{};
+    const audit=auditResult.status==='fulfilled'?auditResult.value:{};
+    const allStudents=Array.isArray(overview.students)?overview.students:[];
+    const rows=[...allStudents].sort((a,b)=>(a.rank??99999)-(b.rank??99999)).slice(0,5);
+    const attended=allStudents.reduce((n,x)=>n+Number(x.attended||0),0);
+    const attendanceTotal=allStudents.reduce((n,x)=>n+Number(x.attendance_total||0),0);
+    const attendance=attendanceTotal?Math.round(attended*100/attendanceTotal)+'%':'—';
+    const studentCount=overviewResult.status==='fulfilled'?Number(overview.total_students||0):'—';
+    const pendingCount=paymentResult.status==='fulfilled'?Number(payment.pending_count||0):'—';
+    const rankRows=rows.length?rows.map((x,i)=>'<div class="pc-admin-student"><span class="pc-admin-rank">'+escape(x.rank??i+1)+'</span><span class="pc-admin-name">'+escape(x.full_name)+'<small>Matematika · '+escape(x.grade?x.grade+'-sinf':'2–7-sinflar')+'</small></span><b>'+escape(x.monthly_points??0)+'<small>oylik ball</small></b></div>').join(''):'<div class="pc-admin-empty">Reyting ma’lumotlari hozircha yo‘q.</div>';
+    const events=Array.isArray(audit.events)?audit.events.slice(0,5):[];
+    const eventRows=events.length?events.map((x,i)=>'<div class="pc-admin-event"><i class="pc-admin-dot dot-'+i+'"></i><span><b>'+escape(x.description||x.event_type||'Admin amali')+'</b><small>'+escape(x.created_at||'Yaqinda')+'</small></span></div>').join(''):'<div class="pc-admin-empty">Yangi admin amallari bo‘lsa, shu yerda ko‘rinadi.</div>';
+    const sessions=Array.isArray(state.sessions)?state.sessions.length:0;
+    root.innerHTML=
+      '<div class="pc-admin-stats">'+
+        '<button class="pc-admin-stat" data-tab="students"><span>Jami o‘quvchilar</span><b>'+escape(studentCount)+'</b><small>Matematika · 2–7-sinflar</small></button>'+
+        '<button class="pc-admin-stat" data-tab="attendance"><span>Davomat</span><b>'+attendance+'</b><small>O‘quvchilar bo‘yicha</small></button>'+
+        '<button class="pc-admin-stat" data-tab="sessions"><span>Natija kunlari</span><b>'+sessions+'</b><small>Yaratilgan mashg‘ulotlar</small></button>'+
+        '<button class="pc-admin-stat" data-tab="math-payments"><span>Kutilayotgan to‘lov</span><b>'+escape(pendingCount)+'</b><small>Holatni To‘lovlar ichida ko‘ring</small></button>'+
+      '</div>'+
+      '<div class="pc-admin-columns"><section class="pc-admin-panel"><div class="pc-admin-panel-head"><div><h3>Eng yuqori reyting</h3><p>Joriy oy · Matematika</p></div><button data-tab="math">Reytingni ochish</button></div>'+rankRows+'</section>'+
+      '<div class="pc-admin-right"><section class="pc-admin-panel"><div class="pc-admin-panel-head"><div><h3>Tezkor amallar</h3><p>Admin boshqaruvi</p></div></div>'+
+      '<div class="pc-admin-actions"><button data-tab="math">O‘quvchi qo‘shish</button><button data-tab="attendance">Davomat belgilash</button><button data-tab="math">Natija kiritish</button><button data-tab="math">Jadval importi / OCR</button></div></section>'+
+      '<section class="pc-admin-panel"><div class="pc-admin-panel-head"><div><h3>O‘zgarishlar tarixi</h3><p>Oxirgi admin amallari</p></div><button data-tab="audit">Tarixni ochish</button></div>'+eventRows+'</section></div></div>';
+  }
   async function showAdminTab(){
     const root=$('admin-tab-content');if(!root)return;
+    const desktopAdmin=adminRoot?.classList.contains('pc-admin-desktop');
     $('admin-tabs')?.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.tab===state.adminTab));
+    const pcDashboard=$('pc-admin-dashboard');
+    if(desktopAdmin&&state.adminTab==='pc-dashboard'){
+      root.hidden=true;if(pcDashboard){pcDashboard.hidden=false;await renderPcAdminDashboard(pcDashboard)}return;
+    }
+    if(pcDashboard)pcDashboard.hidden=true;
+    root.hidden=false;
     if(state.adminTab.startsWith('math') && window.NurMath){await window.NurMath.renderAdmin(root,premiumCtx(),state.adminTab);return}
     if(state.adminTab==='payments' && window.NurPayments){await window.NurPayments.admin(root,premiumCtx());return}
     if(state.adminTab==='inbox' && window.NurContact) {await window.NurContact.inbox(root,premiumCtx());return}
