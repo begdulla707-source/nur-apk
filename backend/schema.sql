@@ -16,6 +16,8 @@ CREATE INDEX IF NOT EXISTS app_sessions_by_group ON app_sessions(group_id);
 
 CREATE INDEX IF NOT EXISTS app_marks_by_student ON app_marks(student_id);
 
-INSERT INTO app_subjects(code,title) VALUES ('mat','Matematika'),('fiz','Fizika'),('rus','Rus tili'),('eng','Ingliz tili') ON CONFLICT(code) DO NOTHING;
+INSERT INTO app_subjects(code,title) VALUES ('mat','Matematika') ON CONFLICT(code) DO NOTHING;
 
-INSERT INTO app_groups(subject_id, code, title) SELECT s.id, x.code, x.code || ' guruhi' FROM app_subjects s CROSS JOIN (VALUES ('A'),('B'),('C'),('V'),('G'),('J'),('H')) AS x(code) WHERE s.code='mat' ON CONFLICT(subject_id,code) DO NOTHING;
+INSERT INTO app_groups(subject_id,code,title)
+SELECT id,'2-7','2–7-sinflar' FROM app_subjects WHERE code='mat'
+ON CONFLICT(subject_id,code) DO NOTHING;
