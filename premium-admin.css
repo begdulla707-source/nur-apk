@@ -124,3 +124,53 @@ body.dark #admin .nur-admin-glass-metric{box-shadow:inset 0 1px 0 #ffffff0b}
  #admin .nur-admin-glass-hero *,
  #admin .admin-tabs button{transition:none!important;animation:none!important}
 }
+
+/* PC-only admin dashboard. Phone and APK layouts stay on their existing styles. */
+@media (min-width:900px) and (pointer:fine){
+  body>.drawer .drawer-head h3{font-size:0}
+  body>.drawer .drawer-head h3::after{content:"Sozlamalar";font-size:20px}
+  #admin>.back,#admin>h2,#admin>.desc,#admin>#admin-identity{display:none!important}
+  #admin-workspace.pc-admin-desktop{display:grid;grid-template-columns:218px minmax(0,1fr);gap:18px 24px;align-items:start;padding:0 4px 35px}
+  #admin-workspace.pc-admin-desktop>.nur-admin-glass-hero{grid-column:1/-1;margin:0 0 2px;padding:23px 25px 18px}
+  #admin-workspace.pc-admin-desktop>.nur-admin-toolbar{grid-column:1/-1;grid-row:2;padding:1px 2px 12px}
+  #admin-workspace.pc-admin-desktop>.admin-tabs{grid-column:1;grid-row:3;display:flex;flex-direction:column;flex-wrap:nowrap;gap:7px;margin:0;padding:12px;border-radius:22px;background:color-mix(in srgb,var(--card) 72%,transparent);border:1px solid var(--stroke);box-shadow:0 10px 25px #163c2410;position:sticky;top:22px;overflow:visible}
+  #admin-workspace.pc-admin-desktop>.admin-tabs button{width:100%;min-height:43px;text-align:left;white-space:normal;padding:11px 12px;border-radius:13px;box-shadow:none;font-size:12px}
+  #admin-workspace.pc-admin-desktop>#admin-tab-content,
+  #admin-workspace.pc-admin-desktop>#pc-admin-dashboard{grid-column:2;grid-row:3;min-width:0}
+  #admin-workspace.pc-admin-desktop>#pc-admin-dashboard[hidden],
+  #admin-workspace.pc-admin-desktop>#admin-tab-content[hidden]{display:none!important}
+  #admin-workspace.pc-admin-desktop .pc-admin-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 15px}
+  #admin-workspace.pc-admin-desktop .pc-admin-stat{min-width:0;text-align:left;padding:18px;border:1px solid color-mix(in srgb,var(--stroke) 75%,var(--card));border-radius:20px;background:linear-gradient(135deg,var(--card),color-mix(in srgb,var(--card) 82%,var(--tint)));box-shadow:0 10px 24px #183d2a10,inset 0 1px 0 #ffffff70;color:var(--text);transition:transform .16s,box-shadow .16s}
+  #admin-workspace.pc-admin-desktop .pc-admin-stat:hover{transform:translateY(-2px);box-shadow:0 14px 29px #183d2a17}
+  #admin-workspace.pc-admin-desktop .pc-admin-stat span,#admin-workspace.pc-admin-desktop .pc-admin-stat small{display:block;color:var(--muted);font-size:11px;line-height:1.4;font-weight:700}
+  #admin-workspace.pc-admin-desktop .pc-admin-stat b{display:block;margin:11px 0 4px;color:var(--text);font-size:27px;letter-spacing:-.04em}
+  #admin-workspace.pc-admin-desktop .pc-admin-columns{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.9fr);gap:14px;align-items:start}
+  #admin-workspace.pc-admin-desktop .pc-admin-right{display:grid;gap:14px;min-width:0}
+  #admin-workspace.pc-admin-desktop .pc-admin-panel{min-width:0;padding:18px 19px;border:1px solid color-mix(in srgb,var(--stroke) 78%,var(--card));border-radius:22px;background:linear-gradient(135deg,var(--card),color-mix(in srgb,var(--card) 84%,var(--tint)));box-shadow:0 12px 28px #153a2310,inset 0 1px 0 #ffffff70}
+  #admin-workspace.pc-admin-desktop .pc-admin-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+  #admin-workspace.pc-admin-desktop .pc-admin-panel-head h3{margin:0;color:var(--text);font-size:16px;letter-spacing:-.025em}
+  #admin-workspace.pc-admin-desktop .pc-admin-panel-head p{margin:4px 0 0;color:var(--muted);font-size:11px}
+  #admin-workspace.pc-admin-desktop .pc-admin-panel-head>button{border:1px solid var(--stroke);border-radius:11px;padding:9px 11px;background:var(--tint);color:var(--accent);font-size:11px;font-weight:750;white-space:nowrap}
+  #admin-workspace.pc-admin-desktop .pc-admin-student{display:grid;grid-template-columns:34px minmax(0,1fr) 82px;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--stroke)}
+  #admin-workspace.pc-admin-desktop .pc-admin-rank{display:grid;place-items:center;width:32px;height:32px;border-radius:11px;background:var(--tint);color:var(--accent);font-weight:850}
+  #admin-workspace.pc-admin-desktop .pc-admin-name{font-size:12px;font-weight:780;min-width:0;overflow-wrap:anywhere}
+  #admin-workspace.pc-admin-desktop .pc-admin-name small,#admin-workspace.pc-admin-desktop .pc-admin-student>b small{display:block;margin-top:4px;color:var(--muted);font-size:10px;font-weight:500}
+  #admin-workspace.pc-admin-desktop .pc-admin-student>b{text-align:right;color:var(--text);font-size:14px}
+  #admin-workspace.pc-admin-desktop .pc-admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #admin-workspace.pc-admin-desktop .pc-admin-actions button{min-height:48px;text-align:left;padding:10px 12px;border:1px solid var(--stroke);border-radius:13px;background:color-mix(in srgb,var(--card) 80%,var(--tint));color:var(--text);font-size:11px;font-weight:720}
+  #admin-workspace.pc-admin-desktop .pc-admin-actions button:hover{background:var(--tint)}
+  #admin-workspace.pc-admin-desktop .pc-admin-event{display:flex;align-items:center;gap:9px;padding:10px 0;border-top:1px solid var(--stroke)}
+  #admin-workspace.pc-admin-desktop .pc-admin-event>i{width:8px;height:8px;border-radius:50%;background:#17805a;flex:none}
+  #admin-workspace.pc-admin-desktop .pc-admin-event .dot-1{background:#4e86a3}
+  #admin-workspace.pc-admin-desktop .pc-admin-event .dot-2{background:#b58b41}
+  #admin-workspace.pc-admin-desktop .pc-admin-event span{min-width:0;font-size:11px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
+  #admin-workspace.pc-admin-desktop .pc-admin-event small{display:block;margin-top:4px;color:var(--muted);font-size:10px;font-weight:500}
+  #admin-workspace.pc-admin-desktop .pc-admin-empty,#admin-workspace.pc-admin-desktop .pc-admin-loading{padding:18px;color:var(--muted);font-size:12px}
+  #admin-workspace.pc-admin-desktop #admin-tab-content>.appcard,
+  #admin-workspace.pc-admin-desktop #admin-tab-content>.nur-math-panel{padding:23px;border-radius:23px}
+}
+@media (min-width:900px) and (max-width:1150px) and (pointer:fine){
+  #admin-workspace.pc-admin-desktop{grid-template-columns:190px minmax(0,1fr);gap:14px}
+  #admin-workspace.pc-admin-desktop .pc-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #admin-workspace.pc-admin-desktop .pc-admin-columns{grid-template-columns:minmax(0,1fr)}
+}
