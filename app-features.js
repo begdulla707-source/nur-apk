@@ -58,7 +58,10 @@
     lastFetchAttempt=Date.now();refreshing=true;
     try {
       const data=await api('/bootstrap');
-      state.subjects=data.subjects||[];state.groups=data.groups||[];state.notices=data.notices||[];state.online=true;successFetchAt=Date.now();
+      const mathSubject=(data.subjects||[]).find(s=>s.code==='mat')||null;
+      state.subjects=mathSubject?[mathSubject]:[];
+      state.groups=mathSubject?(data.groups||[]).filter(g=>Number(g.subject_id)===Number(mathSubject.id)&&String(g.code)==='2-7'):[];
+      state.notices=data.notices||[];state.online=true;successFetchAt=Date.now();
       const signature=JSON.stringify([data.total_students,state.subjects,state.groups,state.notices]);
       if(signature!==lastBootstrapSignature){
         lastBootstrapSignature=signature;
@@ -86,12 +89,16 @@
     if(!groups.length)root.append(el('div','empty','Bu fan bo‘yicha guruh yaratilmagan.'));
   }
   function renderSubjects() {
-    document.querySelectorAll('#home .subject').forEach((btn,i)=>{
-      const s=state.subjects[i];if(!s)return;
-      const sub=btn.querySelector('small');
-      if(sub)sub.textContent=state.groups.filter(g=>g.subject_id===s.id).length+' ta guruh';
+    document.querySelectorAll('#home .subject').forEach(btn=>{
+      const s=state.subjects.find(x=>x.code==='mat');
+      const title=btn.querySelector('.subject-info b')?.textContent?.trim();
+      if(!s||title!=='Matematika'){btn.remove();return}
+      const sub=btn.querySelector('.subject-info small');
+      if(sub)sub.textContent='Matematika · 2–7-sinflar';
       btn.onclick=()=>openSubjectDynamic(s);
     });
+    const fanCount=document.querySelector('#home .stat:nth-child(2) strong');
+    if(fanCount)fanCount.textContent='1';
   }
   function openSubjectDynamic(subject) {
     state.subject=subject;
@@ -233,7 +240,10 @@
       ]);
       adminVerified(true);
       state.sessions=overview.sessions||[];
-      state.groups=bootstrap.groups||[];state.subjects=bootstrap.subjects||[];
+      const mathSubject=(bootstrap.subjects||[]).find(s=>s.code==='mat')||null;
+      state.subjects=mathSubject?[mathSubject]:[];
+      state.groups=mathSubject?(bootstrap.groups||[]).filter(g=>Number(g.subject_id)===Number(mathSubject.id)&&String(g.code)==='2-7'):[];
+
       const c=overview.counts||{};
       // Administrative home is for navigation; finance figures are shown
       // exclusively inside the monthly payments tab.
@@ -258,7 +268,7 @@
       if(state.adminTab==='math-students')state.adminTab='math';
       const root=$('admin-tabs');
       const navItems=desktopAdmin
-        ?[['pc-dashboard','Dashboard'],['math','Natijalar / Import'],['students','O‘quvchilar'],['attendance','Davomat'],['sessions','Mashg‘ulotlar'],['analytics','Tahlil'],['math-payments','Oylik to‘lov'],['audit','O‘zgarishlar tarixi'],['inbox','Xabarlar'],['notices','E’lonlar']]
+        ?[['pc-dashboard','Dashboard'],['math','Natijalar / Import'],['students','O‘quvchilar'],['attendance','Davomat'],['analytics','Tahlil'],['math-payments','Oylik to‘lov'],['audit','O‘zgarishlar tarixi'],['inbox','Xabarlar'],['notices','E’lonlar']]
         :[['math','Natijalar / Import'],['math-payments','Oylik to‘lov'],['inbox','Xabarlar'],['notices','E’lonlar']];
       for(const [id,title] of navItems){
         const b=el('button',state.adminTab===id?'on':'',title);b.dataset.tab=id;root.append(b);
@@ -270,7 +280,7 @@
     root.innerHTML='<div class="pc-admin-loading">Dashboard ma’lumotlari yuklanmoqda…</div>';
     const month=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit'}).format(new Date());
     const [overviewResult,paymentResult,auditResult]=await Promise.allSettled([
-      api('/math/overview?date=latest'),
+      api('/math/overview?date=latest&month='+encodeURIComponent(month)),
       api('/admin/math/payment-summary?month='+encodeURIComponent(month),{admin:true}),
       api('/admin/v2/audit?limit=6',{admin:true})
     ]);
@@ -286,13 +296,11 @@
     const pendingCount=paymentResult.status==='fulfilled'?Number(payment.pending_count||0):'—';
     const rankRows=rows.length?rows.map((x,i)=>'<div class="pc-admin-student"><span class="pc-admin-rank">'+escape(x.rank??i+1)+'</span><span class="pc-admin-name">'+escape(x.full_name)+'<small>Matematika · '+escape(x.grade?x.grade+'-sinf':'2–7-sinflar')+'</small></span><b>'+escape(x.monthly_points??0)+'<small>oylik ball</small></b></div>').join(''):'<div class="pc-admin-empty">Reyting ma’lumotlari hozircha yo‘q.</div>';
     const events=Array.isArray(audit.events)?audit.events.slice(0,5):[];
-    const eventRows=events.length?events.map((x,i)=>'<div class="pc-admin-event"><i class="pc-admin-dot dot-'+i+'"></i><span><b>'+escape(x.description||x.event_type||'Admin amali')+'</b><small>'+escape(x.created_at||'Yaqinda')+'</small></span></div>').join(''):'<div class="pc-admin-empty">Yangi admin amallari bo‘lsa, shu yerda ko‘rinadi.</div>';
-    const sessions=Array.isArray(state.sessions)?state.sessions.length:0;
+    const eventRows=events.length?events.map((x,i)=>'<div class="pc-admin-event"><i class="pc-admin-dot dot-'+i+'"></i><span><b>'+escape(window.NurPremium?.auditLabel?.(x)||'Administrator amali')+'</b><small>'+escape(window.NurPremium?.auditTimestamp?.(x.created_at)||dateText(x.created_at)||'Yaqinda')+'</small></span></div>').join(''):'<div class="pc-admin-empty">Yangi admin amallari bo‘lsa, shu yerda ko‘rinadi.</div>';
     root.innerHTML=
       '<div class="pc-admin-stats">'+
         '<button class="pc-admin-stat" data-tab="students"><span>Jami o‘quvchilar</span><b>'+escape(studentCount)+'</b><small>Matematika · 2–7-sinflar</small></button>'+
         '<button class="pc-admin-stat" data-tab="attendance"><span>Davomat</span><b>'+attendance+'</b><small>O‘quvchilar bo‘yicha</small></button>'+
-        '<button class="pc-admin-stat" data-tab="sessions"><span>Natija kunlari</span><b>'+sessions+'</b><small>Yaratilgan mashg‘ulotlar</small></button>'+
         '<button class="pc-admin-stat" data-tab="math-payments"><span>Kutilayotgan to‘lov</span><b>'+escape(pendingCount)+'</b><small>Holatni To‘lovlar ichida ko‘ring</small></button>'+
       '</div>'+
       '<div class="pc-admin-columns"><section class="pc-admin-panel"><div class="pc-admin-panel-head"><div><h3>Eng yuqori reyting</h3><p>Joriy oy · Matematika</p></div><button data-tab="math">Reytingni ochish</button></div>'+rankRows+'</section>'+
