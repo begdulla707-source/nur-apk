@@ -1047,7 +1047,10 @@
    if(typeof priorGo==='function'){
      window.go=function(id){
        const out=priorGo.apply(this,arguments);
-       if(['rating','results','math-monthly'].includes(id)){reload(true)}
+       // Render the already loaded snapshot at once; the revision poll below
+       // fetches fresh data if an administrator changed anything elsewhere.
+       if(['rating','results','math-monthly'].includes(id) &&
+          (!data || Date.now()-lastSuccess>10000)){refreshRevision()}
        if(id==='nur-settings')renderAppearance();
        return out;
      };
