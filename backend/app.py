@@ -8,11 +8,12 @@ import json
 import logging
 import os
 import secrets
+import threading
 import time
 from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory, abort
-from psycopg import connect
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 app = Flask(__name__)
 SITE_MODE = os.environ.get("MCWEB_SITE_MODE", "") == "1"
@@ -39,9 +40,26 @@ ALLOWED_ORIGINS.update({
 TOKEN_HASH = os.environ.get("ADMIN_TOKEN_SHA256", "")
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
 _login_failures = {}
+_db_pool = None
+_db_pool_pid = None
+_db_pool_lock = threading.Lock()
 
 def db():
-    return connect(os.environ["DATABASE_URL"], row_factory=dict_row, connect_timeout=10)
+    # Each Gunicorn worker owns its own small pool. Creating it lazily avoids
+    # inheriting live database connections if the application is preloaded.
+    global _db_pool, _db_pool_pid
+    pid = os.getpid()
+    if _db_pool is None or _db_pool_pid != pid:
+        with _db_pool_lock:
+            if _db_pool is None or _db_pool_pid != pid:
+                _db_pool = ConnectionPool(
+                    os.environ["DATABASE_URL"],
+                    kwargs={"row_factory": dict_row, "connect_timeout": 5},
+                    min_size=1, max_size=4, timeout=8, max_idle=90,
+                    open=True,
+                )
+                _db_pool_pid = pid
+    return _db_pool.connection()
 
 def bad(message, status=400):
     return jsonify({"error": message}), status
@@ -102,7 +120,12 @@ def cors_headers(response):
         response.headers["Vary"] = "Origin"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, DELETE, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Cache-Control"] = "no-store"
+    if SITE_MODE and request.method == "GET" and request.path.lstrip("/") in SITE_ASSETS - {"index.html"}:
+        response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+    elif SITE_MODE and request.method == "GET" and request.path in ("/", "/index.html"):
+        response.headers["Cache-Control"] = "no-cache"
+    else:
+        response.headers["Cache-Control"] = "no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 
