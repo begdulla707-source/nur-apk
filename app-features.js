@@ -228,7 +228,7 @@
     adminVerified(false);
     if(!auth){
       syncAdminEntry();
-      adminRoot.innerHTML='<div class="appcard"><h3>Admin token bilan kirish</h3><form class="appform" data-form="login"><label>Maxfiy admin token<input name="token" type="password" autocomplete="off" required placeholder="Admin tokenni kiriting"></label><button class="appbtn" type="submit">Xavfsiz kirish</button><div class="page-message">Maxfiy token saqlanmaydi. Kirish shu qurilmada 180 kungacha saqlanadi; Chiqish orqali bekor qilinadi.</div></form></div>';
+      adminRoot.innerHTML='<div class="appcard"><h3>Kirish</h3><form class="appform" data-form="login"><label>Kirish kodi<input name="token" type="password" autocomplete="off" required placeholder="Kodni kiriting"></label><button class="appbtn" type="submit">Kirish</button></form></div>';
       return;
     }
     adminRoot.replaceChildren();
@@ -399,7 +399,7 @@
     try{
       if(type==='login'){
         const r=await api('/admin/login',{method:'POST',body:{token:data.token}});
-        auth=r.session;session.set(auth);syncAdminEntry();toast('Administratorga xush kelibsiz');await renderAdmin();return;
+        auth=r.session;session.set(auth);syncAdminEntry();await renderAdmin();return;
       }
       if(type==='add-group')await api('/admin/groups',{method:'POST',admin:true,body:{subject_id:Number(data.subject_id),code:data.code,title:data.title}});
       if(type==='add-student')await api('/admin/students',{method:'POST',admin:true,body:{group_id:Number(data.group_id),full_name:data.full_name}});
