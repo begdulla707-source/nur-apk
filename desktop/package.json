@@ -1,0 +1,46 @@
+{
+  "name": "nur-oqiw-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nur oqiw orayi Windows PC application",
+  "main": "main.js",
+  "author": "Nur oqiw orayi",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "34.5.8",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "uz.nuroqiworayi.desktop",
+    "productName": "Nur Oqiw Orayi",
+    "asar": true,
+    "files": [
+      "main.js",
+      "offline.html",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "../download-site/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker",
+      "artifactName": "Nur_Oqiw_PC.exe"
+    },
+    "portable": {
+      "artifactName": "Nur_Oqiw_PC.exe"
+    }
+  }
+}
