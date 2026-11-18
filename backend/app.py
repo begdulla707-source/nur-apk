@@ -152,6 +152,10 @@ def handle_error(exc):
 @app.get("/")
 def root_ok():
     if SITE_MODE:
+        # Keep Nur APK unchanged at nur-apk.mcweb.uz while serving
+        # the download page at the new free domain nur.mcweb.uz.
+        if request.host.split(":", 1)[0].lower() == "nur.mcweb.uz":
+            return send_from_directory(SITE_ROOT / "download-site", "index.html", mimetype="text/html")
         return send_from_directory(SITE_ROOT, "index.html", mimetype="text/html")
     return jsonify({"service":"Nur Oqiw Orayi API","ok":True,"health":"/api/health"})
 
