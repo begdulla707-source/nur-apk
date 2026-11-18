@@ -1,0 +1,77 @@
+name: Windows EXE
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "desktop/**"
+      - ".github/workflows/windows-exe.yml"
+permissions:
+  contents: write
+concurrency:
+  group: nur-windows-release
+  cancel-in-progress: true
+jobs:
+  build-exe:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate transparent Windows icon
+        run: |
+          python -m pip install --disable-pip-version-check pillow
+          python -c "from PIL import Image; im=Image.open('download-site/nur-logo.png').convert('RGBA'); im.save('download-site/icon.ico',sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])"
+          if (!(Test-Path 'download-site/icon.ico')) { throw 'Windows icon missing' }
+      - name: Install desktop dependencies
+        working-directory: desktop
+        env:
+          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}\\electron-builder-cache
+        run: |
+          npm install --no-audit --no-fund
+      - name: Build portable Windows EXE
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}\\electron-builder-cache
+        run: |
+          npm run build:win
+      - name: Validate output
+        run: |
+          $file = 'desktop/dist/Nur_Oqiw_PC.exe'
+          if (!(Test-Path $file)) { throw "EXE not created: $file" }
+          $info = Get-Item $file
+          if ($info.Length -lt 10000000) { throw 'EXE unexpectedly small' }
+          Write-Output ("Portable EXE: " + $info.FullName + " | bytes: " + $info.Length)
+          Get-FileHash $file -Algorithm SHA256 | Format-List
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nur-Oqiw-Windows-PC
+          path: desktop/dist/Nur_Oqiw_PC.exe
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish Windows preview
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: pc-v1.0.0
+          name: Nur Oqiw Windows PC 1.0.0
+          body: |
+            Native Windows 10/11 x64 portable desktop application.
+            Uses existing Nur APK PC dashboard and requires internet access.
+            Preview is unsigned and may display a Windows SmartScreen warning.
+          prerelease: true
+          make_latest: false
+          files: desktop/dist/Nur_Oqiw_PC.exe
