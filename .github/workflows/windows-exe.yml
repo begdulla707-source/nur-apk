@@ -32,7 +32,7 @@ jobs:
       - name: Generate transparent Windows icon
         run: |
           python -m pip install --disable-pip-version-check pillow
-          python -c "from PIL import Image; im=Image.open('download-site/nur-logo.png').convert('RGBA'); im.save('download-site/icon.ico',sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])"
+          python -c "from PIL import Image; im=Image.open('download-site/nur-logo.png').convert('RGBA'); square=Image.new('RGBA',(512,512),(0,0,0,0)); im.thumbnail((480,480),Image.Resampling.LANCZOS); square.alpha_composite(im,((512-im.width)//2,(512-im.height)//2)); square.save('download-site/icon.ico',sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])"
           if (!(Test-Path 'download-site/icon.ico')) { throw 'Windows icon missing' }
       - name: Install desktop dependencies
         working-directory: desktop
