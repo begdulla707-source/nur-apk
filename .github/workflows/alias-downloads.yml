@@ -1,0 +1,46 @@
+name: Publish spaced download file names
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/alias-downloads.yml"
+permissions:
+  contents: write
+jobs:
+  aliases:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Fetch previously built original files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p renamed
+          curl --fail --location --retry 3 --silent --show-error \
+            "https://github.com/begdulla707-source/nur-apk/releases/download/build-35/Nur_oqiw.apk" \
+            --output "renamed/Nur oqiw.apk"
+          curl --fail --location --retry 3 --silent --show-error \
+            "https://github.com/begdulla707-source/nur-apk/releases/download/pc-v1.1.1/Nur_Oqiw_Setup.exe" \
+            --output "renamed/Nur oqiw.exe"
+          test "$(stat -c%s 'renamed/Nur oqiw.apk')" -gt 10000000
+          test "$(stat -c%s 'renamed/Nur oqiw.exe')" -gt 90000000
+          unzip -tqq "renamed/Nur oqiw.apk"
+          unzip -Z -1 "renamed/Nur oqiw.apk" | grep -Fxq 'AndroidManifest.xml'
+          file "renamed/Nur oqiw.exe"
+          printf 'e3919bd47000bfaffa8ef3b975a9becb3d6fbe522e456b06b5f946b10fc99b47  renamed/Nur oqiw.exe\n' | sha256sum -c -
+          sha256sum renamed/*
+      - name: Add Nur oqiw.apk alias to existing Android release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-35
+          files: renamed/Nur oqiw.apk
+          overwrite_files: true
+          fail_on_unmatched_files: true
+      - name: Add Nur oqiw.exe alias to verified NSIS installer release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: pc-v1.1.1
+          files: renamed/Nur oqiw.exe
+          overwrite_files: true
+          fail_on_unmatched_files: true
