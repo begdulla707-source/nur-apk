@@ -11,7 +11,7 @@ import secrets
 import threading
 import time
 from pathlib import Path
-from flask import Flask, jsonify, request, send_from_directory, abort
+from flask import Flask, Response, jsonify, request, send_from_directory, abort, stream_with_context
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
@@ -170,6 +170,77 @@ if SITE_MODE:
         if filename != "nur-logo.png":
             abort(404)
         return send_from_directory(SITE_ROOT / "download-site", filename)
+
+    # GitHub release assets normalize spaces to dots. Stream the vetted,
+    # pinned releases so the browser saves *exactly* Nur oqiw.apk or
+    # Nur oqiw.exe, with no APK re-signing and no EXE rebuild.
+    @app.get("/get/<kind>")
+    def renamed_download(kind):
+        from urllib.request import Request, urlopen
+        from urllib.error import HTTPError, URLError
+
+        available = {
+            "apk": (
+                "https://github.com/begdulla707-source/nur-apk/releases/"
+                "download/build-35/Nur_oqiw.apk", "Nur oqiw.apk", 24329406, b"PK"
+            ),
+            "exe": (
+                "https://github.com/begdulla707-source/nur-apk/releases/"
+                "download/pc-v1.1.1/Nur_Oqiw_Setup.exe",
+                "Nur oqiw.exe", 121693165, b"MZ"
+            ),
+        }
+        selected = available.get(kind)
+        if selected is None:
+            abort(404)
+        url, filename, expected_length, magic = selected
+        method = "HEAD" if request.method == "HEAD" else "GET"
+        try:
+            upstream = urlopen(
+                Request(url, method=method, headers={
+                    "User-Agent": "Nur-Oqiw-Official-Download/1.0",
+                    "Accept-Encoding": "identity",
+                }), timeout=25
+            )
+            length = upstream.headers.get("Content-Length")
+            if length is not None and int(length) != expected_length:
+                upstream.close()
+                return jsonify({"error": "Yuklash fayli tekshiruvdan o‘tmadi"}), 502
+            first = b""
+            if method == "GET":
+                first = upstream.read(4)
+                if not first.startswith(magic):
+                    upstream.close()
+                    return jsonify({"error": "Yuklash fayli noto‘g‘ri formatda"}), 502
+        except (HTTPError, URLError, TimeoutError, OSError, ValueError) as exc:
+            logging.warning("Pinned release download failed: %s", type(exc).__name__)
+            return jsonify({"error": "Yuklash manbai vaqtincha ishlamayapti"}), 502
+
+        def chunks():
+            try:
+                if first:
+                    yield first
+                while True:
+                    block = upstream.read(256 * 1024)
+                    if not block:
+                        return
+                    yield block
+            finally:
+                upstream.close()
+
+        response = Response(
+            stream_with_context(chunks()) if method == "GET" else b"",
+            status=200, mimetype="application/octet-stream"
+        )
+        if method == "HEAD":
+            upstream.close()
+        response.headers["Content-Disposition"] = (
+            f'attachment; filename="{filename}"'
+        )
+        response.headers["Content-Length"] = str(expected_length)
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
 
     @app.get("/<path:filename>")
     def public_site_asset(filename):
