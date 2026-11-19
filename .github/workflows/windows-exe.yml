@@ -1,4 +1,4 @@
-name: Windows EXE
+name: Windows Setup EXE
 on:
   workflow_dispatch:
   push:
@@ -40,38 +40,53 @@ jobs:
           ELECTRON_BUILDER_CACHE: ${{ runner.temp }}\\electron-builder-cache
         run: |
           npm install --no-audit --no-fund
-      - name: Build portable Windows EXE
+      - name: Build Windows setup wizard
         working-directory: desktop
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
           ELECTRON_BUILDER_CACHE: ${{ runner.temp }}\\electron-builder-cache
         run: |
           npm run build:win
       - name: Validate output
         run: |
-          $file = 'desktop/dist/Nur_Oqiw_PC.exe'
+          $file = 'desktop/dist/Nur_Oqiw_Setup.exe'
           if (!(Test-Path $file)) { throw "EXE not created: $file" }
           $info = Get-Item $file
           if ($info.Length -lt 10000000) { throw 'EXE unexpectedly small' }
-          Write-Output ("Portable EXE: " + $info.FullName + " | bytes: " + $info.Length)
-          Get-FileHash $file -Algorithm SHA256 | Format-List
+          Write-Output ("Windows setup: " + $info.FullName + " | bytes: " + $info.Length)
+          $magic = [System.IO.File]::ReadAllBytes($file)
+          if ($magic[0] -ne 77 -or $magic[1] -ne 90) { throw 'Not a valid Windows PE EXE' }
+          $sha = (Get-FileHash $file -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$sha  Nur_Oqiw_Setup.exe" | Set-Content -Path 'desktop/dist/SHA256SUMS.txt' -Encoding ascii
+          $signature = Get-AuthenticodeSignature -FilePath $file
+          Write-Output ("Authenticode signature: " + $signature.Status)
+          Write-Output ("SHA256: " + $sha)
+          node -e "const p=require('./desktop/package.json'); if(p.build.nsis.oneClick!==false || p.build.nsis.allowToChangeInstallationDirectory!==true)process.exit(3)"
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Nur-Oqiw-Windows-PC
-          path: desktop/dist/Nur_Oqiw_PC.exe
+          name: Nur-Oqiw-Windows-Setup
+          path: |
+            desktop/dist/Nur_Oqiw_Setup.exe
+            desktop/dist/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
       - name: Publish Windows preview
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: pc-v1.0.0
-          name: Nur Oqiw Windows PC 1.0.0
+          tag_name: pc-v1.1.0
+          name: Nur Oqiw Windows Setup 1.1.0
           body: |
-            Native Windows 10/11 x64 portable desktop application.
+            Windows 10/11 x64 NSIS installer: Welcome, folder selection, Install, Finish.
+            Optional desktop/Start-menu shortcuts and uninstaller. No admin elevation by default.
             Uses existing Nur APK PC dashboard and requires internet access.
-            Preview is unsigned and may display a Windows SmartScreen warning.
+            Without a trusted Authenticode code-signing certificate, browsers and Microsoft SmartScreen may warn.
+            Verify the published SHA256SUMS.txt before installing.
           prerelease: true
           make_latest: false
-          files: desktop/dist/Nur_Oqiw_PC.exe
+          files: |
+            desktop/dist/Nur_Oqiw_Setup.exe
+            desktop/dist/SHA256SUMS.txt
