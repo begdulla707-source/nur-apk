@@ -79,6 +79,33 @@ body:has(.action:hover) .scene,body:has(.action:focus-visible) .scene{filter:bri
 @media(max-width:650px){.night-halo{right:5%;top:13%;width:90px}.star-chart{left:15%;top:9%;width:60vw;opacity:.16}}
 @media(prefers-reduced-motion:reduce){.sky-ribbons{animation:none}.scene,.card,.action{transition:none}}
 
+/* Legal document reading layer: same midnight liquid-glass design. */
+.footer{gap:18px;flex-wrap:wrap}.footer .legal-links{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px 21px}
+.legal-link{color:#c5e9dd!important;font-size:12px;text-decoration:none;line-height:1.7;transition:color .2s,transform .2s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.legal-link:hover,.legal-link:focus-visible{color:#94ffd0!important;transform:translateY(-1px)}
+.legal-link svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.6;fill:none}
+.legal-dialog{border:1px solid rgba(215,255,238,.28);padding:0;max-height:min(92dvh,1000px);width:min(790px,calc(100vw - 28px));max-width:790px;overflow:hidden;border-radius:28px;background:linear-gradient(150deg,#203d4aee 0%,#071520fa 45%,#06121bf9);color:#effff9;box-shadow:0 30px 110px #000b,inset 0 1px 1px #ddffe344;-webkit-backdrop-filter:blur(40px);backdrop-filter:blur(40px)}
+.legal-dialog::backdrop{background:rgba(1,5,12,.83);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px)}
+.legal-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 23px;background:rgba(157,229,205,.065);border-bottom:1px solid rgba(173,240,216,.18)}
+.legal-home{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:800;color:#c1eed7;letter-spacing:.03em}
+.legal-home img{height:31px;width:31px;object-fit:contain}
+.legal-close{cursor:pointer;border:1px solid rgba(197,255,217,.65);background:linear-gradient(165deg,rgba(142,238,189,.21),rgba(67,154,120,.13));border-radius:13px;color:#f1fff7;padding:12px 23px;font-size:14px;font-weight:800;letter-spacing:.01em;box-shadow:inset 0 1px rgba(240,255,243,.18);transition:background .2s,transform .2s}
+.legal-close:hover{background:rgba(122,232,184,.21);transform:scale(.96)}
+.legal-scroll{max-height:calc(min(92dvh,1000px) - 78px);overflow-y:auto;scrollbar-color:#659a83 #07141d;padding:38px clamp(22px,6.3vw,54px) 44px;overscroll-behavior:contain}
+.legal-scroll .document-type{display:inline-flex;border:1px solid #a8ffcc3b;background:#8affa91d;border-radius:999px;padding:7px 12px;font-weight:750;letter-spacing:.11em;font-size:10px;color:#a8f8d1}
+.legal-scroll h2{font-size:clamp(29px,5vw,43px);letter-spacing:-.045em;line-height:1.12;margin:17px 0 10px;font-weight:780;color:#f0fff8}
+.legal-scroll .doc-date{color:#a2bdb6;font-size:12px;margin:0 0 32px}
+.legal-scroll h3{font-size:18px;letter-spacing:-.02em;margin:30px 0 11px;color:#b9ffda;font-weight:730}
+.legal-scroll p,.legal-scroll li{font-size:14.5px;line-height:1.85;color:#c2d2d3;margin:0 0 14px}
+.legal-scroll ul{padding-left:22px;margin:6px 0 19px}.legal-scroll li{padding-left:3px;margin-bottom:5px}
+.legal-scroll a{color:#b0ffdb;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}.legal-scroll strong{color:#edfff3;font-weight:740}
+.doc-highlight{padding:15px 18px;margin-top:26px;border:1px solid #a4eecb36;border-radius:14px;background:#8bffd111;color:#b4e0ce;font-size:12.5px;line-height:1.7}
+.doc-contact{border:1px solid #b1ffc542;border-radius:15px;padding:18px;margin-top:22px;background:#a8ffd20b}
+.doc-contact a{display:inline-block;margin-top:6px}
+@media(max-width:720px){.footer{justify-content:center;text-align:center;padding-top:24px}.footer .legal-links{order:-1;width:100%;gap:7px 18px}.legal-link{font-size:11px}.legal-dialog{border-radius:20px}.legal-top{padding:13px 15px}.legal-scroll{padding:27px 22px 35px}}
+@media(prefers-reduced-motion:reduce){.legal-close,.legal-link{transition:none}}
+
+
 </style>
 </head>
 <body>
@@ -92,7 +119,15 @@ body:has(.action:hover) .scene,body:has(.action:focus-visible) .scene{filter:bri
 <article class="card android"><div class="card-head"><div class="os-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 14h20v12H6zM6 14a10 10 0 0 1 20 0M10 4L8 7M22 4l2 3M2 15v9m28-9v9M11 26v3m10-3v3"/></svg></div><div><div class="os-title">Android APK</div><div class="os-note">Nur oqiw.apk</div></div></div><a class="action" id="apk-link" href="/get/apk" rel="noopener noreferrer"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg> .APK yuklab olish</a><div id="apk-version" class="status">1.0.25 · build 35</div></article>
 <article class="card windows"><div class="card-head"><div class="os-icon"><svg viewBox="0 0 32 32"><path d="M3 6l12-2v11H3zm15-3 11-2v14H18zM3 18h12v10L3 26zm15 0h11v13l-11-2z"/></svg></div><div><div class="os-title">Windows EXE</div><div class="os-note">Nur oqiw.exe</div></div></div><a class="action" id="exe-button" href="/get/exe" rel="noopener noreferrer"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg> .EXE yuklab olish</a><div id="exe-version" class="status">Windows 10/11 · Setup 1.1.1</div></article>
 </section>
-</main><footer class="footer"><span>Nur oqiw orayi</span><span>© 2026</span></footer>
+</main><footer class="footer">
+  <span>Nur oqiw orayi</span>
+  <nav class="legal-links" aria-label="Huquqiy va aloqa havolalari">
+    <a class="legal-link" href="#ommaviy-oferta" data-legal="offer">Ommaviy oferta</a>
+    <a class="legal-link" href="#maxfiylik-siyosati" data-legal="privacy">Maxfiylik siyosati</a>
+    <a class="legal-link" href="https://t.me/up17x" target="_blank" rel="noopener noreferrer">Admin yordam</a>
+  </nav>
+  <span>© 2026 · by жанзаков</span>
+</footer>
 </div>
 <script>
 (()=>{"use strict";
@@ -103,6 +138,100 @@ function flake(randomY=false){const d=Math.random();return{x:Math.random()*width
 function resize(){width=innerWidth;height=innerHeight;scale=Math.min(devicePixelRatio||1,2);c.width=Math.round(width*scale);c.height=Math.round(height*scale);ctx.setTransform(scale,0,0,scale,0,0);snow=Array.from({length:Math.min(width<700?110:230,Math.max(55,Math.round(width*height/10500)))},()=>flake(true))}
 function draw(t){const dt=Math.min((t-last)/16.7||1,2.5);last=t;ctx.clearRect(0,0,width,height);for(let i=0;i<snow.length;i++){const p=snow[i];p.y+=p.v*dt;p.x+=(p.drift+Math.sin(p.phase+=.01*dt)*.2)*dt;if(p.y>height+12){snow[i]=flake();continue}if(p.x>width+12)p.x=-12;if(p.x< -12)p.x=width+12;ctx.globalAlpha=p.alpha;ctx.fillStyle="#eafff2";ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;anim=requestAnimationFrame(draw)}
 addEventListener("resize",resize,{passive:true});document.addEventListener("visibilitychange",()=>{if(document.hidden){cancelAnimationFrame(anim);anim=0}else if(!anim){last=performance.now();anim=requestAnimationFrame(draw)}});resize();anim=requestAnimationFrame(draw)
+})();
+</script>
+<dialog class="legal-dialog" id="legal-dialog" aria-labelledby="legal-title">
+  <div class="legal-top">
+    <div class="legal-home"><img src="/download/nur-logo.png" alt=""> Nur oqiw orayi</div>
+    <button type="button" class="legal-close" id="close-legal" aria-label="Hujjatni yopish">Qaytish</button>
+  </div>
+  <div class="legal-scroll" id="legal-reader" tabindex="-1"></div>
+</dialog>
+<template id="legal-offer">
+  <span class="document-type">HUQUQIY HUJJAT</span>
+  <h2 id="legal-title">Ommaviy oferta</h2>
+  <p class="doc-date">Nur oqiw orayi · Matn loyihasi · 19/11/2026</p>
+  <p>Ushbu Ommaviy oferta (keyingi o‘rinlarda — «Oferta») <strong>Nur oqiw orayi</strong> raqamli ta’lim xizmatlaridan foydalanish va pullik testlarga kirish shartlarining taklif etilayotgan tahriridir. Xizmat ko‘rsatuvchining yuridik nomi hamda rekvizitlari rasmiy e’lon qilishdan avval kiritilishi lozim.</p>
+  <h3>1. Xizmat mazmuni</h3>
+  <p>Xizmatlar foydalanuvchilarga matematika bo‘yicha elektron o‘quv materiallari, testlar, natijalarni ko‘rish, reyting, davomat yoki ta’limni boshqarish imkoniyatlarini taqdim etishi mumkin. Alohida xizmatlar mobil ilova, Windows dasturi yoki Telegram bot orqali ishlaydi. Pullik test imkoniyatlari faqat oldindan e’lon qilingan shartlar va mavjud ruxsatlarga muvofiq ochiladi.</p>
+  <h3>2. Xizmatga kirish va shartlarni qabul qilish</h3>
+  <p>Foydalanuvchi bepul bo‘limlardan tegishli qoidalarga rioya qilib foydalanadi. Pullik xizmat bo‘yicha narx, tarkib, amal qilish muddati va kirish tartibi <strong>to‘lovdan oldin alohida ma’lum qilinadi</strong>. Foydalanuvchi mazkur shartlarni elektron tarzda tasdiqlab, to‘lov amalga oshirganidan keyin buyurtma rasmiylashtiriladi.</p>
+  <h3>3. Narxlar va to‘lov</h3>
+  <p>Pullik testlar narxi, valyutasi (so‘m), to‘lov usuli va to‘lovning tasdiqlanish tartibi xarid vaqtida ko‘rsatiladi. Ilova yoki Telegram orqali ko‘rsatilgan narxlar faqat tegishli taklifga nisbatan amal qiladi. Administrator to‘lov tasdiqlangach, foydalanuvchiga tegishli testga kirishni beradi. Foydalanuvchidan karta PIN-kodi, SMS tasdiqlash kodi yoki bank paroli so‘ralmaydi.</p>
+  <h3>4. Foydalanuvchi majburiyatlari</h3>
+  <ul><li>Shaxsiy ma’lumotlarni to‘g‘ri taqdim etish va o‘z kirish ma’lumotlarini boshqalarga bermaslik.</li><li>Test javoblari va resurslardan faqat qonuniy hamda belgilangan maqsadda foydalanish.</li><li>Tizim ishlashiga zarar yetkazuvchi avtomatlashtirilgan faoliyatni amalga oshirmaslik.</li><li>Xatolik yoki noqonuniy kirish holatini administratorga bildirish.</li></ul>
+  <h3>5. Test natijalari</h3>
+  <p>Testlarning ballari avtomatik algoritmlar yordamida hisoblanishi mumkin. Baholash usuli, savollar va baholar haqidagi ma’lumotlar tegishli test qoidalarida beriladi. Platforma natijalari <strong>rasmiy davlat sertifikati</strong> o‘rnini bosmaydi. Texnik yoki hisob-kitob xatosi yuzaga kelsa, natijalar tekshirilishi va asoslantirilgan tartibda tuzatilishi mumkin.</p>
+  <h3>6. Xizmat sifati va uzilishlar</h3>
+  <p>Xizmat ko‘rsatuvchi tizimning barqaror ishlashi va ma’lumotlar xavfsizligi uchun oqilona choralarni ko‘radi. Rejalashtirilgan texnik ishlar, internet yoki tashqi platformalardagi nosozliklar sababli vaqtinchalik uzilishlar yuz berishi mumkin. Uzilish pullik xizmatdan foydalanishga sezilarli ta’sir qilsa, administrator orqali masala ko‘rib chiqiladi.</p>
+  <h3>7. Bekor qilish va mablag‘ni qaytarish</h3>
+  <p><strong>To‘langan pul qaytarilmaydi.</strong> Pullik testga kirish huquqi berilib, xizmatdan foydalanish boshlanganidan keyin foydalanuvchi o‘z xohishi bilan testdan voz kechsa, to‘lov qaytarilmaydi. <strong>Istisno:</strong> xizmat ko‘rsatilmasa, jiddiy nuqson bo‘lsa yoki qonunchilik mablag‘ni qaytarishni talab qilsa, murojaat amaldagi qonunga muvofiq ko‘rib chiqiladi. Bu band iste’molchining qonuniy huquqlarini cheklamaydi.</p>
+  <h3>8. Voyaga yetmagan foydalanuvchilar</h3>
+  <p>Voyaga yetmagan shaxslar tomonidan pullik xizmatlardan foydalanish va shaxsiy ma’lumotlarni taqdim etish masalalarida zarur hollarda ota-ona yoki qonuniy vakilning roziligi talab etiladi.</p>
+  <h3>9. Shikoyat va aloqa</h3>
+  <p>Xizmat, to‘lov, hisob yoki natija bilan bog‘liq savollar Telegram’dagi administrator orqali qabul qilinadi. Murojaat qonunchilikda belgilangan huquqlardan foydalanishga to‘sqinlik qilmaydi.</p>
+  <div class="doc-contact"><strong>Administrator</strong><br><a href="https://t.me/up17x" target="_blank" rel="noopener noreferrer">Telegram: @up17x</a></div>
+  <h3>10. Rekvizitlar va huquqiy asos</h3>
+  <p><strong>Xizmat ko‘rsatuvchi:</strong> [rasmiy yuridik nom yoki YTT F.I.Sh.]<br><strong>STIR:</strong> [to‘ldiriladi]<br><strong>Yuridik manzil:</strong> [to‘ldiriladi]<br><strong>Rasmiy aloqa:</strong> [to‘ldiriladi]</p>
+  <p>Ushbu loyiha O‘zbekiston Respublikasi «Elektron tijorat to‘g‘risida»gi qonunchiligi va iste’molchilar huquqlarini himoya qilish qoidalarini inobatga olib tayyorlandi. <a href="https://lex.uz/acts/-6213382" target="_blank" rel="noopener noreferrer">Qonun matni</a>.</p>
+  <div class="doc-highlight">Rasmiy nashrdan oldin: xizmat ko‘rsatuvchining haqiqiy rekvizitlari, narx va muddatlar, to‘lov tartibi hamda qaytarish shartlari yuridik tekshiruvdan o‘tkazilishi kerak.</div>
+</template>
+<template id="legal-privacy">
+  <span class="document-type">SHAXSIY MA’LUMOTLAR</span>
+  <h2 id="legal-title">Maxfiylik siyosati</h2>
+  <p class="doc-date">Nur oqiw orayi · Matn loyihasi · 19/11/2026</p>
+  <p>Ushbu siyosat <strong>Nur oqiw orayi</strong> bilan bog‘liq veb-sayt, mobil va Windows ilovalarida hamda tegishli Telegram botlarda shaxsga doir ma’lumotlardan qanday maqsadlarda foydalanilishi mumkinligini tushuntiradi. Amalda yig‘iladigan ma’lumotlarning aniq ro‘yxati foydalanilayotgan xizmat turiga bog‘liq.</p>
+  <h3>1. Qanday ma’lumotlar olinishi mumkin?</h3>
+  <ul><li><strong>Profil ma’lumotlari:</strong> ism-familiya, Telegram ID va username, taqdim etilgan telefon raqami.</li><li><strong>Ta’lim faoliyati:</strong> sinf/guruh, davomat, test javoblari, ball, baho, reyting va natijalar tarixi.</li><li><strong>Pullik xizmatlar:</strong> xarid qilinadigan test nomi, kirish huquqi, to‘lov holati va tekshirish uchun zarur tasdiqlar.</li><li><strong>Texnik ma’lumotlar:</strong> ulanish va xatolik jurnallari, qurilma yoki brauzer haqidagi cheklangan texnik axborot.</li><li><strong>Murojaatlar:</strong> administratorga yuborilgan savollar va javoblar.</li></ul>
+  <h3>2. Nima uchun ishlov beriladi?</h3>
+  <p>Ma’lumotlar akkaunt va testga kirishni ta’minlash, natija va reytingni hisoblash, davomatni yuritish, to‘lovlarni tekshirish, texnik nosozliklarni aniqlash, xavfsizlikni ta’minlash va foydalanuvchi murojaatlariga javob berish uchun ishlatilishi mumkin.</p>
+  <h3>3. Qonuniy asos va rozilik</h3>
+  <p>Shaxsga doir ma’lumotlarga qonunchilikda nazarda tutilgan asoslar mavjud bo‘lganda, jumladan zarur hollarda foydalanuvchi yoki uning qonuniy vakili roziligi bilan ishlov beriladi. Rozilikni qaytarib olish mumkin, biroq qonunda ruxsat etilgan ayrim ma’lumotlarni saqlash majburiyati saqlanishi mumkin.</p>
+  <h3>4. Natijalarni ko‘rsatish</h3>
+  <p>Reyting, test ballari va natijalar tegishli bo‘limlarda boshqa foydalanuvchilarga ko‘rinishi mumkin. Rasmiy nashrdan avval aynan qaysi ma’lumotlar ommaga ochiq bo‘lishi, ko‘rsatish mezonlari va kerakli rozilik tartibi belgilab olinishi kerak. Telefon raqami va to‘lov ma’lumotlari umumiy reytingda e’lon qilinmasligi lozim.</p>
+  <h3>5. Ma’lumotlarni kim ko‘rishi mumkin?</h3>
+  <p>Zarur hollarda ma’lumotlar vakolatli administratorlar, hosting va texnik xizmat ko‘rsatuvchilar, Telegram platformasi yoki qonunchilik asosida vakolatli davlat organlariga taqdim etilishi mumkin. Qonuniy asossiz shaxsga doir ma’lumotlar ochiq tarqatilmaydi yoki reklama maqsadida sotilmaydi.</p>
+  <h3>6. Saqlash muddati va joyi</h3>
+  <p>Ma’lumotlar xizmat ko‘rsatish, hisobot, nizolarni ko‘rib chiqish va qonuniy majburiyatlar uchun zarur muddat davomida saqlanadi, so‘ng qonunchilik va texnik imkoniyatlardan kelib chiqib o‘chiriladi yoki shaxssizlantiriladi. O‘zbekiston fuqarolari ma’lumotlari bo‘yicha hududiy saqlash va ro‘yxatdan o‘tkazish talablari alohida tekshiriladi. Ma’lumotlar oqimini inventarizatsiya qilishdan oldin server joylashuvi haqida kafolat berilmaydi.</p>
+  <h3>7. Himoya choralari</h3>
+  <p>Ma’lumotlarga kirish huquqlarini cheklash, administratorni autentifikatsiya qilish, himoyalangan ulanishlardan foydalanish, zaxiralash va nosozliklar monitoringi kabi choralar qo‘llanishi nazarda tutiladi. Hech qanday onlayn tizim mutlaq xavfsizlikni kafolatlamaydi.</p>
+  <h3>8. Foydalanuvchi huquqlari</h3>
+  <p>Foydalanuvchi qonunda belgilangan tartibda o‘zi haqidagi ma’lumotlar bo‘yicha axborot olish, noto‘g‘ri ma’lumotlarni tuzatishni so‘rash, ma’lumotlarni o‘chirish yoki ishlov berishni cheklash talabini bildirish, roziligini chaqirib olish va tegishli organga murojaat qilish huquqiga ega.</p>
+  <h3>9. Bolalar va qonuniy vakillar</h3>
+  <p>Voyaga yetmagan shaxsga doir ma’lumotlarga ishlov berishda qonunda nazarda tutilgan hollarda ota-ona yoki qonuniy vakil roziligi olinadi. Ma’lumotni keragidan ortiq yig‘maslik prinsipi qo‘llanadi.</p>
+  <h3>10. Siyosatga o‘zgartirishlar va murojaat</h3>
+  <p>Siyosat yangilanganda ushbu sahifada yangi tahrir sanasi ko‘rsatiladi. Ma’lumotlarni ko‘rish, tuzatish yoki o‘chirish masalalari bo‘yicha administratorga yozishingiz mumkin.</p>
+  <div class="doc-contact"><strong>Ma’lumotlar bo‘yicha aloqa</strong><br><a href="https://t.me/up17x" target="_blank" rel="noopener noreferrer">Telegram: @up17x</a><br><br>Ma’lumotlar operatorining rasmiy nomi va manzili: [nashrdan oldin to‘ldiriladi]</div>
+  <p style="margin-top:24px">Huquqiy asos: O‘zbekiston Respublikasining <a href="https://lex.uz/acts/-4396419" target="_blank" rel="noopener noreferrer">«Shaxsga doir ma’lumotlar to‘g‘risida»gi qonuni</a>.</p>
+  <div class="doc-highlight">Ushbu matn loyiha tahriridir. Amaldagi tizimda qaysi ma’lumotlar yig‘ilishi, saqlanishi va ulashilishi tekshirilgach, siyosat shunga mos holda tasdiqlanishi kerak.</div>
+</template>
+<script>
+(()=>{
+ const dialog=document.getElementById('legal-dialog');
+ const reader=document.getElementById('legal-reader');
+ const button=document.getElementById('close-legal');
+ const names={'#ommaviy-oferta':'legal-offer','#maxfiylik-siyosati':'legal-privacy'};
+ let lastFocus=null;
+ function updateFromHash(){
+   const template=document.getElementById(names[window.location.hash]||'');
+   if(template){
+     if(!dialog.open){lastFocus=document.activeElement;dialog.showModal()}
+     reader.replaceChildren(template.content.cloneNode(true));
+     reader.scrollTop=0;
+     const h=reader.querySelector('h2');if(h)h.focus({preventScroll:true});
+   }else if(dialog.open){dialog.close()}
+ }
+ document.querySelectorAll('[data-legal]').forEach(a=>a.addEventListener('click',event=>{
+   event.preventDefault();const hash=a.getAttribute('href');
+   if(window.location.hash===hash)updateFromHash();
+   else window.location.hash=hash;
+ }));
+ function close(){if(window.location.hash in names){history.pushState(null,'',window.location.pathname+window.location.search)}dialog.close();if(lastFocus?.focus)lastFocus.focus()}
+ button.addEventListener('click',close);
+ dialog.addEventListener('click',e=>{if(e.target===dialog)close()});
+ dialog.addEventListener('cancel',e=>{e.preventDefault();close()});
+ window.addEventListener('hashchange',updateFromHash);
+ updateFromHash();
 })();
 </script>
 </body></html>
