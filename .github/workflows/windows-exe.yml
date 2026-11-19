@@ -77,8 +77,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: pc-v1.1.0
-          name: Nur Oqiw Windows Setup 1.1.0
+          tag_name: pc-v1.1.1
+          name: Nur Oqiw Windows Setup 1.1.1
           body: |
             Windows 10/11 x64 NSIS installer: Welcome, folder selection, Install, Finish.
             Optional desktop/Start-menu shortcuts and uninstaller. No admin elevation by default.
