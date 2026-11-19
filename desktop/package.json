@@ -1,6 +1,6 @@
 {
   "name": "nur-oqiw-desktop",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Nur oqiw orayi Windows PC application",
   "main": "main.js",
@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "electron": "45.4.1",
-    "electron-builder": "25.1.8"
+    "electron-builder": "26.18.0"
   },
   "build": {
     "appId": "uz.nuroqiworayi.desktop",
