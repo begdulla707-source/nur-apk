@@ -1,6 +1,6 @@
 {
   "name": "nur-oqiw-desktop",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Nur oqiw orayi Windows PC application",
   "main": "main.js",
@@ -8,10 +8,10 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
-    "build:win": "electron-builder --win portable --x64"
+    "build:win": "electron-builder --win nsis --x64"
   },
   "devDependencies": {
-    "electron": "34.5.8",
+    "electron": "45.4.1",
     "electron-builder": "25.1.8"
   },
   "build": {
@@ -30,17 +30,27 @@
       "icon": "../download-site/icon.ico",
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": [
             "x64"
           ]
         }
       ],
       "requestedExecutionLevel": "asInvoker",
-      "artifactName": "Nur_Oqiw_PC.exe"
+      "artifactName": "Nur_Oqiw_Setup.exe"
     },
-    "portable": {
-      "artifactName": "Nur_Oqiw_PC.exe"
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Nur oqiw orayi",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Nur_Oqiw_Setup.exe",
+      "warningsAsErrors": true
     }
   }
 }
