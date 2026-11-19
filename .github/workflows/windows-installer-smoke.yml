@@ -18,7 +18,7 @@ jobs:
       - name: Download official released Windows setup
         run: |
           $ErrorActionPreference = 'Stop'
-          $url = 'https://github.com/begdulla707-source/nur-apk/releases/download/pc-v1.1.0/'
+          $url = 'https://github.com/begdulla707-source/nur-apk/releases/download/pc-v1.1.1/'
           Invoke-WebRequest -Uri ($url + 'Nur_Oqiw_Setup.exe') -OutFile 'Nur_Oqiw_Setup.exe'
           Invoke-WebRequest -Uri ($url + 'SHA256SUMS.txt') -OutFile 'SHA256SUMS.txt'
           $record = (Get-Content 'SHA256SUMS.txt' -Raw).Trim()
@@ -33,7 +33,13 @@ jobs:
           $setup = (Resolve-Path 'Nur_Oqiw_Setup.exe').Path
           Write-Output "Custom installation directory: $install"
           $process = Start-Process -FilePath $setup -ArgumentList @('/S',"/D=$install") -Wait -PassThru
-          if ($process.ExitCode -ne 0) { throw "NSIS installer failed with code $($process.ExitCode)" }
+          if ($process.ExitCode -ne 0) {
+            Write-Output ("Installer failed: " + $process.ExitCode)
+            Get-WinEvent -FilterHashtable @{LogName='Application';StartTime=(Get-Date).AddMinutes(-8)} -ErrorAction SilentlyContinue |
+              Where-Object { $_.LevelDisplayName -eq 'Error' -and $_.Message -match 'Nur|Setup|System.dll|NSIS' } |
+              Select-Object -First 4 -ExpandProperty Message | Write-Output
+            throw "NSIS installer failed with code $($process.ExitCode)"
+          }
           $exe = Join-Path $install 'Nur Oqiw Orayi.exe'
           if (!(Test-Path $exe)) { throw "Installed app missing at $exe" }
           $asar = Join-Path $install 'resources/app.asar'
